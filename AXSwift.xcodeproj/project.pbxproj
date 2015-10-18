@@ -7,13 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2F1AEB951BD43741005BA6FC /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1AEB941BD43741005BA6FC /* Application.swift */; settings = {ASSET_TAGS = (); }; };
+		2F1AEB971BD43768005BA6FC /* SystemWideElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1AEB961BD43768005BA6FC /* SystemWideElement.swift */; settings = {ASSET_TAGS = (); }; };
 		2F32C6881BD42D5000AD4419 /* AXSwift.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F32C6871BD42D5000AD4419 /* AXSwift.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2F32C6901BD42FE700AD4419 /* UIElement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F32C68F1BD42FE700AD4419 /* UIElement.swift */; settings = {ASSET_TAGS = (); }; };
+		2F32C6921BD4342700AD4419 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F32C6911BD4342700AD4419 /* Error.swift */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2F1AEB941BD43741005BA6FC /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
+		2F1AEB961BD43768005BA6FC /* SystemWideElement.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemWideElement.swift; sourceTree = "<group>"; };
 		2F32C6841BD42D5000AD4419 /* AXSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = AXSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F32C6871BD42D5000AD4419 /* AXSwift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AXSwift.h; sourceTree = "<group>"; };
 		2F32C6891BD42D5000AD4419 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2F32C68F1BD42FE700AD4419 /* UIElement.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIElement.swift; sourceTree = "<group>"; };
+		2F32C6911BD4342700AD4419 /* Error.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +56,10 @@
 			children = (
 				2F32C6871BD42D5000AD4419 /* AXSwift.h */,
 				2F32C6891BD42D5000AD4419 /* Info.plist */,
+				2F32C68F1BD42FE700AD4419 /* UIElement.swift */,
+				2F1AEB961BD43768005BA6FC /* SystemWideElement.swift */,
+				2F1AEB941BD43741005BA6FC /* Application.swift */,
+				2F32C6911BD4342700AD4419 /* Error.swift */,
 			);
 			path = AXSwift;
 			sourceTree = "<group>";
@@ -90,6 +102,7 @@
 		2F32C67B1BD42D5000AD4419 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 0700;
 				LastUpgradeCheck = 0700;
 				ORGANIZATIONNAME = "Tyler Mandry";
 				TargetAttributes = {
@@ -130,6 +143,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F1AEB951BD43741005BA6FC /* Application.swift in Sources */,
+				2F32C6921BD4342700AD4419 /* Error.swift in Sources */,
+				2F1AEB971BD43768005BA6FC /* SystemWideElement.swift in Sources */,
+				2F32C6901BD42FE700AD4419 /* UIElement.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,6 +240,7 @@
 		2F32C68D1BD42D5000AD4419 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -235,12 +253,14 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.AXSwift;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		2F32C68E1BD42D5000AD4419 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -275,6 +295,7 @@
 				2F32C68E1BD42D5000AD4419 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
