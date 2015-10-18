@@ -44,4 +44,10 @@ extension AXError : CustomStringConvertible {
   }
 }
 
+/// All possible errors that could be returned from UIElement or one of its subclasses.
+///
+/// These are just the errors that can be returned from the underlying API.
+///
+/// - seeAlso: [AXUIElement.h Reference](https://developer.apple.com/library/mac/documentation/ApplicationServices/Reference/AXUIElement_header_reference/)
+/// - seeAlso: `UIElement` for a list of errors that you should handle
 public typealias Error = AXError

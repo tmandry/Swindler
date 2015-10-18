@@ -1,3 +1,4 @@
+/// A `UIElement` for an application.
 public class Application: UIElement {
   // Creates a UIElement for the given process ID.
   // Does NOT check if the given process actually exists, just checks for a valid ID.
@@ -10,6 +11,8 @@ public class Application: UIElement {
     }
   }
 
+  /// Creates an `Application` from a `NSRunningApplication` instance.
+  /// - returns: The `Application`, or `nil` if the given application is not running.
   public convenience init?(_ app: NSRunningApplication) {
     if app.terminated {
       return nil
@@ -17,6 +20,8 @@ public class Application: UIElement {
     self.init(forKnownProcessID: app.processIdentifier)
   }
 
+  /// Create an `Application` from the process ID of a running application.
+  /// - returns: The `Application`, or `nil` if the PID is invalid or the given application is not running.
   public convenience init?(forProcessID processID: pid_t) {
     guard let app = NSRunningApplication(processIdentifier: processID) else {
       return nil
@@ -24,6 +29,8 @@ public class Application: UIElement {
     self.init(app)
   }
 
+  /// Creates an `Application` for every running instance of the given `bundleID`.
+  /// - returns: A (potentially empty) array of `Application`s.
   public class func all(forBundleID bundleID: String) -> [Application] {
     let runningApps = NSWorkspace.sharedWorkspace().runningApplications
     return runningApps
@@ -31,11 +38,15 @@ public class Application: UIElement {
       .flatMap({ Application($0) })
   }
 
+  /// Returns a list of the application's visible windows.
+  /// - returns: An array of `UIElement`s, one for every visible window. Or `nil` if the list cannot
+  ///            be retrieved.
   public func windows() throws -> [UIElement]? {
     let axWindows: [AXUIElement]? = try self.attribute("AXWindows")
     return axWindows?.map({ UIElement($0) })
   }
 
+  /// Returns the element at the specified top-down coordinates, or nil if there is none.
   public override func elementAtPosition(x: Float, _ y: Float) throws -> UIElement? {
     return try super.elementAtPosition(x, y)
   }

@@ -1,4 +1,33 @@
-// Generic UI element which can hold and interact with any accessibility element.
+/// Holds and interacts with any accessibility element.
+///
+/// This class wraps every operation that operates on AXUIElements.
+///
+/// - seeAlso: [OS X Accessibility Model](https://developer.apple.com/library/mac/documentation/Accessibility/Conceptual/AccessibilityMacOSX/OSXAXmodel.html)
+///
+/// Note that every operation involves IPC and is tied to the event loop of the target process. This
+/// means that operations are synchronous and can hang until they time out. The default timeout is
+/// 6 seconds, but it can be changed using `setMessagingTimeout` and `setGlobalMessagingTimeout`.
+///
+/// ### Error handling
+///
+/// Unless otherwise specified, during reads, "missing data/attribute" errors are handled by
+/// returning optionals as nil. During writes, missing attribute errors are thrown.
+///
+/// Other failures are all thrown, including if messaging fails or the underlying AXUIElement
+/// becomes invalid.
+///
+/// #### Possible Errors
+/// - `Error.APIDisabled`: The accessibility API is disabled. Your application must request and
+///                        receive special permission from the user to be able to use these APIs.
+/// - `Error.InvalidUIElement`: The UI element has become invalid, perhaps because it was destroyed.
+/// - `Error.CannotComplete`: There is a problem with messaging, perhaps because the application is
+///                           being unresponsive. This error will be thrown when a message times out.
+/// - `Error.NotImplemented`: The process does not fully support the accessibility API.
+/// - Anything included in the docs of the method you are calling.
+///
+/// Any undocumented errors thrown are bugs and should be reported.
+///
+/// - seeAlso: [AXUIElement.h reference](https://developer.apple.com/library/mac/documentation/ApplicationServices/Reference/AXUIElement_header_reference/)
 public class UIElement {
   let element: AXUIElement
 
@@ -9,12 +38,20 @@ public class UIElement {
     element = nativeElement
   }
 
+  /// Sets the messaging timeout for all UIElements. Use this to control how long a method call can
+  /// delay execution.
+  ///
+  /// - parameter seconds: The timeout in seconds, or `0` to reset to the default value.
+  /// - throws: `Errors.IllegalArgument` if `seconds` is negative.
   public class func setGlobalMessagingTimeout(seconds: Float) throws {
     try SystemWideElement().setMessagingTimeout(seconds)
   }
 
   // MARK: - Attributes
 
+  /// Returns the list of all attributes.
+  ///
+  /// Does not include parameterized attributes.
   public func attributes() throws -> [String] {
     var names: CFArray?
     let error = AXUIElementCopyAttributeNames(element, &names)
@@ -31,13 +68,16 @@ public class UIElement {
     return names! as [AnyObject] as! [String]
   }
 
-  // The `attribute` method returns nil for unsupported attributes and empty attributes alike.
-  // This is more convenient than dealing with exceptions (which are used for more serious errors).
-  // However, if you'd like to see whether an attribute is actually supported, you can use this method.
-  public func attributeIsSupported(name: String) throws -> Bool {
+  /// Returns whether `attribute` is supported by this element.
+  ///
+  /// The `attribute` method returns nil for unsupported attributes and empty attributes alike,
+  /// which is more convenient than dealing with exceptions (which are used for more serious
+  /// errors). However, if you'd like to specifically test an attribute is actually supported, you
+  /// can use this method.
+  public func attributeIsSupported(attribute: String) throws -> Bool {
     // Ask to copy 0 values, since we are only interested in the return code.
     var value: CFArray?
-    let error = AXUIElementCopyAttributeValues(element, name, 0, 0, &value)
+    let error = AXUIElementCopyAttributeValues(element, attribute, 0, 0, &value)
 
     if error == .AttributeUnsupported {
       return false
@@ -54,9 +94,10 @@ public class UIElement {
     return true
   }
 
-  public func attributeIsSettable(name: String) throws -> Bool {
+  /// Returns whether `attribute` is writeable.
+  public func attributeIsSettable(attribute: String) throws -> Bool {
     var settable: DarwinBoolean = false
-    let error = AXUIElementIsAttributeSettable(element, name, &settable)
+    let error = AXUIElementIsAttributeSettable(element, attribute, &settable)
 
     if error == .NoValue || error == .AttributeUnsupported {
       return false
@@ -69,11 +110,18 @@ public class UIElement {
     return settable.boolValue
   }
 
-  // Force-casts the attribute to the desired type. If you want to check the return type, ask for
-  // AnyObject.
-  public func attribute<T>(name: String) throws -> T? {
+  /// Returns the value of `attribute`, if it exists.
+  ///
+  /// - parameter attribute: The name of a (non-parameterized) attribute.
+  ///
+  /// - returns: An optional containing the value of `attribute` as the desired type, or nil.
+  ///            If `attribute` is an array, all values are returned.
+  ///
+  /// - warning: This method force-casts the attribute to the desired type, which will abort if the
+  ///            cast fails. If you want to check the return type, ask for AnyObject.
+  public func attribute<T>(attribute: String) throws -> T? {
     var value: AnyObject?
-    let error = AXUIElementCopyAttributeValue(element, name, &value)
+    let error = AXUIElementCopyAttributeValue(element, attribute, &value)
 
     if error == .NoValue || error == .AttributeUnsupported {
       return nil
@@ -86,27 +134,38 @@ public class UIElement {
     return (value as! T)
   }
 
-  // Throws if the named attribute doesn't exist.
-  public func setAttribute(name: String, value: AnyObject) throws {
-    let error = AXUIElementSetAttributeValue(element, name, value)
+  /// Sets the value of `attribute` to `value`.
+  ///
+  /// - warning: Unlike read-only methods, this method throws if the attribute doesn't exist.
+  ///
+  /// - throws:
+  ///   - `Error.AttributeUnsupported` if `attribute` isn't supported,
+  ///   - `Error.IllegalArgument` if `value` is an illegal value
+  public func setAttribute(attribute: String, value: AnyObject) throws {
+    let error = AXUIElementSetAttributeValue(element, attribute, value)
 
     guard error == .Success else {
       throw error
     }
   }
 
-
-  // Gets multiple attributes of the element at once and returns them in a dictionary.
-  // Presumably you would use this API for performance, though it's not documented that there is
-  // actually a difference.
-  // Missing values (or attributes) aren't included in the dictionary.
-  // If there are any errors other than .NoValue or .AttributeUnsupported it will throw the first
-  // one it encounters.
-  public func getMultipleAttributes(names: [String]) throws -> [String: AnyObject] {
+  /// Gets multiple attributes of the element at once.
+  ///
+  /// - parameter attributes: An array of attribute names. Nonexistent attributes are ignored.
+  ///
+  /// - returns: A dictionary mapping provided parameter names to their values. Parameters which
+  ///            don't exist or have no value will be absent.
+  ///
+  /// - throws: If there are any errors other than .NoValue or .AttributeUnsupported, it will throw
+  ///           the first one it encounters.
+  ///
+  /// - note: Presumably you would use this API for performance, though it's not explicitly
+  ///         documented by Apple that there is actually a difference.
+  public func getMultipleAttributes(attributes: [String]) throws -> [String: AnyObject] {
     var valuesCF: CFArray?
     let error = AXUIElementCopyMultipleAttributeValues(
       element,
-      names,
+      attributes,
       AXCopyMultipleAttributeOptions(rawValue: 0),  // keep going on errors (particularly NoValue)
       &valuesCF)
 
@@ -118,9 +177,9 @@ public class UIElement {
 
     // Pack names, values into dictionary
     var result = [String: AnyObject]()
-    for (index, name) in names.enumerate() {
+    for (index, attribute) in attributes.enumerate() {
       if try checkMultiAttrValue(values[index]) {
-        result[name] = values[index]
+        result[attribute] = values[index]
       }
     }
     return result
@@ -150,19 +209,30 @@ public class UIElement {
     return true
   }
 
-  // Convenience function that doesn't require passing an array.
+  /// Gets multiple attributes of the element at once.
+  ///
+  /// Convenience wrapper that doesn't require passing an array.
   public func getMultipleAttributes(names: String...) throws -> [String: AnyObject] {
     return try getMultipleAttributes(names)
   }
 
   // MARK: Array attributes
 
-  // Returns nil if the attribute doesn't exist or has no value.
-  // Returns empty array if there are no elements starting at `index`.
+  /// Returns a subset of values from an array attribute.
+  ///
+  /// - parameter attribute: The name of the array attribute.
+  /// - parameter startAtIndex: The index of the array to start taking values from.
+  /// - parameter maxValues: The maximum number of values you want.
+  ///
+  /// - returns: An array of up to `maxValues` values starting at `startAtIndex`.
+  ///   - The array is empty if `startAtIndex` is out of range.
+  ///   - `nil` if the attribute doesn't exist or has no value.
+  ///
+  /// - throws: `Error.IllegalArgument` if the attribute isn't an array.
   public func valuesForAttribute<T: AnyObject>
-      (name: String, startAtIndex index: Int, maxValues: Int) throws -> [T]? {
+      (attribute: String, startAtIndex index: Int, maxValues: Int) throws -> [T]? {
     var values: CFArray?
-    let error = AXUIElementCopyAttributeValues(element, name, index, maxValues, &values)
+    let error = AXUIElementCopyAttributeValues(element, attribute, index, maxValues, &values)
 
     if error == .NoValue || error == .AttributeUnsupported {
       return nil
@@ -175,10 +245,15 @@ public class UIElement {
     return (values! as [AnyObject] as! [T])
   }
 
-  // Throws if the attribute doesn't exist (.AttributeUnsupported) or isn't an array (.IllegalArgument).
-  public func valueCountForAttribute(name: String) throws -> Int {
+  /// Returns the number of values an array attribute has.
+  /// - returns: The number of values, or `nil` if `attribute` isn't an array (or doesn't exist).
+  public func valueCountForAttribute(attribute: String) throws -> Int? {
     var count: Int = 0
-    let error = AXUIElementGetAttributeValueCount(element, name, &count)
+    let error = AXUIElementGetAttributeValueCount(element, attribute, &count)
+
+    if error == .AttributeUnsupported || error == .IllegalArgument {
+      return nil
+    }
 
     guard error == .Success else {
       throw error
@@ -189,6 +264,10 @@ public class UIElement {
 
   // MARK: Parameterized attributes
 
+  /// Returns a list of all parameterized attributes of the element.
+  ///
+  /// Parameterized attributes are attributes that require parameters to retrieve. For example,
+  /// the cell contents of a spreadsheet might require the row and column of the cell you want.
   public func parameterizedAttributes() throws -> [String] {
     var names: CFArray?
     let error = AXUIElementCopyParameterizedAttributeNames(element, &names)
@@ -205,9 +284,14 @@ public class UIElement {
     return names! as [AnyObject] as! [String]
   }
 
-  public func parameterizedAttribute<T, U>(name: String, param: U) throws -> T? {
+  /// Returns the value of the parameterized attribute `attribute` with parameter `param`.
+  ///
+  /// The expected type of `param` depends on the attribute. See the
+  /// [NSAccessibility Informal Protocol Reference](https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ApplicationKit/Protocols/NSAccessibility_Protocol/)
+  /// for more info.
+  public func parameterizedAttribute<T, U>(attribute: String, param: U) throws -> T? {
     var value: AnyObject?
-    let error = AXUIElementCopyParameterizedAttributeValue(element, name, param as! AnyObject, &value)
+    let error = AXUIElementCopyParameterizedAttributeValue(element, attribute, param as! AnyObject, &value)
 
     if error == .NoValue || error == .AttributeUnsupported {
       return nil
@@ -222,6 +306,7 @@ public class UIElement {
 
   // MARK: - Actions
 
+  /// Returns a list of actions that can be performed on the element.
   public func actions() throws -> [String] {
     var names: CFArray?
     let error = AXUIElementCopyActionNames(element, &names)
@@ -238,6 +323,7 @@ public class UIElement {
     return names! as [AnyObject] as! [String]
   }
 
+  /// Returns the human-readable description of `action`.
   public func actionDescription(action: String) throws -> String? {
     var description: CFString?
     let error = AXUIElementCopyActionDescription(element, action, &description)
@@ -253,6 +339,10 @@ public class UIElement {
     return description! as String
   }
 
+  /// Performs the action `action` on the element, returning on success.
+  ///
+  /// - note: If the action times out, it might mean that the application is taking a long time to
+  ///         actually perform the action. It doesn't necessarily mean that the action wasn't performed.
   public func performAction(action: String) throws {
     let error = AXUIElementPerformAction(element, action)
 
@@ -263,6 +353,7 @@ public class UIElement {
 
   // MARK: -
 
+  /// Returns the process ID of the application that the element is a part of.
   public func pid() throws -> pid_t {
     var pid: pid_t = -1
     let error = AXUIElementGetPid(element, &pid)
@@ -274,8 +365,13 @@ public class UIElement {
     return pid
   }
 
-  // Only applies to this instance of UIElement, not other instances that happen to equal it.
-  // See also UIElement.setGlobalMessagingTimeout().
+  /// Sets the messaging timeout for all messages sent to this element. Use this to control how long
+  /// a method call can delay execution.
+  ///
+  /// - note: Only applies to this instance of UIElement, not other instances that happen to equal it.
+  /// - parameter seconds: The timeout in seconds, or `0` to use the global timeout.
+  /// - throws: `Errors.IllegalArgument` if `seconds` is negative.
+  /// - seeAlso: `UIElement.setGlobalMessagingTimeout(_:)`
   public func setMessagingTimeout(seconds: Float) throws {
     let error = AXUIElementSetMessagingTimeout(element, seconds)
 
@@ -301,7 +397,7 @@ public class UIElement {
     return UIElement(result!)
   }
 
-  // TODO: docs
+  // TODO: request permission
   // TODO: observers
   // TODO: convenience functions for attributes
 }
@@ -324,10 +420,15 @@ public func ==(lhs: UIElement, rhs: UIElement) -> Bool {
 
 // MARK: - Convenience getters
 
-/// Convenience getters for UIElement
 extension UIElement {
-  // should this be non-optional?
+  /// Returns the role (type) of the element, if it reports one.
+  ///
+  /// Almost all elements report a role, but this could return nil for elements that aren't finished
+  /// initializing.
+  ///
+  /// - seeAlso: [Roles](https://developer.apple.com/library/mac/documentation/AppKit/Reference/NSAccessibility_Protocol_Reference/index.html#//apple_ref/doc/constant_group/Roles)
   public func role() throws -> String? {
+    // should this be non-optional?
     return try self.attribute(NSAccessibilityRoleAttribute)
   }
 }
