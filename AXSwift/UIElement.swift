@@ -38,6 +38,16 @@ public class UIElement {
     element = nativeElement
   }
 
+  /// Checks if the current process is a trusted accessibility client. If false, all APIs will throw
+  /// errors.
+  ///
+  /// - parameter withPrompt: Whether to show the user a prompt if the process is untrusted. This
+  ///                         happens asynchronously and does not affect the return value.
+  public class func isProcessTrusted(withPrompt showPrompt: Bool = false) -> Bool {
+    let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: showPrompt as CFBoolean]
+    return AXIsProcessTrustedWithOptions(options)
+  }
+
   /// Sets the messaging timeout for all UIElements. Use this to control how long a method call can
   /// delay execution.
   ///
@@ -397,9 +407,10 @@ public class UIElement {
     return UIElement(result!)
   }
 
-  // TODO: request permission
   // TODO: observers
   // TODO: convenience functions for attributes
+  // TODO: get any attribute as a UIElement or [UIElement] (or a subclass)
+  // TODO: promoters
 }
 
 // MARK: - CustomStringConvertible

@@ -3,6 +3,13 @@ import AXSwift
 
 class ApplicationDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(aNotification: NSNotification) {
+    // Check that we have permission
+    guard UIElement.isProcessTrusted(withPrompt: true) else {
+      NSLog("No accessibility API permission, exiting")
+      NSRunningApplication.currentApplication().terminate()
+      return
+    }
+
     // Get Active Application
     if let application = NSWorkspace.sharedWorkspace().frontmostApplication {
       NSLog("localizedName: \(application.localizedName), processIdentifier: \(application.processIdentifier)")
