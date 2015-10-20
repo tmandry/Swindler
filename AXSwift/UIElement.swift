@@ -418,7 +418,7 @@ public class UIElement {
 extension UIElement: CustomStringConvertible {
   public var description: String {
     let role = (try? self.role()) ?? "UIElement"
-    return "\(role): \(element)"
+    return "\(role!): \(element)"
   }
 }
 
