@@ -15,6 +15,10 @@
 		2F86CE9B1BD49958007E8C29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CE9A1BD49958007E8C29 /* AppDelegate.swift */; };
 		2F86CE9D1BD49958007E8C29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F86CE9C1BD49958007E8C29 /* Assets.xcassets */; };
 		2F86CEA61BD4999F007E8C29 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEA51BD4999F007E8C29 /* main.swift */; };
+		2F86CEA81BD4A0B9007E8C29 /* Observer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEA71BD4A0B9007E8C29 /* Observer.swift */; };
+		2F86CEB01BD5621F007E8C29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEAF1BD5621F007E8C29 /* AppDelegate.swift */; };
+		2F86CEB21BD5621F007E8C29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F86CEB11BD5621F007E8C29 /* Assets.xcassets */; };
+		2F86CEBB1BD56250007E8C29 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEBA1BD56250007E8C29 /* main.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +34,12 @@
 		2F86CE9C1BD49958007E8C29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F86CEA11BD49958007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F86CEA51BD4999F007E8C29 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		2F86CEA71BD4A0B9007E8C29 /* Observer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Observer.swift; sourceTree = "<group>"; };
+		2F86CEAD1BD5621F007E8C29 /* AXSwiftObserverExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AXSwiftObserverExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F86CEAF1BD5621F007E8C29 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		2F86CEB11BD5621F007E8C29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2F86CEB61BD5621F007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2F86CEBA1BD56250007E8C29 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +57,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2F86CEAA1BD5621F007E8C29 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -55,6 +72,7 @@
 			children = (
 				2F32C6861BD42D5000AD4419 /* AXSwift */,
 				2F86CE991BD49958007E8C29 /* AXSwiftExample */,
+				2F86CEAE1BD5621F007E8C29 /* AXSwiftObserverExample */,
 				2F32C6851BD42D5000AD4419 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,6 +82,7 @@
 			children = (
 				2F32C6841BD42D5000AD4419 /* AXSwift.framework */,
 				2F86CE981BD49958007E8C29 /* AXSwiftExample.app */,
+				2F86CEAD1BD5621F007E8C29 /* AXSwiftObserverExample.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,6 +93,7 @@
 				2F32C6871BD42D5000AD4419 /* AXSwift.h */,
 				2F32C6891BD42D5000AD4419 /* Info.plist */,
 				2F32C68F1BD42FE700AD4419 /* UIElement.swift */,
+				2F86CEA71BD4A0B9007E8C29 /* Observer.swift */,
 				2F1AEB961BD43768005BA6FC /* SystemWideElement.swift */,
 				2F1AEB941BD43741005BA6FC /* Application.swift */,
 				2F32C6911BD4342700AD4419 /* Error.swift */,
@@ -90,6 +110,17 @@
 				2F86CEA11BD49958007E8C29 /* Info.plist */,
 			);
 			path = AXSwiftExample;
+			sourceTree = "<group>";
+		};
+		2F86CEAE1BD5621F007E8C29 /* AXSwiftObserverExample */ = {
+			isa = PBXGroup;
+			children = (
+				2F86CEAF1BD5621F007E8C29 /* AppDelegate.swift */,
+				2F86CEBA1BD56250007E8C29 /* main.swift */,
+				2F86CEB11BD5621F007E8C29 /* Assets.xcassets */,
+				2F86CEB61BD5621F007E8C29 /* Info.plist */,
+			);
+			path = AXSwiftObserverExample;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -141,6 +172,23 @@
 			productReference = 2F86CE981BD49958007E8C29 /* AXSwiftExample.app */;
 			productType = "com.apple.product-type.application";
 		};
+		2F86CEAC1BD5621F007E8C29 /* AXSwiftObserverExample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2F86CEB71BD5621F007E8C29 /* Build configuration list for PBXNativeTarget "AXSwiftObserverExample" */;
+			buildPhases = (
+				2F86CEA91BD5621F007E8C29 /* Sources */,
+				2F86CEAA1BD5621F007E8C29 /* Frameworks */,
+				2F86CEAB1BD5621F007E8C29 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AXSwiftObserverExample;
+			productName = AXSwiftObserverExample;
+			productReference = 2F86CEAD1BD5621F007E8C29 /* AXSwiftObserverExample.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -155,6 +203,9 @@
 						CreatedOnToolsVersion = 7.0;
 					};
 					2F86CE971BD49958007E8C29 = {
+						CreatedOnToolsVersion = 7.1;
+					};
+					2F86CEAC1BD5621F007E8C29 = {
 						CreatedOnToolsVersion = 7.1;
 					};
 				};
@@ -174,6 +225,7 @@
 			targets = (
 				2F32C6831BD42D5000AD4419 /* AXSwift */,
 				2F86CE971BD49958007E8C29 /* AXSwiftExample */,
+				2F86CEAC1BD5621F007E8C29 /* AXSwiftObserverExample */,
 			);
 		};
 /* End PBXProject section */
@@ -194,6 +246,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		2F86CEAB1BD5621F007E8C29 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F86CEB21BD5621F007E8C29 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -202,6 +262,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F1AEB951BD43741005BA6FC /* Application.swift in Sources */,
+				2F86CEA81BD4A0B9007E8C29 /* Observer.swift in Sources */,
 				2F32C6921BD4342700AD4419 /* Error.swift in Sources */,
 				2F1AEB971BD43768005BA6FC /* SystemWideElement.swift in Sources */,
 				2F32C6901BD42FE700AD4419 /* UIElement.swift in Sources */,
@@ -214,6 +275,15 @@
 			files = (
 				2F86CEA61BD4999F007E8C29 /* main.swift in Sources */,
 				2F86CE9B1BD49958007E8C29 /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2F86CEA91BD5621F007E8C29 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F86CEBB1BD56250007E8C29 /* main.swift in Sources */,
+				2F86CEB01BD5621F007E8C29 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,6 +439,32 @@
 			};
 			name = Release;
 		};
+		2F86CEB81BD5621F007E8C29 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = AXSwiftObserverExample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.AXSwiftObserverExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		2F86CEB91BD5621F007E8C29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = AXSwiftObserverExample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.AXSwiftObserverExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -395,6 +491,14 @@
 			buildConfigurations = (
 				2F86CEA21BD49958007E8C29 /* Debug */,
 				2F86CEA31BD49958007E8C29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		2F86CEB71BD5621F007E8C29 /* Build configuration list for PBXNativeTarget "AXSwiftObserverExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2F86CEB81BD5621F007E8C29 /* Debug */,
+				2F86CEB91BD5621F007E8C29 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};
