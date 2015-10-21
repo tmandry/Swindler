@@ -163,7 +163,45 @@ public class UIElement {
       throw error
     }
 
-    return (value as! T)
+    return (unpackAXValue(value!) as! T)
+  }
+
+  // Checks if the value is an AXValue and if so, unwraps it.
+  private func unpackAXValue(value: AnyObject) -> Any {
+    guard CFGetTypeID(value) == AXValueGetTypeID() else {
+      return value
+    }
+
+    let type = AXValueGetType(value as! AXValue)
+    switch type {
+    case .AXError:
+      var result: AXError = .Success
+      let success = AXValueGetValue(value as! AXValue, type, &result)
+      assert(success)
+      return result
+    case .CFRange:
+      var result: CFRange = CFRange()
+      let success = AXValueGetValue(value as! AXValue, type, &result)
+      assert(success)
+      return result
+    case .CGPoint:
+      var result: CGPoint = CGPointZero
+      let success = AXValueGetValue(value as! AXValue, type, &result)
+      assert(success)
+      return result
+    case .CGRect:
+      var result: CGRect = CGRectZero
+      let success = AXValueGetValue(value as! AXValue, type, &result)
+      assert(success)
+      return result
+    case .CGSize:
+      var result: CGSize = CGSizeZero
+      let success = AXValueGetValue(value as! AXValue, type, &result)
+      assert(success)
+      return result
+    case .Illegal:
+      return value
+    }
   }
 
   /// Sets the value of `attribute` to `value`.
@@ -197,16 +235,16 @@ public class UIElement {
   ///
   /// - note: Presumably you would use this API for performance, though it's not explicitly
   ///         documented by Apple that there is actually a difference.
-  public func getMultipleAttributes(names: Attribute...) throws -> [Attribute: AnyObject] {
+  public func getMultipleAttributes(names: Attribute...) throws -> [Attribute: Any] {
     return try getMultipleAttributes(names)
   }
 
-  public func getMultipleAttributes(attributes: [Attribute]) throws -> [Attribute: AnyObject] {
+  public func getMultipleAttributes(attributes: [Attribute]) throws -> [Attribute: Any] {
     let values = try fetchMultiAttrValues(attributes.map({ $0.rawValue }))
     return try packMultiAttrValues(attributes, values: values)
   }
 
-  public func getMultipleAttributes(attributes: [String]) throws -> [String: AnyObject] {
+  public func getMultipleAttributes(attributes: [String]) throws -> [String: Any] {
     let values = try fetchMultiAttrValues(attributes)
     return try packMultiAttrValues(attributes, values: values)
   }
@@ -228,11 +266,11 @@ public class UIElement {
   }
 
   // Helper: Packs names, values into dictionary
-  private func packMultiAttrValues<Attr>(attributes: [Attr], values: [AnyObject]) throws -> [Attr: AnyObject] {
-    var result = [Attr: AnyObject]()
+  private func packMultiAttrValues<Attr>(attributes: [Attr], values: [AnyObject]) throws -> [Attr: Any] {
+    var result = [Attr: Any]()
     for (index, attribute) in attributes.enumerate() {
       if try checkMultiAttrValue(values[index]) {
-        result[attribute] = values[index]
+        result[attribute] = unpackAXValue(values[index])
       }
     }
     return result
