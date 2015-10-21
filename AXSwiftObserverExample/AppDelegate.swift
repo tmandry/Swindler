@@ -6,7 +6,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   var observer: Observer!
 
   func applicationDidFinishLaunching(aNotification: NSNotification) {
-    let app = Application.all(forBundleID: "com.apple.finder").first!
+    let app = Application.allForBundleID("com.apple.finder").first!
 
     do {
       try startWatcher(app)
@@ -17,17 +17,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   func startWatcher(app: Application) throws {
-    let pid = try! app.pid()
-    
     var updated = false
-    observer = try Observer(processID: pid) { (observer: Observer, element: UIElement, event: Notification) in
+    observer = app.createObserver() { (observer: Observer, element: UIElement, event: Notification) in
       print("\(element): \(event)")
 
       // Watch events on new windows
       if event == .WindowCreated {
         do {
-          try observer.addNotification(element, notification: .UIElementDestroyed)
-          try observer.addNotification(element, notification: .Moved)
+          try observer.addNotification(.UIElementDestroyed, forElement: element)
+          try observer.addNotification(.Moved, forElement: element)
         } catch let error {
           NSLog("Error: Could not watch [\(element)]: \(error)")
         }
@@ -44,8 +42,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       }
     }
 
-    try observer.addNotification(app, notification: .WindowCreated)
-    try observer.addNotification(app, notification: .MainWindowChanged)
+    try observer.addNotification(.WindowCreated, forElement: app)
+    try observer.addNotification(.MainWindowChanged, forElement: app)
   }
 
   func applicationWillTerminate(aNotification: NSNotification) {

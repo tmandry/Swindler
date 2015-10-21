@@ -19,13 +19,13 @@ class ApplicationDelegate: NSObject, NSApplicationDelegate {
       NSLog("at 0,0: \(try! uiApp.elementAtPosition(0,0))")
       if let bundleIdentifier = application.bundleIdentifier {
         NSLog("bundleIdentifier: \(bundleIdentifier)")
-        let windows = try! Application.all(forBundleID: bundleIdentifier).first!.windows()
+        let windows = try! Application.allForBundleID(bundleIdentifier).first!.windows()
         NSLog("windows: \(windows)")
       }
     }
 
     // Get Application by bundleIdentifier
-    let app = Application.all(forBundleID: "com.apple.finder").first!
+    let app = Application.allForBundleID("com.apple.finder").first!
     NSLog("finder: \(app)")
     NSLog("role: \(try! app.role()!)")
     NSLog("windows: \(try! app.windows()!)")
