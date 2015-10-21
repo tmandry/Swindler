@@ -432,6 +432,8 @@ public class UIElement {
   // MARK: -
 
   /// Returns the process ID of the application that the element is a part of.
+  ///
+  /// Throws only if the element is invalid (`Errors.InvalidUIElement`).
   public func pid() throws -> pid_t {
     var pid: pid_t = -1
     let error = AXUIElementGetPid(element, &pid)

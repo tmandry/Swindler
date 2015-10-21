@@ -31,11 +31,33 @@ public class Application: UIElement {
 
   /// Creates an `Application` for every running instance of the given `bundleID`.
   /// - returns: A (potentially empty) array of `Application`s.
-  public class func all(forBundleID bundleID: String) -> [Application] {
+  public class func allForBundleID(bundleID: String) -> [Application] {
     let runningApps = NSWorkspace.sharedWorkspace().runningApplications
     return runningApps
       .filter({ $0.bundleIdentifier == bundleID })
       .flatMap({ Application($0) })
+  }
+
+  /// Creates an `Observer` on this application, if it is still alive.
+  public func createObserver(callback: Observer.Callback) -> Observer? {
+    do {
+      return try Observer(processID: try pid(), callback: callback)
+    } catch AXError.InvalidUIElement {
+      return nil
+    } catch let error {
+      fatalError("Caught unexpected error creating observer: \(error)")
+    }
+  }
+
+  /// Creates an `Observer` on this application, if it is still alive.
+  public func createObserver(callback: Observer.CallbackWithInfo) -> Observer? {
+    do {
+      return try Observer(processID: try pid(), callback: callback)
+    } catch AXError.InvalidUIElement {
+      return nil
+    } catch let error {
+      fatalError("Caught unexpected error creating observer: \(error)")
+    }
   }
 
   /// Returns a list of the application's visible windows.
