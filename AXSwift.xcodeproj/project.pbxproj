@@ -19,7 +19,19 @@
 		2F86CEB01BD5621F007E8C29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEAF1BD5621F007E8C29 /* AppDelegate.swift */; };
 		2F86CEB21BD5621F007E8C29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F86CEB11BD5621F007E8C29 /* Assets.xcassets */; };
 		2F86CEBB1BD56250007E8C29 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEBA1BD56250007E8C29 /* main.swift */; };
+		2F86CEFC1BD7086F007E8C29 /* AXSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F32C6841BD42D5000AD4419 /* AXSwift.framework */; };
+		2F86CF001BD70B70007E8C29 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEFF1BD70B70007E8C29 /* Constants.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2F86CEFD1BD70887007E8C29 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2F32C67B1BD42D5000AD4419 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2F32C6831BD42D5000AD4419;
+			remoteInfo = AXSwift;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		2F1AEB941BD43741005BA6FC /* Application.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Application.swift; sourceTree = "<group>"; };
@@ -40,6 +52,8 @@
 		2F86CEB11BD5621F007E8C29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F86CEB61BD5621F007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F86CEBA1BD56250007E8C29 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		2F86CEE01BD6B33C007E8C29 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		2F86CEFF1BD70B70007E8C29 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F86CEFC1BD7086F007E8C29 /* AXSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -90,6 +105,7 @@
 		2F32C6861BD42D5000AD4419 /* AXSwift */ = {
 			isa = PBXGroup;
 			children = (
+				2F86CEE01BD6B33C007E8C29 /* README.md */,
 				2F32C6871BD42D5000AD4419 /* AXSwift.h */,
 				2F32C6891BD42D5000AD4419 /* Info.plist */,
 				2F32C68F1BD42FE700AD4419 /* UIElement.swift */,
@@ -97,6 +113,7 @@
 				2F1AEB961BD43768005BA6FC /* SystemWideElement.swift */,
 				2F1AEB941BD43741005BA6FC /* Application.swift */,
 				2F32C6911BD4342700AD4419 /* Error.swift */,
+				2F86CEFF1BD70B70007E8C29 /* Constants.swift */,
 			);
 			path = AXSwift;
 			sourceTree = "<group>";
@@ -183,6 +200,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				2F86CEFE1BD70887007E8C29 /* PBXTargetDependency */,
 			);
 			name = AXSwiftObserverExample;
 			productName = AXSwiftObserverExample;
@@ -262,6 +280,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F1AEB951BD43741005BA6FC /* Application.swift in Sources */,
+				2F86CF001BD70B70007E8C29 /* Constants.swift in Sources */,
 				2F86CEA81BD4A0B9007E8C29 /* Observer.swift in Sources */,
 				2F32C6921BD4342700AD4419 /* Error.swift in Sources */,
 				2F1AEB971BD43768005BA6FC /* SystemWideElement.swift in Sources */,
@@ -288,6 +307,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2F86CEFE1BD70887007E8C29 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2F32C6831BD42D5000AD4419 /* AXSwift */;
+			targetProxy = 2F86CEFD1BD70887007E8C29 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2F32C68A1BD42D5000AD4419 /* Debug */ = {

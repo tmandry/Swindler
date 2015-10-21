@@ -25,19 +25,16 @@ class ApplicationDelegate: NSObject, NSApplicationDelegate {
     }
 
     // Get Application by bundleIdentifier
-    NSLog("finder:")
     let app = Application.all(forBundleID: "com.apple.finder").first!
-    if let role: AnyObject = try! app.attribute("AXRole") {
-      NSLog("role: \(role)")
-    }
+    NSLog("finder: \(app)")
     NSLog("role: \(try! app.role()!)")
     NSLog("windows: \(try! app.windows()!)")
     NSLog("attributes: \(try! app.attributes())")
-    if let title: String = try! app.attribute("AXTitle") {
+    if let title: String = try! app.attribute(.Title) {
       NSLog("title: \(title)")
     }
-    let dict = try! app.getMultipleAttributes("AXRole", "asdf", "AXTitle")
-    NSLog("multi: \(dict)")
+    NSLog("multi: \(try! app.getMultipleAttributes(["AXRole", "asdf", "AXTitle"]))")
+    NSLog("multi: \(try! app.getMultipleAttributes(.Role, .Title))")
 
     NSLog("system wide:")
     let sys = SystemWideElement()

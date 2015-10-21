@@ -5,9 +5,9 @@
 /// - seeAlso: `UIElement` for a list of exceptions that can be thrown.
 public class Observer {
   public typealias Callback =
-    (observer: Observer, element: UIElement, event: String) -> Void
+    (observer: Observer, element: UIElement, notification: Notification) -> Void
   public typealias CallbackWithInfo =
-    (observer: Observer, element: UIElement, event: String, info: [String: AnyObject]?) -> Void
+    (observer: Observer, element: UIElement, notification: Notification, info: [String: AnyObject]?) -> Void
 
   let axObserver: AXObserver!
   let callback: Callback?
@@ -75,17 +75,17 @@ public class Observer {
 
   /// Adds a notification for the observer to watch.
   ///
-  /// - parameter element: The element to watch for the event on. Must belong to the application
+  /// - parameter element: The element to watch for the notification on. Must belong to the application
   ///                      this observer was created on.
-  /// - parameter event:   The name of the event to watch for.
+  /// - parameter notification: The name of the notification to watch for.
   /// - seeAlso: [Notificatons](https://developer.apple.com/library/mac/documentation/AppKit/Reference/NSAccessibility_Protocol_Reference/index.html#//apple_ref/c/data/NSAccessibilityAnnouncementRequestedNotification)
   /// - note: The underlying API returns an error if the notification is already added, but that
   ///         error is not passed on for consistency with `start()` and `stop()`.
   /// - throws: `Error.NotificationUnsupported`: The element does not support notifications (note
   ///           that the system-wide element does not support notifications).
-  public func addNotification(element: UIElement, event: String) throws {
+  public func addNotification(element: UIElement, notification: Notification) throws {
     let selfPtr = UnsafeMutablePointer<Observer>(Unmanaged.passUnretained(self).toOpaque())
-    let error = AXObserverAddNotification(axObserver, element.element, event, selfPtr)
+    let error = AXObserverAddNotification(axObserver, element.element, notification.rawValue, selfPtr)
     guard error == .Success || error == .NotificationAlreadyRegistered else {
       throw error
     }
@@ -93,14 +93,14 @@ public class Observer {
 
   /// Removes a notification from the observer.
   ///
-  /// - parameter element: The element to stop watching the event on.
-  /// - parameter event:   The name of the event to stop watching.
+  /// - parameter element: The element to stop watching the notification on.
+  /// - parameter notification: The name of the notification to stop watching.
   /// - note: The underlying API returns an error if the notification is not present, but that
   ///         error is not passed on for consistency with `start()` and `stop()`.
   /// - throws: `Error.NotificationUnsupported`: The element does not support notifications (note
   ///           that the system-wide element does not support notifications).
-  public func removeNotification(element: UIElement, event: String) throws {
-    let error = AXObserverRemoveNotification(axObserver, element.element, event)
+  public func removeNotification(element: UIElement, notification: Notification) throws {
+    let error = AXObserverRemoveNotification(axObserver, element.element, notification.rawValue)
     guard error == .Success || error == .NotificationNotRegistered else {
       throw error
     }
@@ -109,20 +109,22 @@ public class Observer {
 
 private func internalCallback(axObserver: AXObserver,
                               axElement: AXUIElement,
-                              event: CFString,
+                              notification: CFString,
                               userData: UnsafeMutablePointer<Void>) {
   let observer = Unmanaged<Observer>.fromOpaque(COpaquePointer(userData)).takeUnretainedValue()
   let element  = UIElement(axElement)
-  observer.callback!(observer: observer, element: element, event: event as String)
+  let notif    = Notification(rawValue: notification as String)!
+  observer.callback!(observer: observer, element: element, notification: notif)
 }
 
 private func internalCallback(axObserver: AXObserver,
                               axElement: AXUIElement,
-                              event: CFString,
+                              notification: CFString,
                               cfInfo: CFDictionary,
                               userData: UnsafeMutablePointer<Void>) {
   let observer = Unmanaged<Observer>.fromOpaque(COpaquePointer(userData)).takeUnretainedValue()
   let element  = UIElement(axElement)
   let info     = cfInfo as NSDictionary? as! [String: AnyObject]?
-  observer.callbackWithInfo!(observer: observer, element: element, event: event as String, info: info)
+  let notif    = Notification(rawValue: notification as String)!
+  observer.callbackWithInfo!(observer: observer, element: element, notification: notif, info: info)
 }
