@@ -37,10 +37,9 @@ class ApplicationDelegate: NSObject, NSApplicationDelegate {
     NSLog("multi: \(try! app.getMultipleAttributes(.Role, .Title))")
 
     NSLog("system wide:")
-    let sys = SystemWideElement()
-    NSLog("role: \(try! sys.role()!)")
+    NSLog("role: \(try! systemWideElement.role()!)")
     // NSLog("windows: \(try! sys.windows())")
-    NSLog("attributes: \(try! sys.attributes())")
+    NSLog("attributes: \(try! systemWideElement.attributes())")
 
     NSRunningApplication.currentApplication().terminate()
   }

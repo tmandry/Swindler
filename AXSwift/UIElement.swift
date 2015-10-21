@@ -54,13 +54,11 @@ public class UIElement {
     return AXIsProcessTrustedWithOptions(options)
   }
 
-  /// Sets the messaging timeout for all UIElements. Use this to control how long a method call can
-  /// delay execution.
-  ///
-  /// - parameter seconds: The timeout in seconds, or `0` to reset to the default value.
-  /// - throws: `Errors.IllegalArgument` if `seconds` is negative.
-  public class func setGlobalMessagingTimeout(seconds: Float) throws {
-    try SystemWideElement().setMessagingTimeout(seconds)
+  /// Timeout in seconds for all UIElement messages. Use this to control how long a method call can
+  /// delay execution. The default is `0` which means to use the system default.
+  public var globalMessagingTimeout: Float {
+    get { return systemWideElement.messagingTimeout }
+    set { systemWideElement.messagingTimeout = newValue }
   }
 
   // MARK: - Attributes
@@ -445,18 +443,21 @@ public class UIElement {
     return pid
   }
 
-  /// Sets the messaging timeout for all messages sent to this element. Use this to control how long
-  /// a method call can delay execution.
+  /// The timeout in seconds for all messages sent to this element. Use this to control how long
+  /// a method call can delay execution. The default is `0`, which means to use the global timeout.
   ///
   /// - note: Only applies to this instance of UIElement, not other instances that happen to equal it.
-  /// - parameter seconds: The timeout in seconds, or `0` to use the global timeout.
-  /// - throws: `Errors.IllegalArgument` if `seconds` is negative.
-  /// - seeAlso: `UIElement.setGlobalMessagingTimeout(_:)`
-  public func setMessagingTimeout(seconds: Float) throws {
-    let error = AXUIElementSetMessagingTimeout(element, seconds)
+  /// - seeAlso: `UIElement.globalMessagingTimeout(_:)`
+  public var messagingTimeout: Float = 0 {
+    didSet {
+      messagingTimeout = max(messagingTimeout, 0)
+      let error = AXUIElementSetMessagingTimeout(element, messagingTimeout)
 
-    guard error == .Success else {
-      throw error
+      // InvalidUIElement errors are only relevant when actually passing messages, so we can ignore
+      // them here.
+      guard error == .Success || error == .InvalidUIElement else {
+        fatalError("Unexpected error setting messaging timeout: \(error)")
+      }
     }
   }
 
