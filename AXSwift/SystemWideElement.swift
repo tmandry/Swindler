@@ -1,8 +1,10 @@
+/// A singleton for the system-wide element.
+public var systemWideElement = SystemWideElement()
+
 /// A `UIElement` for the system-wide accessibility element, which can be used to retrieve global,
 /// application-inspecific parameters like the currently focused element.
 public class SystemWideElement: UIElement {
-  /// Returns the system-wide accessibility element.
-  public init() {
+  private init() {
     super.init(AXUIElementCreateSystemWide().takeRetainedValue())
   }
 
