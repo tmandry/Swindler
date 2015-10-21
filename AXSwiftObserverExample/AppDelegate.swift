@@ -20,14 +20,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let pid = try! app.pid()
     
     var updated = false
-    observer = try Observer(processID: pid) { (observer: Observer, element: UIElement, event: String) in
+    observer = try Observer(processID: pid) { (observer: Observer, element: UIElement, event: Notification) in
       print("\(element): \(event)")
 
       // Watch events on new windows
-      if event == NSAccessibilityWindowCreatedNotification {
+      if event == .WindowCreated {
         do {
-          try observer.addNotification(element, event: NSAccessibilityUIElementDestroyedNotification)
-          try observer.addNotification(element, event: NSAccessibilityMovedNotification)
+          try observer.addNotification(element, notification: .UIElementDestroyed)
+          try observer.addNotification(element, notification: .Moved)
         } catch let error {
           NSLog("Error: Could not watch [\(element)]: \(error)")
         }
@@ -44,8 +44,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       }
     }
 
-    try observer.addNotification(app, event: NSAccessibilityWindowCreatedNotification)
-    try observer.addNotification(app, event: NSAccessibilityMainWindowChangedNotification)
+    try observer.addNotification(app, notification: .WindowCreated)
+    try observer.addNotification(app, notification: .MainWindowChanged)
   }
 
   func applicationWillTerminate(aNotification: NSNotification) {
