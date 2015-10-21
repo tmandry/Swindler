@@ -183,6 +183,7 @@ public enum Attribute: String {
   case VisibleChildren                        = "AXVisibleChildren" //(NSArray *)  - child elements which are visible
   case Position                               = "AXPosition" //(NSValue *)  - (pointValue) position in screen coords
   case Size                                   = "AXSize" //(NSValue *)  - (sizeValue) size
+  case Frame                                  = "AXFrame" //(NSValue *)  - (rectValue) frame
   case Contents                               = "AXContents" //(NSArray *)  - main elements
   case Title                                  = "AXTitle" //(NSString *) - visible text (e.g. of a push button)
   case Description                            = "AXDescription" //(NSString *) - instance description
@@ -241,6 +242,8 @@ public enum Attribute: String {
   case SharedCharacterRange                   = "AXSharedCharacterRange" //(NSValue *)  - (rangeValue) part of shared text in this view
   case InsertionPointLineNumber               = "AXInsertionPointLineNumber" //(NSNumber *) - line# containing caret
   case SelectedTextRanges                     = "AXSelectedTextRanges" //(NSArray<NSValue *> *) - array of NSValue (rangeValue) ranges of selected text
+  /// - note: private/undocumented attribute
+  case TextInputMarkedRange                   = "AXTextInputMarkedRange"
 
   // Parameterized text-specific attributes
   case LineForIndexParameterized              = "AXLineForIndexParameterized" //(NSNumber *) - line# for char index; param:(NSNumber *)
@@ -289,6 +292,8 @@ public enum Attribute: String {
   case DefaultButton                          = "AXDefaultButton" //(id) - UIElement for default button
   case CancelButton                           = "AXCancelButton" //(id) - UIElement for cancel button
   case FullScreenButton                       = "AXFullScreenButton" //(id) - UIElement for full screen button (or nil)
+  /// - note: private/undocumented attribute
+  case FullScreen                             = "AXFullScreen" //(NSNumber *) - (boolValue) is the window fullscreen
 
   // Application-specific attributes
   case MenuBar                                = "AXMenuBar" //(id)         - UIElement for the menu bar
@@ -299,6 +304,8 @@ public enum Attribute: String {
   case FocusedWindow                          = "AXFocusedWindow" //(id)         - UIElement for the key window.
   case FocusedUIElement                       = "AXFocusedUIElement" //(id)         - Currently focused UIElement.
   case ExtrasMenuBar                          = "AXExtrasMenuBar" //(id)         - UIElement for the application extras menu bar.
+  /// - note: private/undocumented attribute
+  case EnhancedUserInterface                  = "AXEnhancedUserInterface" //(NSNumber *) - (boolValue) is the enhanced user interface active?
 
   case Orientation                            = "AXOrientation" //(NSString *) - NSAccessibilityXXXOrientationValue
 
