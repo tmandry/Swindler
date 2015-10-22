@@ -67,7 +67,9 @@ public class UIElement {
   ///
   /// Does not include parameterized attributes.
   public func attributes() throws -> [Attribute] {
-    return try attributesAsStrings().flatMap({ Attribute(rawValue: $0) })
+    let attrs = try attributesAsStrings()
+    for attr in attrs where Attribute(rawValue: attr) == nil { print("Unrecognized attribute: \(attr)") }
+    return attrs.flatMap({ Attribute(rawValue: $0) })
   }
 
   // This version is named differently so the caller doesn't have to specify the return type when
@@ -211,15 +213,31 @@ public class UIElement {
   /// - throws:
   ///   - `Error.AttributeUnsupported` if `attribute` isn't supported,
   ///   - `Error.IllegalArgument` if `value` is an illegal value
-  public func setAttribute(attribute: Attribute, value: AnyObject) throws {
+  public func setAttribute(attribute: Attribute, value: Any) throws {
     try self.setAttribute(attribute.rawValue, value: value)
   }
 
-  public func setAttribute(attribute: String, value: AnyObject) throws {
-    let error = AXUIElementSetAttributeValue(element, attribute, value)
+  public func setAttribute(attribute: String, value: Any) throws {
+    let error = AXUIElementSetAttributeValue(element, attribute, packAXValue(value))
 
     guard error == .Success else {
       throw error
+    }
+  }
+
+  // Checks if the value is one supported by AXValue and if so, wraps it.
+  private func packAXValue(value: Any) -> AnyObject {
+    switch value {
+    case var val as CFRange:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCFRangeType)!, &val)!.takeRetainedValue()
+    case var val as CGPoint:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCGPointType)!, &val)!.takeRetainedValue()
+    case var val as CGRect:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCGRectType)!, &val)!.takeRetainedValue()
+    case var val as CGSize:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCGSizeType)!, &val)!.takeRetainedValue()
+    default:
+      return value as! AnyObject  // must be an object to pass to AX
     }
   }
 
