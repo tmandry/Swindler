@@ -46,36 +46,57 @@ class OSXState: State {
     return self.windows.enumerate().filter({ $0.1.axElement == axElement }).first
   }
 
+  private typealias EventHandler = (Event) -> ()
   private var eventHandlers: [Notification: [EventHandler]] = [:]
-  private var windowPropertyHandlers: [WindowProperty: [WindowPropertyHandler]] = [:]
+  private var windowPropertyHandlers: [WindowProperty: [EventHandler]] = [:]
 
-  func onEvent(notification: Notification, handler: EventHandler) {
+  func onEvent<EventType: Event>(notification: Notification, handler: (EventType) -> ()) {
+    // If we must do run-time type checking, do it during setup, not when an event fires.
+    guard EventType.self == typeForNotification(notification) else {
+      fatalError("Wrong event type \(EventType.self) used for \(notification) handler; " +
+        "correct type is \(typeForNotification(notification))")
+    }
+
     if eventHandlers[notification] == nil {
       eventHandlers[notification] = []
     }
-    eventHandlers[notification]!.append(handler)
+
+    // Wrap in a casting closure to preserve type information.
+    eventHandlers[notification]!.append({ handler($0 as! EventType) })
   }
 
-  func onWindowPropertyChanged(property: WindowProperty, handler: WindowPropertyHandler) {
-    // TODO: type safety with casting closure, runtime check that requested and actual type are same
+  func onWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(
+      property: WindowProperty, handler: (EventType) -> ()) {
+    guard EventType.PropertyType.self == typeForProperty(property) else {
+      fatalError("Wrong event type \(EventType.self) used for \(property) change event handler; " +
+        "correct type is Window\(property)ChangedEvent (WindowPropertyEvent<\(typeForProperty(property))>)")
+    }
+
     if windowPropertyHandlers[property] == nil {
       windowPropertyHandlers[property] = []
     }
-    windowPropertyHandlers[property]!.append(handler)
+
+    // Wrap in a casting closure to preserve type information.
+    windowPropertyHandlers[property]!.append({ handler($0 as! EventType) })
   }
 
-  func notify(notification: Notification, event: Event) {
+  func notify<EventType: Event>(notification: Notification, event: EventType) {
+    assert(EventType.self == typeForNotification(notification))
+
     if let handlers = eventHandlers[notification] {
       for handler in handlers {
-        handler(event: event)
+        handler(event)
       }
     }
   }
 
-  func notifyWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(property: WindowProperty, event: EventType) {
+  func notifyWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(
+      property: WindowProperty, event: EventType) {
+    assert(EventType.PropertyType.self == typeForProperty(property))
+
     if let handlers = windowPropertyHandlers[property] {
       for handler in handlers {
-        handler(event: event)
+        handler(event)
       }
     }
   }
@@ -131,6 +152,7 @@ class OSXWindow: Window {
 
   private func setAttribute<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!, _ newVal: T) {
     // TODO: check value asynchronously(?), deal with failure modes (set fails, get fails)
+    // TODO: purge all events for this attribute? otherwise a notification could come through with an old value.
     do {
       try axElement.setAttribute(axAttr, value: newVal)
       // Ask for the new value to find out what actually resulted

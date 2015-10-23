@@ -1,7 +1,7 @@
 public protocol State {
   var visibleWindows: [Window] { get }
-  func onEvent(notification: Notification, handler: EventHandler)
-  func onWindowPropertyChanged(property: WindowProperty, handler: WindowPropertyHandler)
+  func onEvent<EventType: Event>(notification: Notification, handler: (EventType) -> ())
+  func onWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(property: WindowProperty, handler: (EventType) -> ())
 }
 
 public protocol Window {
@@ -21,10 +21,7 @@ extension Window {
   }
 }
 
-public typealias EventHandler = (event: Event) -> ()
-
 public enum Notification {
-  // (window)
   case WindowCreated
   case WindowDiscovered
   case WindowDestroyed
@@ -38,9 +35,9 @@ public enum Notification {
   //  // (window, cause)
   //  case WindowMinimized
   // (oldSpace, newSpace, windowsArrived, windowsDeparted)
-  case SpaceChanged
+  // case SpaceChanged
   // (oldLayout?, newLayout)
-  case ScreenLayoutChanged
+  // case ScreenLayoutChanged
 }
 
 public protocol Event {
@@ -52,9 +49,15 @@ public struct WindowEvent: Event {
   public var external: Bool
 }
 
-public typealias WindowPropertyHandler = (event: Event) -> ()
+func typeForNotification(notification: Notification) -> Any.Type {
+  switch notification {
+  case .WindowCreated:    return WindowEvent.self
+  case .WindowDiscovered: return WindowEvent.self
+  case .WindowDestroyed:  return WindowEvent.self
+  }
+}
 
-protocol GenericWindowPropertyEvent: Event {
+public protocol GenericWindowPropertyEvent: Event {
   typealias PropertyType
 
   var window: Window { get }
@@ -63,7 +66,8 @@ protocol GenericWindowPropertyEvent: Event {
   // TODO: requestedVal?
 }
 
-public struct WindowPropertyEvent<PropertyType>: GenericWindowPropertyEvent {
+public struct WindowPropertyEvent<Property>: GenericWindowPropertyEvent {
+  public typealias PropertyType = Property
   public var window: Window
   public var external: Bool
   public var oldVal: PropertyType
@@ -76,4 +80,11 @@ public typealias WindowSizeChangedEvent = WindowPropertyEvent<CGSize>
 public enum WindowProperty {
   case Pos
   case Size
+}
+
+func typeForProperty(property: WindowProperty) -> Any.Type {
+  switch property {
+  case .Pos:  return CGPoint.self
+  case .Size: return CGSize.self
+  }
 }

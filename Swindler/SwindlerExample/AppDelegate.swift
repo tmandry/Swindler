@@ -20,25 +20,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(aNotification: NSNotification) {
     swindler = Swindler.state
-    swindler.onEvent(.WindowCreated) { event in
-      var event = event as! WindowEvent
-      print("new window: \(event.window)")
+    swindler.onEvent(.WindowCreated) { (event: WindowEvent) in
+      var window = event.window
+      print("new window: \(window)")
 
       dispatchAfter(4.0) {
-        event.window.pos = CGPoint(x: 200, y: 200)
-        event.window.size = CGSize(width: 30, height: 30)
+        window.pos = CGPoint(x: 200, y: 200)
+        window.size = CGSize(width: 30, height: 30)
       }
     }
-    swindler.onWindowPropertyChanged(.Pos) { event in
-      let event = event as! WindowPosChangedEvent
+    swindler.onWindowPropertyChanged(.Pos) { (event: WindowPosChangedEvent) in
       print("Pos changed from \(event.oldVal) to \(event.newVal), external: \(event.external)")
     }
-    swindler.onWindowPropertyChanged(.Size) { event in
-      let event = event as! WindowSizeChangedEvent
+    swindler.onWindowPropertyChanged(.Size) { (event: WindowSizeChangedEvent) in
       print("Size changed from \(event.oldVal) to \(event.newVal), external: \(event.external)")
     }
-    swindler.onEvent(.WindowDestroyed) { event in
-      let event = event as! WindowEvent
+    swindler.onEvent(.WindowDestroyed) { (event: WindowEvent) in
       print("window destroyed: \(event.window)")
     }
   }
