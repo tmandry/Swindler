@@ -2,27 +2,28 @@ import AXSwift
 
 public var state: State = OSXState()
 
-func dispatchAfter(delay: NSTimeInterval, block: dispatch_block_t) {
-  let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC)))
-  dispatch_after(time, dispatch_get_main_queue(), block)
-}
-
 class OSXState: State {
   var applications: [Application] = []
   var observers: [Observer] = []
   var windows: [OSXWindow] = []
 
+  // TODO: add testing
+  // TODO: handle errors
   // TODO: fix strong ref cycle
 
   init() {
+    // TODO: clean this up
     let app = Application.allForBundleID("com.apple.finder").first!
     print("app attrs: \(try! app.attributes())")
     let observer = app.createObserver() { (observer, element, notification) in
       if notification == .WindowCreated {
-        self.windows.append(try! OSXWindow(axElement: element, observer: observer))
+        let window = try! OSXWindow(state: self, axElement: element, observer: observer)
+        self.windows.append(window)
+        self.notify(.WindowCreated, event: WindowEvent(window: window, external: true))
       } else if let (index, target) = self.findWindowAndIndex(element) {
         if notification == .UIElementDestroyed {
           self.windows.removeAtIndex(index)
+          self.notify(.WindowDestroyed, event: WindowEvent(window: target, external: true))
         }
         target.onEvent(observer, event: notification)
       } else {
@@ -44,17 +45,50 @@ class OSXState: State {
   private func findWindowAndIndex(axElement: UIElement) -> (Int, OSXWindow)? {
     return self.windows.enumerate().filter({ $0.1.axElement == axElement }).first
   }
+
+  private var eventHandlers: [Notification: [EventHandler]] = [:]
+  private var windowPropertyHandlers: [WindowProperty: [WindowPropertyHandler]] = [:]
+
+  func onEvent(notification: Notification, handler: EventHandler) {
+    if eventHandlers[notification] == nil {
+      eventHandlers[notification] = []
+    }
+    eventHandlers[notification]!.append(handler)
+  }
+
+  func onWindowPropertyChanged(property: WindowProperty, handler: WindowPropertyHandler) {
+    // TODO: type safety with casting closure, runtime check that requested and actual type are same
+    if windowPropertyHandlers[property] == nil {
+      windowPropertyHandlers[property] = []
+    }
+    windowPropertyHandlers[property]!.append(handler)
+  }
+
+  func notify(notification: Notification, event: Event) {
+    if let handlers = eventHandlers[notification] {
+      for handler in handlers {
+        handler(event: event)
+      }
+    }
+  }
+
+  func notifyWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(property: WindowProperty, event: EventType) {
+    if let handlers = windowPropertyHandlers[property] {
+      for handler in handlers {
+        handler(event: event)
+      }
+    }
+  }
 }
 
 class OSXWindow: Window {
+  let state: OSXState
   let axElement: UIElement
 
-  init(axElement: UIElement, observer: Observer) throws {
+  init(state: OSXState, axElement: UIElement, observer: Observer) throws {
+    self.state = state
     self.axElement = axElement
     try loadAttributes()
-    let attrs = try! axElement.attributes()
-    print("new window, attrs: \(attrs)")
-    print("- settable: \(attrs.filter({ try! axElement.attributeIsSettable($0) }))")
 
     do {
       try observer.addNotification(.UIElementDestroyed, forElement: axElement)
@@ -62,11 +96,6 @@ class OSXWindow: Window {
       try observer.addNotification(.Resized, forElement: axElement)
     } catch let error {
       NSLog("Error: Could not watch [\(axElement)]: \(error)")
-    }
-
-    dispatchAfter(4.0) {
-      self.pos = CGPoint(x: 200, y: 200)
-      self.size = CGSize(width: 30, height: 30)
     }
   }
 
@@ -83,38 +112,40 @@ class OSXWindow: Window {
     size_ = attributes[.Size]! as! CGSize
   }
 
-  private func updateAttribute<T: Equatable>(attr: Attribute, _ axAttr: AXSwift.Attribute, inout _ store: T!) {
+  private func updateAttribute<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!) {
     do {
       let value: T = try axElement.attribute(axAttr)!
-      updateAttributeWithValue(attr, &store, value)
+      updateAttributeWithValue(prop, &store, value)
     } catch {
       fatalError("unhandled error: \(error)")
     }
   }
 
-  private func updateAttributeWithValue<T: Equatable>(attr: Attribute, inout _ store: T!, _ value: T) {
+  private func updateAttributeWithValue<T: Equatable>(prop: WindowProperty, inout _ store: T!, _ value: T) {
     if store != value {
+      let oldVal = store
       store = value
-      print("\(attr) changed to \(value), cause: external")
+      state.notifyWindowPropertyChanged(prop, event: WindowPropertyEvent<T>(window: self, external: true, oldVal: oldVal, newVal: store))
     }
   }
 
-  private func setAttribute<T: Equatable>(attr: Attribute, _ axAttr: AXSwift.Attribute, inout _ store: T!, _ newVal: T) {
+  private func setAttribute<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!, _ newVal: T) {
     // TODO: check value asynchronously(?), deal with failure modes (set fails, get fails)
     do {
       try axElement.setAttribute(axAttr, value: newVal)
       // Ask for the new value to find out what actually resulted
       let actual: T = try axElement.attribute(axAttr)!
       if store != actual {
+        let oldVal = store
         store = actual
-        print("\(attr) changed to \(actual), cause: internal (requested: \(newVal))")
+        state.notifyWindowPropertyChanged(prop, event: WindowPropertyEvent<T>(window: self, external: false, oldVal: oldVal, newVal: store))
       }
     } catch let error {
       fatalError("unhandled error: \(error)")
     }
   }
 
-  func onEvent(observer: Observer, event: Notification) {
+  func onEvent(observer: AXSwift.Observer, event: AXSwift.Notification) {
     print("\(axElement): \(event)")
     switch event {
     case .Moved:
@@ -124,11 +155,6 @@ class OSXWindow: Window {
     default:
       print("Unknown event on \(self): \(event)")
     }
-  }
-
-  enum Attribute {
-    case Pos
-    case Size
   }
 
   private var pos_: CGPoint!
