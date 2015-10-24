@@ -9,15 +9,19 @@ public class Observer {
   public typealias CallbackWithInfo =
     (observer: Observer, element: UIElement, notification: Notification, info: [String: AnyObject]?) -> Void
 
+  let pid: pid_t
   let axObserver: AXObserver!
   let callback: Callback?
   let callbackWithInfo: CallbackWithInfo?
+
+  public private(set) lazy var application: Application = Application(forKnownProcessID: self.pid)!
 
   /// Creates and starts an observer on the given `processID`.
   public init(processID: pid_t, callback: Callback) throws {
     var axObserver: AXObserver?
     let error = AXObserverCreate(processID, internalCallback, &axObserver)
 
+    self.pid              = processID
     self.axObserver       = axObserver
     self.callback         = callback
     self.callbackWithInfo = nil
@@ -38,6 +42,7 @@ public class Observer {
     var axObserver: AXObserver?
     let error = AXObserverCreateWithInfoCallback(processID, internalCallback, &axObserver)
 
+    self.pid              = processID
     self.axObserver       = axObserver
     self.callback         = nil
     self.callbackWithInfo = callback
