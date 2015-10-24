@@ -1,7 +1,6 @@
 public protocol State {
   var visibleWindows: [Window] { get }
-  func onEvent<EventType: Event>(notification: Notification, handler: (EventType) -> ())
-  func onWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(property: WindowProperty, handler: (EventType) -> ())
+  func on<EventType: Event>(handler: (EventType) -> ())
 }
 
 public protocol Window {
@@ -21,70 +20,66 @@ extension Window {
   }
 }
 
-public enum Notification {
-  case WindowCreated
-  case WindowDiscovered
-  case WindowDestroyed
-  // case WindowPropertyChanged(property: OSXWindow.Attribute)
-  //  // (window, cause: {SpaceChange, ...})
-  //  case WindowMoved
-  //  // (window, oldSize, [newSize], cause)
-  //  case WindowResized
-  //  // (window, cause)
-  //  case WindowClosed
-  //  // (window, cause)
-  //  case WindowMinimized
-  // (oldSpace, newSpace, windowsArrived, windowsDeparted)
-  // case SpaceChanged
-  // (oldLayout?, newLayout)
-  // case ScreenLayoutChanged
-}
+// (oldSpace, newSpace, windowsArrived, windowsDeparted)
+// case SpaceChanged
+// (oldLayout?, newLayout)
+// case ScreenLayoutChanged
 
 public protocol Event {
   var external: Bool { get }
 }
 
-public struct WindowEvent: Event {
-  public var window: Window
-  public var external: Bool
-}
-
-func typeForNotification(notification: Notification) -> Any.Type {
-  switch notification {
-  case .WindowCreated:    return WindowEvent.self
-  case .WindowDiscovered: return WindowEvent.self
-  case .WindowDestroyed:  return WindowEvent.self
+extension Event {
+  // In a later version of Swift, this can be stored (lazily).. store as hashValue for more speed.
+  // Instead of using this, we _could_ use an enum of all notifications and require each event to
+  // declare a static var of its notification. That's error prone, though, and this is fast enough.
+  static var typeName: String {
+    return Mirror(reflecting: Self.self).description
   }
 }
 
-public protocol GenericWindowPropertyEvent: Event {
-  typealias PropertyType
-
+public protocol WindowEvent: Event {
   var window: Window { get }
+  var external: Bool { get }
+}
+
+public struct WindowCreatedEvent: Event {
+  public var external: Bool
+  public var window: Window
+}
+
+public struct WindowDestroyedEvent: Event {
+  public var external: Bool
+  public var window: Window
+}
+
+public protocol WindowPropertyEvent: WindowEvent {
+  typealias PropertyType: Equatable
+
   var oldVal: PropertyType { get }
   var newVal: PropertyType { get }
+
   // TODO: requestedVal?
 }
 
-public struct WindowPropertyEvent<Property>: GenericWindowPropertyEvent {
-  public typealias PropertyType = Property
-  public var window: Window
+protocol WindowPropertyEventInternal: WindowPropertyEvent {
+  init(external: Bool, window: Window, oldVal: PropertyType, newVal: PropertyType)
+}
+
+public struct WindowPosChangedEvent: WindowPropertyEventInternal {
+  public typealias PropertyType = CGPoint
+
   public var external: Bool
+  public var window: Window
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
 
-public typealias WindowPosChangedEvent = WindowPropertyEvent<CGPoint>
-public typealias WindowSizeChangedEvent = WindowPropertyEvent<CGSize>
+public struct WindowSizeChangedEvent: WindowPropertyEventInternal {
+  public typealias PropertyType = CGSize
 
-public enum WindowProperty {
-  case Pos
-  case Size
-}
-
-func typeForProperty(property: WindowProperty) -> Any.Type {
-  switch property {
-  case .Pos:  return CGPoint.self
-  case .Size: return CGSize.self
-  }
+  public var external: Bool
+  public var window: Window
+  public var oldVal: PropertyType
+  public var newVal: PropertyType
 }

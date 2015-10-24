@@ -28,14 +28,14 @@ class OSXState: State {
       do {
         let window = try OSXWindow(state: self, axElement: element, observer: observer)
         windows.append(window)
-        notify(.WindowCreated, event: WindowEvent(window: window, external: true))
+        notify(WindowCreatedEvent(external: true, window: window))
       } catch let error {
         NSLog("Error: Could not watch [\(element)]: \(error)")
       }
     } else if let (index, target) = findWindowAndIndex(element) {
       if .UIElementDestroyed == notification {
         windows.removeAtIndex(index)
-        notify(.WindowDestroyed, event: WindowEvent(window: target, external: true))
+        notify(WindowDestroyedEvent(external: true, window: target))
       }
       target.handleEvent(observer, event: notification)
     } else {
@@ -52,16 +52,10 @@ class OSXState: State {
   }
 
   private typealias EventHandler = (Event) -> ()
-  private var eventHandlers: [Notification: [EventHandler]] = [:]
-  private var windowPropertyHandlers: [WindowProperty: [EventHandler]] = [:]
+  private var eventHandlers: [String: [EventHandler]] = [:]
 
-  func onEvent<EventType: Event>(notification: Notification, handler: (EventType) -> ()) {
-    // If we must do run-time type checking, do it during setup, not when an event fires.
-    guard EventType.self == typeForNotification(notification) else {
-      fatalError("Wrong event type \(EventType.self) used for \(notification) handler; " +
-        "correct type is \(typeForNotification(notification))")
-    }
-
+  func on<EventType: Event>(handler: (EventType) -> ()) {
+    let notification = EventType.typeName
     if eventHandlers[notification] == nil {
       eventHandlers[notification] = []
     }
@@ -70,36 +64,8 @@ class OSXState: State {
     eventHandlers[notification]!.append({ handler($0 as! EventType) })
   }
 
-  func onWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(
-      property: WindowProperty, handler: (EventType) -> ()) {
-    guard EventType.PropertyType.self == typeForProperty(property) else {
-      fatalError("Wrong event type \(EventType.self) used for \(property) change event handler; " +
-        "correct type is Window\(property)ChangedEvent (WindowPropertyEvent<\(typeForProperty(property))>)")
-    }
-
-    if windowPropertyHandlers[property] == nil {
-      windowPropertyHandlers[property] = []
-    }
-
-    // Wrap in a casting closure to preserve type information.
-    windowPropertyHandlers[property]!.append({ handler($0 as! EventType) })
-  }
-
-  func notify<EventType: Event>(notification: Notification, event: EventType) {
-    assert(EventType.self == typeForNotification(notification))
-
-    if let handlers = eventHandlers[notification] {
-      for handler in handlers {
-        handler(event)
-      }
-    }
-  }
-
-  func notifyWindowPropertyChanged<EventType: GenericWindowPropertyEvent>(
-      property: WindowProperty, event: EventType) {
-    assert(EventType.PropertyType.self == typeForProperty(property))
-
-    if let handlers = windowPropertyHandlers[property] {
+  func notify<EventType: Event>(event: EventType) {
+    if let handlers = eventHandlers[EventType.typeName] {
       for handler in handlers {
         handler(event)
       }
@@ -124,9 +90,9 @@ class OSXWindow: Window {
   func handleEvent(observer: AXSwift.Observer, event: AXSwift.Notification) {
     switch event {
     case .Moved:
-      updateProperty(.Pos, .Position, &pos_)
+      updateProperty(.Position, &pos_, WindowPosChangedEvent.self)
     case .Resized:
-      updateProperty(.Size, .Size, &size_)
+      updateProperty(.Size, &size_, WindowSizeChangedEvent.self)
     case .UIElementDestroyed:
       break
     default:
@@ -137,13 +103,13 @@ class OSXWindow: Window {
   private var pos_: CGPoint!
   var pos: CGPoint {
     get { return pos_ }
-    set { setProperty(.Pos, .Position, &pos_, newValue) }
+    set { setProperty(.Position, &pos_, newValue, WindowPosChangedEvent.self) }
   }
 
   private var size_: CGSize!
   var size: CGSize {
     get { return size_ }
-    set { setProperty(.Size, .Size, &size_, newValue) }
+    set { setProperty(.Size, &size_, newValue, WindowSizeChangedEvent.self) }
   }
 
   private func loadAttributes() throws {
@@ -160,36 +126,40 @@ class OSXWindow: Window {
   }
 
   // Updates the given property from the axElement (events marked as external).
-  private func updateProperty<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!) {
+  private func updateProperty<EventType: WindowPropertyEventInternal>(
+      axAttr: AXSwift.Attribute, inout _ store: EventType.PropertyType!, _ eventType: EventType.Type) {
     do {
-      let value: T = try axElement.attribute(axAttr)!
-      updatePropertyWithValue(prop, &store, value)
+      let value: EventType.PropertyType = try axElement.attribute(axAttr)!
+      updatePropertyWithValue(&store, value, eventType)
     } catch {
       fatalError("unhandled error: \(error)")
     }
   }
 
   // Updates the given property to the given value (events marked as external).
-  private func updatePropertyWithValue<T: Equatable>(prop: WindowProperty, inout _ store: T!, _ value: T) {
+  private func updatePropertyWithValue<EventType: WindowPropertyEventInternal>(
+      inout store: EventType.PropertyType!, _ value: EventType.PropertyType, _ eventType: EventType.Type) {
     if store != value {
       let oldVal = store
       store = value
-      state.notifyWindowPropertyChanged(prop, event: WindowPropertyEvent<T>(window: self, external: true, oldVal: oldVal, newVal: store))
+      state.notify(EventType(external: true, window: self, oldVal: oldVal, newVal: store))
     }
   }
 
   // Sets the given property and axElement attribute to the given value (events marked as internal).
-  private func setProperty<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!, _ newVal: T) {
+  private func setProperty<EventType: WindowPropertyEventInternal>(
+      axAttr: AXSwift.Attribute, inout _ store: EventType.PropertyType!, _ newVal: EventType.PropertyType,
+      _ eventType: EventType.Type) {
     // TODO: check value asynchronously(?), deal with failure modes (set fails, get fails)
     // TODO: purge all events for this attribute? otherwise a notification could come through with an old value.
     do {
       try axElement.setAttribute(axAttr, value: newVal)
       // Ask for the new value to find out what actually resulted
-      let actual: T = try axElement.attribute(axAttr)!
+      let actual: EventType.PropertyType = try axElement.attribute(axAttr)!
       if store != actual {
         let oldVal = store
         store = actual
-        state.notifyWindowPropertyChanged(prop, event: WindowPropertyEvent<T>(window: self, external: false, oldVal: oldVal, newVal: store))
+        state.notify(EventType(external: false, window: self, oldVal: oldVal, newVal: store))
       }
     } catch let error {
       fatalError("unhandled error: \(error)")
