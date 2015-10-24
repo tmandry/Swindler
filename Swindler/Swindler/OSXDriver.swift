@@ -14,22 +14,7 @@ class OSXState: State {
   init() {
     // TODO: clean this up
     let app = Application.allForBundleID("com.apple.finder").first!
-    print("app attrs: \(try! app.attributes())")
-    let observer = app.createObserver() { (observer, element, notification) in
-      if notification == .WindowCreated {
-        let window = try! OSXWindow(state: self, axElement: element, observer: observer)
-        self.windows.append(window)
-        self.notify(.WindowCreated, event: WindowEvent(window: window, external: true))
-      } else if let (index, target) = self.findWindowAndIndex(element) {
-        if notification == .UIElementDestroyed {
-          self.windows.removeAtIndex(index)
-          self.notify(.WindowDestroyed, event: WindowEvent(window: target, external: true))
-        }
-        target.onEvent(observer, event: notification)
-      } else {
-        print("Event \(notification) on unknown element \(element)")
-      }
-    }!
+    let observer = app.createObserver(handleEvent)!
     try! observer.addNotification(.WindowCreated,     forElement: app)
     try! observer.addNotification(.MainWindowChanged, forElement: app)
     observer.start()
@@ -38,12 +23,32 @@ class OSXState: State {
     observers.append(observer)
   }
 
-  var visibleWindows: [Window] {
-    get { return windows }
+  private func handleEvent(observer: AXSwift.Observer, element: AXSwift.UIElement, notification: AXSwift.Notification) {
+    if .WindowCreated == notification {
+      do {
+        let window = try OSXWindow(state: self, axElement: element, observer: observer)
+        windows.append(window)
+        notify(.WindowCreated, event: WindowEvent(window: window, external: true))
+      } catch let error {
+        NSLog("Error: Could not watch [\(element)]: \(error)")
+      }
+    } else if let (index, target) = findWindowAndIndex(element) {
+      if .UIElementDestroyed == notification {
+        windows.removeAtIndex(index)
+        notify(.WindowDestroyed, event: WindowEvent(window: target, external: true))
+      }
+      target.handleEvent(observer, event: notification)
+    } else {
+      print("Event \(notification) on unknown element \(element)")
+    }
   }
 
   private func findWindowAndIndex(axElement: UIElement) -> (Int, OSXWindow)? {
     return self.windows.enumerate().filter({ $0.1.axElement == axElement }).first
+  }
+
+  var visibleWindows: [Window] {
+    get { return windows }
   }
 
   private typealias EventHandler = (Event) -> ()
@@ -111,13 +116,34 @@ class OSXWindow: Window {
     self.axElement = axElement
     try loadAttributes()
 
-    do {
-      try observer.addNotification(.UIElementDestroyed, forElement: axElement)
-      try observer.addNotification(.Moved, forElement: axElement)
-      try observer.addNotification(.Resized, forElement: axElement)
-    } catch let error {
-      NSLog("Error: Could not watch [\(axElement)]: \(error)")
+    try observer.addNotification(.UIElementDestroyed, forElement: axElement)
+    try observer.addNotification(.Moved, forElement: axElement)
+    try observer.addNotification(.Resized, forElement: axElement)
+  }
+
+  func handleEvent(observer: AXSwift.Observer, event: AXSwift.Notification) {
+    switch event {
+    case .Moved:
+      updateProperty(.Pos, .Position, &pos_)
+    case .Resized:
+      updateProperty(.Size, .Size, &size_)
+    case .UIElementDestroyed:
+      break
+    default:
+      print("Unknown event on \(self): \(event)")
     }
+  }
+
+  private var pos_: CGPoint!
+  var pos: CGPoint {
+    get { return pos_ }
+    set { setProperty(.Pos, .Position, &pos_, newValue) }
+  }
+
+  private var size_: CGSize!
+  var size: CGSize {
+    get { return size_ }
+    set { setProperty(.Size, .Size, &size_, newValue) }
   }
 
   private func loadAttributes() throws {
@@ -133,16 +159,18 @@ class OSXWindow: Window {
     size_ = attributes[.Size]! as! CGSize
   }
 
-  private func updateAttribute<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!) {
+  // Updates the given property from the axElement (events marked as external).
+  private func updateProperty<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!) {
     do {
       let value: T = try axElement.attribute(axAttr)!
-      updateAttributeWithValue(prop, &store, value)
+      updatePropertyWithValue(prop, &store, value)
     } catch {
       fatalError("unhandled error: \(error)")
     }
   }
 
-  private func updateAttributeWithValue<T: Equatable>(prop: WindowProperty, inout _ store: T!, _ value: T) {
+  // Updates the given property to the given value (events marked as external).
+  private func updatePropertyWithValue<T: Equatable>(prop: WindowProperty, inout _ store: T!, _ value: T) {
     if store != value {
       let oldVal = store
       store = value
@@ -150,7 +178,8 @@ class OSXWindow: Window {
     }
   }
 
-  private func setAttribute<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!, _ newVal: T) {
+  // Sets the given property and axElement attribute to the given value (events marked as internal).
+  private func setProperty<T: Equatable>(prop: WindowProperty, _ axAttr: AXSwift.Attribute, inout _ store: T!, _ newVal: T) {
     // TODO: check value asynchronously(?), deal with failure modes (set fails, get fails)
     // TODO: purge all events for this attribute? otherwise a notification could come through with an old value.
     do {
@@ -165,29 +194,5 @@ class OSXWindow: Window {
     } catch let error {
       fatalError("unhandled error: \(error)")
     }
-  }
-
-  func onEvent(observer: AXSwift.Observer, event: AXSwift.Notification) {
-    print("\(axElement): \(event)")
-    switch event {
-    case .Moved:
-      updateAttribute(.Pos, .Position, &pos_)
-    case .Resized:
-      updateAttribute(.Size, .Size, &size_)
-    default:
-      print("Unknown event on \(self): \(event)")
-    }
-  }
-
-  private var pos_: CGPoint!
-  var pos: CGPoint {
-    get { return pos_ }
-    set { setAttribute(.Pos, .Position, &pos_, newValue) }
-  }
-
-  private var size_: CGSize!
-  var size: CGSize {
-    get { return size_ }
-    set { setAttribute(.Size, .Size, &size_, newValue) }
   }
 }
