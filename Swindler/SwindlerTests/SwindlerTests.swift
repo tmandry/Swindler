@@ -1,11 +1,3 @@
-//
-//  SwindlerTests.swift
-//  SwindlerTests
-//
-//  Created by Tyler Mandry on 10/19/15.
-//  Copyright © 2015 Tyler Mandry. All rights reserved.
-//
-
 import XCTest
 import AXSwift
 @testable import Swindler

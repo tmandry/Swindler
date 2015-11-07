@@ -15,6 +15,7 @@
 		2F86CEEC1BD6EC32007E8C29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEEB1BD6EC32007E8C29 /* AppDelegate.swift */; };
 		2F86CEEE1BD6EC32007E8C29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F86CEED1BD6EC32007E8C29 /* Assets.xcassets */; };
 		2F86CEF71BD6EC55007E8C29 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEF61BD6EC55007E8C29 /* main.swift */; };
+		83E91AD8E20936CBBF5D1146 /* Pods_SwindlerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91C56A787A4B2F4B5CD73FE8 /* Pods_SwindlerTests.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +42,9 @@
 		2F86CEED1BD6EC32007E8C29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F86CEF21BD6EC32007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F86CEF61BD6EC55007E8C29 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		91C56A787A4B2F4B5CD73FE8 /* Pods_SwindlerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwindlerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9EAB3A2BBA4091D04E7E98F0 /* Pods-SwindlerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTests.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		B762FE9F005BA6FEC448385F /* Pods-SwindlerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTests.release.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +60,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F86CED11BD60117007E8C29 /* Swindler.framework in Frameworks */,
+				83E91AD8E20936CBBF5D1146 /* Pods_SwindlerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -69,6 +74,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2BB0565394FF27F1464D487A /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				9EAB3A2BBA4091D04E7E98F0 /* Pods-SwindlerTests.debug.xcconfig */,
+				B762FE9F005BA6FEC448385F /* Pods-SwindlerTests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 		2F86CEBC1BD60117007E8C29 = {
 			isa = PBXGroup;
 			children = (
@@ -76,6 +90,8 @@
 				2F86CED41BD60117007E8C29 /* SwindlerTests */,
 				2F86CEEA1BD6EC32007E8C29 /* SwindlerExample */,
 				2F86CEC71BD60117007E8C29 /* Products */,
+				2BB0565394FF27F1464D487A /* Pods */,
+				9E4447A2F5E7EB6E92464F87 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -120,6 +136,14 @@
 			path = SwindlerExample;
 			sourceTree = "<group>";
 		};
+		9E4447A2F5E7EB6E92464F87 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				91C56A787A4B2F4B5CD73FE8 /* Pods_SwindlerTests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -156,9 +180,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2F86CEDD1BD60117007E8C29 /* Build configuration list for PBXNativeTarget "SwindlerTests" */;
 			buildPhases = (
+				783498C7211556939B7FA6C5 /* Check Pods Manifest.lock */,
 				2F86CECC1BD60117007E8C29 /* Sources */,
 				2F86CECD1BD60117007E8C29 /* Frameworks */,
 				2F86CECE1BD60117007E8C29 /* Resources */,
+				0E57D15CC514660BEB7860AB /* Embed Pods Frameworks */,
+				3127712B32F2AB2112561CA1 /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -252,6 +279,54 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0E57D15CC514660BEB7860AB /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/../Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3127712B32F2AB2112561CA1 /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/../Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		783498C7211556939B7FA6C5 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2F86CEC11BD60117007E8C29 /* Sources */ = {
@@ -415,6 +490,7 @@
 		};
 		2F86CEDE1BD60117007E8C29 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9EAB3A2BBA4091D04E7E98F0 /* Pods-SwindlerTests.debug.xcconfig */;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerTests/Info.plist;
@@ -426,6 +502,7 @@
 		};
 		2F86CEDF1BD60117007E8C29 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B762FE9F005BA6FEC448385F /* Pods-SwindlerTests.release.xcconfig */;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerTests/Info.plist;
@@ -478,6 +555,7 @@
 				2F86CEDC1BD60117007E8C29 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2F86CEDD1BD60117007E8C29 /* Build configuration list for PBXNativeTarget "SwindlerTests" */ = {
 			isa = XCConfigurationList;
@@ -486,6 +564,7 @@
 				2F86CEDF1BD60117007E8C29 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2F86CEF31BD6EC32007E8C29 /* Build configuration list for PBXNativeTarget "SwindlerExample" */ = {
 			isa = XCConfigurationList;
@@ -494,6 +573,7 @@
 				2F86CEF51BD6EC32007E8C29 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
