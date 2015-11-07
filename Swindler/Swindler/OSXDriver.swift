@@ -1,32 +1,69 @@
 import AXSwift
 
-public var state: State = OSXState()
+public var state: State = OSXState<UIElement, Application, Observer>()
 
-class OSXState: State {
+// MARK: - Injectable protocols
+
+protocol UIElementType: Equatable {
+  func pid() throws -> pid_t
+  func attribute<T>(attribute: Attribute) throws -> T?
+  func setAttribute(attribute: Attribute, value: Any) throws
+  func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute: Any]
+}
+extension AXSwift.UIElement: UIElementType { }
+
+protocol ObserverType {
+  typealias UIElement: UIElementType
+
+  init(processID: pid_t, callback: (observer: Self, element: UIElement, notification: AXSwift.Notification) -> ()) throws
+  func addNotification(notification: AXSwift.Notification, forElement: UIElement) throws
+}
+extension AXSwift.Observer: ObserverType {
+  typealias UIElement = AXSwift.UIElement
+}
+
+protocol ApplicationType: UIElementType {
+  typealias UIElement: UIElementType
+
+  static func all() -> [Self]
+
+  // Until the Swift type system improves, I don't see a way around this.
+  var toElement: UIElement { get }
+}
+extension AXSwift.Application: ApplicationType {
+  typealias UIElement = AXSwift.UIElement
+  var toElement: UIElement { return self }
+}
+
+// MARK: - Implementation
+
+class OSXState<
+    UIElement: UIElementType, Application: ApplicationType, Observer: ObserverType
+    where Observer.UIElement == UIElement, Application.UIElement == UIElement
+>: State {
+  typealias WindowT = OSXWindow<UIElement, Application, Observer>
   var applications: [Application] = []
   var observers: [Observer] = []
-  var windows: [OSXWindow] = []
+  var windows: [WindowT] = []
 
   // TODO: add testing
   // TODO: handle errors
   // TODO: fix strong ref cycle
 
   init() {
-    // TODO: clean this up
-    let app = Application.allForBundleID("com.apple.finder").first!
-    let observer = app.createObserver(handleEvent)!
-    try! observer.addNotification(.WindowCreated,     forElement: app)
-    try! observer.addNotification(.MainWindowChanged, forElement: app)
-    observer.start()
+    let app = Application.all().first!
+    let observer = try! Observer(processID: try! app.pid(), callback: handleEvent)
+    try! observer.addNotification(.WindowCreated,     forElement: app.toElement)
+    try! observer.addNotification(.MainWindowChanged, forElement: app.toElement)
 
     applications.append(app)
     observers.append(observer)
   }
 
-  private func handleEvent(observer: AXSwift.Observer, element: AXSwift.UIElement, notification: AXSwift.Notification) {
+  private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
     if .WindowCreated == notification {
       do {
-        let window = try OSXWindow(state: self, axElement: element, observer: observer)
+        let window = try WindowT(state: self, axElement: element, observer: observer)
         windows.append(window)
         notify(WindowCreatedEvent(external: true, window: window))
       } catch let error {
@@ -43,7 +80,7 @@ class OSXState: State {
     }
   }
 
-  private func findWindowAndIndex(axElement: UIElement) -> (Int, OSXWindow)? {
+  private func findWindowAndIndex(axElement: UIElement) -> (Int, WindowT)? {
     return self.windows.enumerate().filter({ $0.1.axElement == axElement }).first
   }
 
@@ -60,7 +97,7 @@ class OSXState: State {
       eventHandlers[notification] = []
     }
 
-    // Wrap in a casting closure to preserve type information.
+    // Wrap in a casting closure to preserve type information that gets erased in the dictionary.
     eventHandlers[notification]!.append({ handler($0 as! EventType) })
   }
 
@@ -73,11 +110,15 @@ class OSXState: State {
   }
 }
 
-class OSXWindow: Window {
-  let state: OSXState
+class OSXWindow<
+    UIElement: UIElementType, Application: ApplicationType, Observer: ObserverType
+    where Observer.UIElement == UIElement, Application.UIElement == UIElement
+>: Window {
+  typealias StateT = OSXState<UIElement, Application, Observer>
+  let state: StateT
   let axElement: UIElement
 
-  init(state: OSXState, axElement: UIElement, observer: Observer) throws {
+  init(state: StateT, axElement: UIElement, observer: Observer) throws {
     self.state = state
     self.axElement = axElement
     try loadAttributes()
@@ -87,7 +128,7 @@ class OSXWindow: Window {
     try observer.addNotification(.Resized, forElement: axElement)
   }
 
-  func handleEvent(observer: AXSwift.Observer, event: AXSwift.Notification) {
+  func handleEvent(observer: Observer, event: AXSwift.Notification) {
     switch event {
     case .Moved:
       updateProperty(.Position, &pos_, WindowPosChangedEvent.self)
