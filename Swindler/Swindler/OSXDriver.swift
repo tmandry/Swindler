@@ -46,7 +46,6 @@ class OSXState<
   var observers: [Observer] = []
   var windows: [Window] = []
 
-  // TODO: add testing
   // TODO: handle errors
   // TODO: fix strong ref cycle
 
@@ -82,11 +81,11 @@ class OSXState<
   }
 
   private func findWindowAndIndex(axElement: UIElement) -> (Int, Window)? {
-    return self.windows.enumerate().filter({ $0.1.axElement == axElement }).first
+    return windows.enumerate().filter({ $0.1.axElement == axElement }).first
   }
 
   var visibleWindows: [WindowType] {
-    get { return windows }
+    return windows.map({ $0 as WindowType })
   }
 
   private typealias EventHandler = (EventType) -> ()
@@ -169,7 +168,9 @@ class OSXWindow<
 
   // Updates the given property from the axElement (events marked as external).
   private func updateProperty<Event: WindowPropertyEventInternalType>(
-      axAttr: AXSwift.Attribute, inout _ store: Event.PropertyType!, _ eventType: Event.Type) {
+              axAttr:    AXSwift.Attribute,
+      inout _ store:     Event.PropertyType!,
+      _       eventType: Event.Type) {
     do {
       let value: Event.PropertyType = try axElement.attribute(axAttr)!
       updatePropertyWithValue(&store, value, eventType)
@@ -180,7 +181,9 @@ class OSXWindow<
 
   // Updates the given property to the given value (events marked as external).
   private func updatePropertyWithValue<Event: WindowPropertyEventInternalType>(
-      inout store: Event.PropertyType!, _ value: Event.PropertyType, _ eventType: Event.Type) {
+      inout store:     Event.PropertyType!,
+      _     value:     Event.PropertyType,
+      _     eventType: Event.Type) {
     if store != value {
       let oldVal = store
       store = value
@@ -190,8 +193,10 @@ class OSXWindow<
 
   // Sets the given property and axElement attribute to the given value (events marked as internal).
   private func setProperty<Event: WindowPropertyEventInternalType>(
-      axAttr: AXSwift.Attribute, inout _ store: Event.PropertyType!, _ newVal: Event.PropertyType,
-      _ eventType: Event.Type) {
+              axAttr:    AXSwift.Attribute,
+      inout _ store:     Event.PropertyType!,
+      _       newVal:    Event.PropertyType,
+      _       eventType: Event.Type) {
     // TODO: check value asynchronously(?), deal with failure modes (set fails, get fails)
     // TODO: purge all events for this attribute? otherwise a notification could come through with an old value.
     do {
