@@ -4,8 +4,8 @@ public var systemWideElement = SystemWideElement()
 /// A `UIElement` for the system-wide accessibility element, which can be used to retrieve global,
 /// application-inspecific parameters like the currently focused element.
 public class SystemWideElement: UIElement {
-  private init() {
-    super.init(AXUIElementCreateSystemWide().takeRetainedValue())
+  private convenience init() {
+    self.init(AXUIElementCreateSystemWide().takeRetainedValue())
   }
 
   /// Returns the element at the specified top-down coordinates, or nil if there is none.

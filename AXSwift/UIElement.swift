@@ -35,9 +35,12 @@
 ///
 /// - seeAlso: [AXUIElement.h reference](https://developer.apple.com/library/mac/documentation/ApplicationServices/Reference/AXUIElement_header_reference/)
 public class UIElement {
-  let element: AXUIElement
+  public let element: AXUIElement
 
-  init(_ nativeElement: AXUIElement) {
+  /// Create a UIElement from a raw AXUIElement object.
+  ///
+  /// The state and role of the AXUIElement is not checked.
+  public required init(_ nativeElement: AXUIElement) {
     // Since we are dealing with low-level C APIs, it never hurts to double check types.
     assert(CFGetTypeID(nativeElement) == AXUIElementGetTypeID(), "nativeElement is not an AXUIElement")
 
