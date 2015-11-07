@@ -3,7 +3,7 @@
 /// Events are received as part of the application's default run loop.
 ///
 /// - seeAlso: `UIElement` for a list of exceptions that can be thrown.
-public class Observer {
+public final class Observer {
   public typealias Callback =
     (observer: Observer, element: UIElement, notification: Notification) -> Void
   public typealias CallbackWithInfo =

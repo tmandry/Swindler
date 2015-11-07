@@ -1,10 +1,10 @@
 /// A `UIElement` for an application.
-public class Application: UIElement {
+public final class Application: UIElement {
   // Creates a UIElement for the given process ID.
   // Does NOT check if the given process actually exists, just checks for a valid ID.
-  init?(forKnownProcessID processID: pid_t) {
+  convenience init?(forKnownProcessID processID: pid_t) {
     let appElement = AXUIElementCreateApplication(processID).takeRetainedValue()
-    super.init(appElement)
+    self.init(appElement)
 
     if (processID < 0) {
       return nil
@@ -27,6 +27,15 @@ public class Application: UIElement {
       return nil
     }
     self.init(app)
+  }
+
+  /// Creates an `Application` for every running application with a UI.
+  /// - returns: An array of `Application`s.
+  public class func all() -> [Application] {
+    let runningApps = NSWorkspace.sharedWorkspace().runningApplications
+    return runningApps
+      .filter({ $0.activationPolicy != .Prohibited })
+      .flatMap({ Application($0) })
   }
 
   /// Creates an `Application` for every running instance of the given `bundleID`.

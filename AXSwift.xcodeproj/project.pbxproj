@@ -520,6 +520,7 @@
 				2F86CEA31BD49958007E8C29 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		2F86CEB71BD5621F007E8C29 /* Build configuration list for PBXNativeTarget "AXSwiftObserverExample" */ = {
 			isa = XCConfigurationList;
@@ -528,6 +529,7 @@
 				2F86CEB91BD5621F007E8C29 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
