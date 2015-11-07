@@ -67,7 +67,7 @@ class OSXStateSpec: QuickSpec {
 
     describe("initialization") {
 
-      it("observes system applications") {
+      it("observes all applications") {
         class MyTestObserver: TestObserver {
           static var numObservers: Int = 0
           required init(processID: pid_t, callback: Callback) throws {
@@ -76,10 +76,10 @@ class OSXStateSpec: QuickSpec {
           }
         }
 
-        TestApplication.allApps = [TestApplication()]
+        TestApplication.allApps = [TestApplication(), TestApplication()]
         let _ = OSXState<TestUIElement, TestApplication, MyTestObserver>()
 
-        expect(MyTestObserver.numObservers).to(equal(1), description: "observer count")
+        expect(MyTestObserver.numObservers).to(equal(2), description: "observer count")
       }
 
     }

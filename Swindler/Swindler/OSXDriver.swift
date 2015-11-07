@@ -51,13 +51,14 @@ class OSXState<
   // TODO: fix strong ref cycle
 
   init() {
-    let app = Application.all().first!
-    let observer = try! Observer(processID: try! app.pid(), callback: handleEvent)
-    try! observer.addNotification(.WindowCreated,     forElement: app.toElement)
-    try! observer.addNotification(.MainWindowChanged, forElement: app.toElement)
+    for app in Application.all() {
+      let observer = try! Observer(processID: try! app.pid(), callback: handleEvent)
+      try! observer.addNotification(.WindowCreated,     forElement: app.toElement)
+      try! observer.addNotification(.MainWindowChanged, forElement: app.toElement)
 
-    applications.append(app)
-    observers.append(observer)
+      applications.append(app)
+      observers.append(observer)
+    }
   }
 
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
