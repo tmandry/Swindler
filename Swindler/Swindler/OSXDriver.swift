@@ -1,6 +1,6 @@
 import AXSwift
 
-public var state: State = OSXState<UIElement, Application, Observer>()
+public var state: StateType = OSXState<UIElement, Application, Observer>()
 
 // MARK: - Injectable protocols
 
@@ -40,11 +40,11 @@ extension AXSwift.Application: ApplicationType {
 class OSXState<
     UIElement: UIElementType, Application: ApplicationType, Observer: ObserverType
     where Observer.UIElement == UIElement, Application.UIElement == UIElement
->: State {
-  typealias WindowT = OSXWindow<UIElement, Application, Observer>
+>: StateType {
+  typealias Window = OSXWindow<UIElement, Application, Observer>
   var applications: [Application] = []
   var observers: [Observer] = []
-  var windows: [WindowT] = []
+  var windows: [Window] = []
 
   // TODO: add testing
   // TODO: handle errors
@@ -63,7 +63,7 @@ class OSXState<
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
     if .WindowCreated == notification {
       do {
-        let window = try WindowT(state: self, axElement: element, observer: observer)
+        let window = try Window(state: self, axElement: element, observer: observer)
         windows.append(window)
         notify(WindowCreatedEvent(external: true, window: window))
       } catch let error {
@@ -80,29 +80,29 @@ class OSXState<
     }
   }
 
-  private func findWindowAndIndex(axElement: UIElement) -> (Int, WindowT)? {
+  private func findWindowAndIndex(axElement: UIElement) -> (Int, Window)? {
     return self.windows.enumerate().filter({ $0.1.axElement == axElement }).first
   }
 
-  var visibleWindows: [Window] {
+  var visibleWindows: [WindowType] {
     get { return windows }
   }
 
-  private typealias EventHandler = (Event) -> ()
+  private typealias EventHandler = (EventType) -> ()
   private var eventHandlers: [String: [EventHandler]] = [:]
 
-  func on<EventType: Event>(handler: (EventType) -> ()) {
-    let notification = EventType.typeName
+  func on<Event: EventType>(handler: (Event) -> ()) {
+    let notification = Event.typeName
     if eventHandlers[notification] == nil {
       eventHandlers[notification] = []
     }
 
     // Wrap in a casting closure to preserve type information that gets erased in the dictionary.
-    eventHandlers[notification]!.append({ handler($0 as! EventType) })
+    eventHandlers[notification]!.append({ handler($0 as! Event) })
   }
 
-  func notify<EventType: Event>(event: EventType) {
-    if let handlers = eventHandlers[EventType.typeName] {
+  func notify<Event: EventType>(event: Event) {
+    if let handlers = eventHandlers[Event.typeName] {
       for handler in handlers {
         handler(event)
       }
@@ -113,12 +113,12 @@ class OSXState<
 class OSXWindow<
     UIElement: UIElementType, Application: ApplicationType, Observer: ObserverType
     where Observer.UIElement == UIElement, Application.UIElement == UIElement
->: Window {
-  typealias StateT = OSXState<UIElement, Application, Observer>
-  let state: StateT
+>: WindowType {
+  typealias State = OSXState<UIElement, Application, Observer>
+  let state: State
   let axElement: UIElement
 
-  init(state: StateT, axElement: UIElement, observer: Observer) throws {
+  init(state: State, axElement: UIElement, observer: Observer) throws {
     self.state = state
     self.axElement = axElement
     try loadAttributes()
@@ -167,10 +167,10 @@ class OSXWindow<
   }
 
   // Updates the given property from the axElement (events marked as external).
-  private func updateProperty<EventType: WindowPropertyEventInternal>(
-      axAttr: AXSwift.Attribute, inout _ store: EventType.PropertyType!, _ eventType: EventType.Type) {
+  private func updateProperty<Event: WindowPropertyEventInternalType>(
+      axAttr: AXSwift.Attribute, inout _ store: Event.PropertyType!, _ eventType: Event.Type) {
     do {
-      let value: EventType.PropertyType = try axElement.attribute(axAttr)!
+      let value: Event.PropertyType = try axElement.attribute(axAttr)!
       updatePropertyWithValue(&store, value, eventType)
     } catch {
       fatalError("unhandled error: \(error)")
@@ -178,29 +178,29 @@ class OSXWindow<
   }
 
   // Updates the given property to the given value (events marked as external).
-  private func updatePropertyWithValue<EventType: WindowPropertyEventInternal>(
-      inout store: EventType.PropertyType!, _ value: EventType.PropertyType, _ eventType: EventType.Type) {
+  private func updatePropertyWithValue<Event: WindowPropertyEventInternalType>(
+      inout store: Event.PropertyType!, _ value: Event.PropertyType, _ eventType: Event.Type) {
     if store != value {
       let oldVal = store
       store = value
-      state.notify(EventType(external: true, window: self, oldVal: oldVal, newVal: store))
+      state.notify(Event(external: true, window: self, oldVal: oldVal, newVal: store))
     }
   }
 
   // Sets the given property and axElement attribute to the given value (events marked as internal).
-  private func setProperty<EventType: WindowPropertyEventInternal>(
-      axAttr: AXSwift.Attribute, inout _ store: EventType.PropertyType!, _ newVal: EventType.PropertyType,
-      _ eventType: EventType.Type) {
+  private func setProperty<Event: WindowPropertyEventInternalType>(
+      axAttr: AXSwift.Attribute, inout _ store: Event.PropertyType!, _ newVal: Event.PropertyType,
+      _ eventType: Event.Type) {
     // TODO: check value asynchronously(?), deal with failure modes (set fails, get fails)
     // TODO: purge all events for this attribute? otherwise a notification could come through with an old value.
     do {
       try axElement.setAttribute(axAttr, value: newVal)
       // Ask for the new value to find out what actually resulted
-      let actual: EventType.PropertyType = try axElement.attribute(axAttr)!
+      let actual: Event.PropertyType = try axElement.attribute(axAttr)!
       if store != actual {
         let oldVal = store
         store = actual
-        state.notify(EventType(external: false, window: self, oldVal: oldVal, newVal: store))
+        state.notify(Event(external: false, window: self, oldVal: oldVal, newVal: store))
       }
     } catch let error {
       fatalError("unhandled error: \(error)")

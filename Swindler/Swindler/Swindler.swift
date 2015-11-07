@@ -1,15 +1,15 @@
-public protocol State {
-  var visibleWindows: [Window] { get }
-  func on<EventType: Event>(handler: (EventType) -> ())
+public protocol StateType {
+  var visibleWindows: [WindowType] { get }
+  func on<Event: EventType>(handler: (Event) -> ())
 }
 
-public protocol Window {
+public protocol WindowType {
   var pos: CGPoint { get set }
   var size: CGSize { get set }
   var rect: CGRect { get set }
 }
 
-extension Window {
+extension WindowType {
   // Convenience parameter
   var rect: CGRect {
     get { return CGRect(origin: pos, size: size) }
@@ -25,11 +25,11 @@ extension Window {
 // (oldLayout?, newLayout)
 // case ScreenLayoutChanged
 
-public protocol Event {
+public protocol EventType {
   var external: Bool { get }
 }
 
-extension Event {
+extension EventType {
   // In a later version of Swift, this can be stored (lazily).. store as hashValue for more speed.
   // Instead of using this, we _could_ use an enum of all notifications and require each event to
   // declare a static var of its notification. That's error prone, though, and this is fast enough.
@@ -38,22 +38,22 @@ extension Event {
   }
 }
 
-public protocol WindowEvent: Event {
-  var window: Window { get }
+public protocol WindowEventType: EventType {
+  var window: WindowType { get }
   var external: Bool { get }
 }
 
-public struct WindowCreatedEvent: Event {
+public struct WindowCreatedEvent: EventType {
   public var external: Bool
-  public var window: Window
+  public var window: WindowType
 }
 
-public struct WindowDestroyedEvent: Event {
+public struct WindowDestroyedEvent: EventType {
   public var external: Bool
-  public var window: Window
+  public var window: WindowType
 }
 
-public protocol WindowPropertyEvent: WindowEvent {
+public protocol WindowPropertyEventType: WindowEventType {
   typealias PropertyType: Equatable
 
   var oldVal: PropertyType { get }
@@ -62,24 +62,24 @@ public protocol WindowPropertyEvent: WindowEvent {
   // TODO: requestedVal?
 }
 
-protocol WindowPropertyEventInternal: WindowPropertyEvent {
-  init(external: Bool, window: Window, oldVal: PropertyType, newVal: PropertyType)
+protocol WindowPropertyEventInternalType: WindowPropertyEventType {
+  init(external: Bool, window: WindowType, oldVal: PropertyType, newVal: PropertyType)
 }
 
-public struct WindowPosChangedEvent: WindowPropertyEventInternal {
+public struct WindowPosChangedEvent: WindowPropertyEventInternalType {
   public typealias PropertyType = CGPoint
 
   public var external: Bool
-  public var window: Window
+  public var window: WindowType
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
 
-public struct WindowSizeChangedEvent: WindowPropertyEventInternal {
+public struct WindowSizeChangedEvent: WindowPropertyEventInternalType {
   public typealias PropertyType = CGSize
 
   public var external: Bool
-  public var window: Window
+  public var window: WindowType
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
