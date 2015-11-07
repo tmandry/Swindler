@@ -1,11 +1,14 @@
-import XCTest
-import AXSwift
+import Quick
+import Nimble
+
 @testable import Swindler
+import AXSwift
 
 class TestUIElement: UIElementType, Equatable {
+  var processID: pid_t = 0
   var attrs: [Attribute: Any] = [:]
   init() { }
-  func pid() throws -> pid_t { return 0 }
+  func pid() throws -> pid_t { return processID }
   func attribute<T>(attribute: Attribute) throws -> T? {
     if let value = attrs[attribute] {
       return (value as! T)
@@ -30,44 +33,56 @@ func ==(lhs: TestUIElement, rhs: TestUIElement) -> Bool {
 class BaseTestApplication: TestUIElement {
   typealias UIElementType = TestUIElement
   var toElement: TestUIElement { return self }
-}
-final class TestApplication: BaseTestApplication, ApplicationType {
-  static func all() -> [TestApplication] { return [TestApplication()] }
+
+  static var processCount: pid_t = 0
+  override init() {
+    super.init()
+    BaseTestApplication.processCount++
+    self.processID = BaseTestApplication.processCount
+  }
 }
 
 class TestObserver: ObserverType {
   typealias UIElementType = TestUIElement
-  required init(processID: pid_t, callback: (observer: TestObserver, element: UIElementType, notification: AXSwift.Notification) -> Void) throws {}
+  typealias Callback = (observer: TestObserver, element: UIElementType, notification: AXSwift.Notification) -> ()
+
+  var callback: Callback!
+
+  required init(processID: pid_t, callback: Callback) throws {
+    self.callback = callback
+  }
   func addNotification(notification: AXSwift.Notification, forElement: UIElementType) throws {}
 }
 
-class SwindlerTests: XCTestCase {
 
-  override func setUp() {
-    super.setUp()
-    // Put setup code here. This method is called before the invocation of each test method in the class.
-  }
+// Can't define this inside the spec, due to a Swift bug.
+final class TestApplication: BaseTestApplication, ApplicationType {
+  static var allApps: [TestApplication] = []
+  static func all() -> [TestApplication] { return TestApplication.allApps }
+}
 
-  override func tearDown() {
-    // Put teardown code here. This method is called after the invocation of each test method in the class.
-    super.tearDown()
-  }
+class OSXStateSpec: QuickSpec {
+  override func spec() {
+    beforeEach { TestApplication.allApps = [] }
 
-  func testExample() {
-    class MyTestObserver: TestObserver {
-      static var lastPid: pid_t = -1
-      static var numObservers: Int = 0
-      required init(processID: pid_t, callback: (observer: TestObserver, element: UIElementType, notification: AXSwift.Notification) -> Void) throws {
-        MyTestObserver.lastPid = processID
-        MyTestObserver.numObservers++
-        try super.init(processID: processID, callback: callback)
+    describe("initialization") {
+
+      it("observes system applications") {
+        class MyTestObserver: TestObserver {
+          static var numObservers: Int = 0
+          required init(processID: pid_t, callback: Callback) throws {
+            MyTestObserver.numObservers++
+            try super.init(processID: processID, callback: callback)
+          }
+        }
+
+        TestApplication.allApps = [TestApplication()]
+        let _ = OSXState<TestUIElement, TestApplication, MyTestObserver>()
+
+        expect(MyTestObserver.numObservers).to(equal(1), description: "observer count")
       }
-    }
-    let _ = OSXState<TestUIElement, TestApplication, MyTestObserver>()
-    XCTAssert(MyTestObserver.numObservers == 1)
-    XCTAssert(MyTestObserver.lastPid == 0)
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
-  }
 
+    }
+
+  }
 }
