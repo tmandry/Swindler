@@ -236,7 +236,7 @@ class OSXDriverSpec: QuickSpec {
 
       context("when a window property changes") {
 
-        it("calls a ChangedEvent callback") {
+        it("emits a ChangedEvent") {
           var callbacks = 0
           state.on { (event: WindowPosChangedEvent) in
             callbacks++
@@ -272,6 +272,17 @@ class OSXDriverSpec: QuickSpec {
           observer.emit(.Moved, forElement: windowElement)
         }
 
+        context("when the event fires but the value is not changed") {
+          it("does not emit a ChangedEvent") {
+            var callbacks = 0
+            state.on { (event: WindowPosChangedEvent) in
+              callbacks++
+            }
+            observer.emit(.WindowCreated, forElement: windowElement)
+            observer.emit(.Moved, forElement: windowElement)
+            expect(callbacks).to(equal(0), description: "callback should not be called")
+          }
+        }
       }
 
       it("calls multiple event handlers") {
@@ -326,6 +337,17 @@ class OSXDriverSpec: QuickSpec {
             expect(event.external).to(beFalse())
           }
           window.pos = CGPoint(x: 100, y: 100)
+        }
+
+        context("when the new value is the same as the old value") {
+          it("does not emit a ChangedEvent") {
+            var callbacks = 0
+            state.on { (event: WindowPosChangedEvent) in
+              callbacks++
+            }
+            window.pos = CGPoint(x: 5, y: 5)
+            expect(callbacks).to(equal(0), description: "callback not should be called")
+          }
         }
 
         context("when the window element becomes invalid") {
