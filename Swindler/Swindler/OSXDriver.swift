@@ -158,16 +158,19 @@ class OSXWindow<
     try observer.addNotification(.UIElementDestroyed, forElement: axElement)
     try observer.addNotification(.Moved, forElement: axElement)
     try observer.addNotification(.Resized, forElement: axElement)
+    try observer.addNotification(.TitleChanged, forElement: axElement)
   }
 
   func handleEvent(event: AXSwift.Notification, observer: Observer) {
     switch event {
+    case .UIElementDestroyed:
+      valid = false
     case .Moved:
       updateProperty(.Position, &pos_, WindowPosChangedEvent.self)
     case .Resized:
       updateProperty(.Size, &size_, WindowSizeChangedEvent.self)
-    case .UIElementDestroyed:
-      valid = false
+    case .TitleChanged:
+      updateProperty(.Title, &title_, WindowTitleChangedEvent.self)
     default:
       print("Unknown event on \(self): \(event)")
     }
@@ -187,8 +190,13 @@ class OSXWindow<
     set { setProperty(.Size, &size_, newValue, WindowSizeChangedEvent.self) }
   }
 
+  private var title_: String!
+  var title: String {
+    get { return title_ }
+  }
+
   private func loadAttributes() throws {
-    let attrNames: [AXSwift.Attribute] = [.Position, .Size]
+    let attrNames: [AXSwift.Attribute] = [.Position, .Size, .Title]
     let attributes = try axElement.getMultipleAttributes(attrNames)
 
     guard attributes.count == attrNames.count else {
@@ -196,8 +204,9 @@ class OSXWindow<
       throw OSXDriverError.MissingAttributes
     }
 
-    pos_  = attributes[.Position]! as! CGPoint
-    size_ = attributes[.Size]! as! CGSize
+    pos_   = attributes[.Position]! as! CGPoint
+    size_  = attributes[.Size]! as! CGSize
+    title_ = attributes[.Title]! as! String
   }
 
   // Updates the given property from the axElement (events marked as external).

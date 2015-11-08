@@ -5,9 +5,12 @@ public protocol StateType {
 
 public protocol WindowType {
   var valid: Bool { get }
+
   var pos: CGPoint { get set }
   var size: CGSize { get set }
   var rect: CGRect { get set }
+
+  var title: String { get }
 }
 
 extension WindowType {
@@ -69,7 +72,6 @@ protocol WindowPropertyEventInternalType: WindowPropertyEventType {
 
 public struct WindowPosChangedEvent: WindowPropertyEventInternalType {
   public typealias PropertyType = CGPoint
-
   public var external: Bool
   public var window: WindowType
   public var oldVal: PropertyType
@@ -78,7 +80,14 @@ public struct WindowPosChangedEvent: WindowPropertyEventInternalType {
 
 public struct WindowSizeChangedEvent: WindowPropertyEventInternalType {
   public typealias PropertyType = CGSize
+  public var external: Bool
+  public var window: WindowType
+  public var oldVal: PropertyType
+  public var newVal: PropertyType
+}
 
+public struct WindowTitleChangedEvent: WindowPropertyEventInternalType {
+  public typealias PropertyType = String
   public var external: Bool
   public var window: WindowType
   public var oldVal: PropertyType
