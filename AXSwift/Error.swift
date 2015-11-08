@@ -1,7 +1,7 @@
-extension AXError : ErrorType { }
+extension AXError: ErrorType { }
 
 // For some reason values don't get described in this enum, so we have to do it manually.
-extension AXError : CustomStringConvertible {
+extension AXError: CustomStringConvertible {
   private var valueAsString: String {
     switch (self) {
     case Success:
