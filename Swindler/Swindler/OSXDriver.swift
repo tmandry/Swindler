@@ -50,34 +50,62 @@ class OSXState<
   // TODO: fix strong ref cycle
 
   init() {
+    print("Initializing Swindler")
     for app in Application.all() {
-      let observer = try! Observer(processID: try! app.pid(), callback: handleEvent)
-      try! observer.addNotification(.WindowCreated,     forElement: app.toElement)
-      try! observer.addNotification(.MainWindowChanged, forElement: app.toElement)
+      do {
+        let observer = try Observer(processID: app.pid(), callback: handleEvent)
+        try observer.addNotification(.WindowCreated,     forElement: app.toElement)
+        try observer.addNotification(.MainWindowChanged, forElement: app.toElement)
 
-      applications.append(app)
-      observers.append(observer)
+        applications.append(app)
+        observers.append(observer)
+      } catch {
+        // TODO: handle timeouts
+        let application = try? NSRunningApplication(processIdentifier: app.pid())
+        print("Could not watch application \(application): \(error)")
+        assert(error is AXSwift.Error)
+      }
     }
+    print("Done initializing")
   }
 
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
     if .WindowCreated == notification {
-      do {
-        let window = try Window(state: self, axElement: element, observer: observer)
-        windows.append(window)
-        notify(WindowCreatedEvent(external: true, window: window))
-      } catch let error {
-        NSLog("Error: Could not watch [\(element)]: \(error)")
-      }
-    } else if let (index, target) = findWindowAndIndex(element) {
-      if .UIElementDestroyed == notification {
-        windows.removeAtIndex(index)
-        notify(WindowDestroyedEvent(external: true, window: target))
-      }
-      target.handleEvent(observer, event: notification)
-    } else {
+      onWindowCreated(element, observer: observer)
+      return
+    }
+
+    let handled = onWindowEvent(notification, windowElement: element, observer: observer)
+    if !handled {
       print("Event \(notification) on unknown element \(element)")
     }
+  }
+
+  private func onWindowCreated(windowElement: UIElement, observer: Observer) {
+    do {
+      let window = try Window(state: self, axElement: windowElement, observer: observer)
+      windows.append(window)
+      notify(WindowCreatedEvent(external: true, window: window))
+    } catch {
+      // TODO: handle timeouts
+      print("Error: Could not watch [\(windowElement)]: \(error)")
+      assert(error is AXSwift.Error)
+    }
+  }
+
+  private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement, observer: Observer) -> Bool {
+    guard let (index, window) = findWindowAndIndex(windowElement) else {
+      return false
+    }
+
+    window.handleEvent(notification, observer: observer)
+
+    if .UIElementDestroyed == notification {
+      windows.removeAtIndex(index)
+      notify(WindowDestroyedEvent(external: true, window: window))
+    }
+
+    return true
   }
 
   private func findWindowAndIndex(axElement: UIElement) -> (Int, Window)? {
@@ -110,6 +138,10 @@ class OSXState<
   }
 }
 
+enum OSXDriverError: ErrorType {
+  case MissingAttributes
+}
+
 class OSXWindow<
     UIElement: UIElementType, Application: ApplicationType, Observer: ObserverType
     where Observer.UIElement == UIElement, Application.UIElement == UIElement
@@ -128,18 +160,20 @@ class OSXWindow<
     try observer.addNotification(.Resized, forElement: axElement)
   }
 
-  func handleEvent(observer: Observer, event: AXSwift.Notification) {
+  func handleEvent(event: AXSwift.Notification, observer: Observer) {
     switch event {
     case .Moved:
       updateProperty(.Position, &pos_, WindowPosChangedEvent.self)
     case .Resized:
       updateProperty(.Size, &size_, WindowSizeChangedEvent.self)
     case .UIElementDestroyed:
-      break
+      valid = false
     default:
       print("Unknown event on \(self): \(event)")
     }
   }
+
+  private(set) var valid: Bool = true
 
   private var pos_: CGPoint!
   var pos: CGPoint {
@@ -158,11 +192,11 @@ class OSXWindow<
     let attributes = try axElement.getMultipleAttributes(attrNames)
 
     guard attributes.count == attrNames.count else {
-      NSLog("Could not get required attributes for window. Wanted: \(attrNames). Got: \(attributes.keys)")
-      throw AXSwift.Error.InvalidUIElement  // TODO: make our own
+      print("Could not get required attributes for window. Wanted: \(attrNames). Got: \(attributes.keys)")
+      throw OSXDriverError.MissingAttributes
     }
 
-    pos_ = attributes[.Position]! as! CGPoint
+    pos_  = attributes[.Position]! as! CGPoint
     size_ = attributes[.Size]! as! CGSize
   }
 
@@ -174,8 +208,12 @@ class OSXWindow<
     do {
       let value: Event.PropertyType = try axElement.attribute(axAttr)!
       updatePropertyWithValue(&store, value, eventType)
+    } catch AXSwift.Error.InvalidUIElement {
+      valid = false
     } catch {
-      fatalError("unhandled error: \(error)")
+      // TODO: deal with timeouts
+      unexpectedError(error, onElement: axElement)
+      valid = false
     }
   }
 
@@ -197,7 +235,7 @@ class OSXWindow<
       inout _ store:     Event.PropertyType!,
       _       newVal:    Event.PropertyType,
       _       eventType: Event.Type) {
-    // TODO: check value asynchronously(?), deal with failure modes (set fails, get fails)
+    // TODO: check value asynchronously(?)
     // TODO: purge all events for this attribute? otherwise a notification could come through with an old value.
     do {
       try axElement.setAttribute(axAttr, value: newVal)
@@ -208,8 +246,26 @@ class OSXWindow<
         store = actual
         state.notify(Event(external: false, window: self, oldVal: oldVal, newVal: store))
       }
-    } catch let error {
-      fatalError("unhandled error: \(error)")
+    } catch AXSwift.Error.InvalidUIElement {
+      valid = false
+    } catch {
+      // TODO: deal with timeouts
+      unexpectedError(error, onElement: axElement)
+      valid = false
     }
   }
+}
+
+// MARK: - Error handling
+
+// Handle unexpected errors with detailed logging, and abort when in debug mode.
+func unexpectedError(error: ErrorType, file: String = __FILE__, line: Int = __LINE__) {
+  print("unexpected error: \(error) at \(file):\(line)")
+  assertionFailure()
+}
+func unexpectedError<UIElement: UIElementType>(
+    error: ErrorType, onElement element: UIElement, file: String = __FILE__, line: Int = __LINE__) {
+  let application = try? NSRunningApplication(processIdentifier: element.pid())
+  print("unexpected error: \(error) on element: \(element) of application: \(application) at \(file):\(line)")
+  assertionFailure()
 }

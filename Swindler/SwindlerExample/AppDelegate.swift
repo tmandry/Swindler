@@ -25,8 +25,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       print("new window: \(window)")
 
       dispatchAfter(4.0) {
+        print("moving")
         window.pos = CGPoint(x: 200, y: 200)
         window.size = CGSize(width: 30, height: 30)
+        print("done, valid: \(window.valid)")
       }
     }
     swindler.on { (event: WindowPosChangedEvent) in

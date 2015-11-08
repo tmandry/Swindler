@@ -4,6 +4,7 @@ public protocol StateType {
 }
 
 public protocol WindowType {
+  var valid: Bool { get }
   var pos: CGPoint { get set }
   var size: CGSize { get set }
   var rect: CGRect { get set }
