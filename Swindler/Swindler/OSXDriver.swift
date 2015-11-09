@@ -89,7 +89,7 @@ class OSXState<
     } catch {
       // TODO: handle timeouts
       print("Error: Could not watch [\(windowElement)]: \(error)")
-      assert(error is AXSwift.Error)
+      assert(error is AXSwift.Error || error is OSXDriverError)
     }
   }
 
