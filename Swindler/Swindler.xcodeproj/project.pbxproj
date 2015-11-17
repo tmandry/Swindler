@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */; };
 		2F86CECA1BD60117007E8C29 /* Swindler.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F86CEC91BD60117007E8C29 /* Swindler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2F86CED11BD60117007E8C29 /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
 		2F86CED61BD60117007E8C29 /* SwindlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CED51BD60117007E8C29 /* SwindlerTests.swift */; };
@@ -15,6 +16,7 @@
 		2F86CEEC1BD6EC32007E8C29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEEB1BD6EC32007E8C29 /* AppDelegate.swift */; };
 		2F86CEEE1BD6EC32007E8C29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F86CEED1BD6EC32007E8C29 /* Assets.xcassets */; };
 		2F86CEF71BD6EC55007E8C29 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEF61BD6EC55007E8C29 /* main.swift */; };
+		2F9E31A91BF050AF00EAD248 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9E31A81BF050AF00EAD248 /* Property.swift */; };
 		76726C939037D76F6C084B6D /* Pods_Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F13BD50BDE9B564868B4B295 /* Pods_Swindler.framework */; };
 		83E91AD8E20936CBBF5D1146 /* Pods_SwindlerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91C56A787A4B2F4B5CD73FE8 /* Pods_SwindlerTests.framework */; };
 /* End PBXBuildFile section */
@@ -30,6 +32,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
 		2F86CEC61BD60117007E8C29 /* Swindler.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Swindler.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F86CEC91BD60117007E8C29 /* Swindler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Swindler.h; sourceTree = "<group>"; };
 		2F86CECB1BD60117007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -43,6 +46,7 @@
 		2F86CEED1BD6EC32007E8C29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2F86CEF21BD6EC32007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F86CEF61BD6EC55007E8C29 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		2F9E31A81BF050AF00EAD248 /* Property.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
 		91C56A787A4B2F4B5CD73FE8 /* Pods_SwindlerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwindlerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		924F5818E2E521CB545E40DD /* Pods-Swindler.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Swindler.release.xcconfig"; path = "../Pods/Target Support Files/Pods-Swindler/Pods-Swindler.release.xcconfig"; sourceTree = "<group>"; };
 		9EAB3A2BBA4091D04E7E98F0 /* Pods-SwindlerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTests.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests.debug.xcconfig"; sourceTree = "<group>"; };
@@ -119,6 +123,7 @@
 				2F86CEE11BD6D9E1007E8C29 /* Swindler.swift */,
 				2F86CEE31BD6DAD7007E8C29 /* OSXDriver.swift */,
 				2F86CECB1BD60117007E8C29 /* Info.plist */,
+				2F9E31A81BF050AF00EAD248 /* Property.swift */,
 			);
 			path = Swindler;
 			sourceTree = "<group>";
@@ -127,6 +132,7 @@
 			isa = PBXGroup;
 			children = (
 				2F86CED51BD60117007E8C29 /* SwindlerTests.swift */,
+				2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */,
 				2F86CED71BD60117007E8C29 /* Info.plist */,
 			);
 			path = SwindlerTests;
@@ -373,6 +379,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F9E31A91BF050AF00EAD248 /* Property.swift in Sources */,
 				2F86CEE41BD6DAD7007E8C29 /* OSXDriver.swift in Sources */,
 				2F86CEE21BD6D9E1007E8C29 /* Swindler.swift in Sources */,
 			);
@@ -383,6 +390,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F86CED61BD60117007E8C29 /* SwindlerTests.swift in Sources */,
+				2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -21,15 +21,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(aNotification: NSNotification) {
     swindler = Swindler.state
     swindler.on { (event: WindowCreatedEvent) in
-      var window = event.window
+      let window = event.window
       print("new window: \(window)")
-
-      dispatchAfter(4.0) {
-        print("moving")
-        window.pos = CGPoint(x: 200, y: 200)
-        window.size = CGSize(width: 30, height: 30)
-        print("done, valid: \(window.valid)")
-      }
     }
     swindler.on { (event: WindowPosChangedEvent) in
       print("Pos changed from \(event.oldVal) to \(event.newVal), external: \(event.external)")
@@ -39,6 +32,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     swindler.on { (event: WindowDestroyedEvent) in
       print("window destroyed: \(event.window)")
+    }
+
+    dispatchAfter(10.0) {
+      for window in self.swindler.visibleWindows {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+          print("resizing \(window.title)")
+          window.size.value = CGSize(width: 200, height: 200)
+          print("done with \(window.title), valid: \(window.valid)")
+        }
+      }
     }
   }
 
