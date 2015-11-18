@@ -336,18 +336,13 @@ class OSXWindowSpec: QuickSpec {
     beforeEach { TestApplication.allApps = [] }
 
     describe("initialize") {
-      fcontext("when called with a window that is missing attributes") {
+      context("when called with a window that is missing attributes") {
         it("returns an error") { () -> Promise<Void> in
           let windowElement = TestWindow(forApp: TestApplication())
           windowElement.attrs.removeValueForKey(.Position)
 
           let promise = Window.initialize(notifier: TestNotifier(), axElement: windowElement, observer: TestObserver())
-          return promise.asVoid().then({
-            fail("Expected to fail")
-          }).recover { (error: ErrorType) -> () in
-            expect(error is OSXDriverError).to(beTrue(), description: "expected OSXDriverError, got \(error)")
-            expect(error as? OSXDriverError).to(equal(OSXDriverError.MissingAttribute))
-          }
+          return expectToFail(promise, with: OSXDriverError.MissingAttribute)
         }
       }
     }
@@ -381,17 +376,31 @@ class AXPropertySpec: QuickSpec {
     var property: WriteableProperty<CGPoint>!
     var windowElement: TestWindow!
     var notifier: TestWindowPropertyNotifier!
-    beforeEach {
-      let position = CGPoint(x: 5, y: 5)
+    func setUpWithAttributes(attrs: [AXSwift.Attribute: Any]) {
       windowElement = TestWindow(forApp: TestApplication())
-      windowElement.attrs[.Position] = position
-      let initPromise = Promise<[AXSwift.Attribute: Any]>([.Position: position])
+      windowElement.attrs = attrs
+      let initPromise = Promise<[AXSwift.Attribute: Any]>(attrs)
       notifier = TestWindowPropertyNotifier()
       property = WriteableProperty(WindowPosChangedEvent.self, notifier, AXPropertyDelegate(windowElement, .Position, initPromise))
+    }
+
+    beforeEach {
+      setUpWithAttributes([.Position: CGPoint(x: 5, y: 5)])
       waitUntil { done in
         property.initialized.then {
           done()
         }
+      }
+    }
+
+    describe("initialization") {
+      context("when the attribute is missing") {
+
+        it("reports an error") { () -> Promise<Void> in
+          setUpWithAttributes([:])
+          return expectToFail(property.initialized, with: OSXDriverError.MissingAttribute)
+        }
+
       }
     }
 
@@ -480,6 +489,10 @@ class AXPropertySpec: QuickSpec {
         }
 
       }
+    }
+
+    describe("optional properties") {
+
     }
 
   }

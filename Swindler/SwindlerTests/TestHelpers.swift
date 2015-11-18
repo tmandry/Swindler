@@ -39,3 +39,11 @@ func setUpPromiseErrorHandler(file file: String, line: UInt) {
     fail("Unhandled error returned from promise: \(error)", file: file, line: line)
   }
 }
+
+func expectToFail<T, E: ErrorType>(promise: Promise<T>, with expectedError: E, file: String = __FILE__, line: UInt = __LINE__) -> Promise<Void> {
+  return promise.asVoid().then({
+    fail("Expected to fail with error \(expectedError), but succeeded", file: file, line: line)
+  }).recover { (error: ErrorType) -> () in
+    expect(file, line: line, expression: { throw error }).to(throwError(expectedError))
+  }
+}

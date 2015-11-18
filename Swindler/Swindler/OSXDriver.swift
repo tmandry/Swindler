@@ -95,10 +95,10 @@ class OSXState<
   }
 
   private func onWindowCreated(windowElement: UIElement, observer: Observer) {
-    Window.initialize(notifier: self, axElement: windowElement, observer: observer).then({ window in
+    Window.initialize(notifier: self, axElement: windowElement, observer: observer).then { (window: Window) -> () in
       self.windows.append(window)
       self.notify(WindowCreatedEvent(external: true, window: window))
-    } as (Window) -> ()).error { error in
+    }.error { error in
       // TODO: handle timeouts
       print("Error: Could not watch [\(windowElement)]: \(error)")
       assert(error is AXSwift.Error || error is OSXDriverError)
@@ -180,6 +180,8 @@ class OSXWindow<
 
   // Do not use -- internal for testing only
   init(notifier: EventNotifier, axElement: UIElement, observer: Observer) throws {
+    // TODO: reject invalid roles (Chrome ghost windows)
+
     self.notifier = notifier
     self.axElement = axElement
 
@@ -223,7 +225,9 @@ class OSXWindow<
       let window = try OSXWindow(notifier: notifier, axElement: axElement, observer: observer)
       let axProperties = window.watchedAxProperties.values
       let attrPromises = axProperties.map({ $0.initialized })
-      return when(Array(attrPromises)).then { _ in window }
+      return when(Array(attrPromises)).then { _ -> OSXWindow in
+        return window
+      }
     }.recover { (error: ErrorType) -> OSXWindow in
       // Pass through errors wrapped by when
       switch error {
@@ -291,6 +295,8 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
       try axElement.setAttribute(attribute, value: newValue)
     } catch AXSwift.Error.InvalidUIElement {
       throw PropertyError.Invalid(error: AXSwift.Error.InvalidUIElement)
+    } catch AXSwift.Error.Failure {
+      throw AXSwift.Error.Failure
     } catch let error {
       // TODO: handle kAXErrorIllegalArgument, kAXErrorAttributeUnsupported, kAXErrorCannotComplete, kAXErrorNotImplemented
       unexpectedError(error)
@@ -298,17 +304,14 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
     }
   }
 
-  // Returns a promise of the property's initial value. It's the responsibility of whoever defines
-  // the property to ensure that the property is not accessed before this promise resolves.
-  // We could make this optional and use `readValue()` otherwise.
   func initialize() -> Promise<T> {
-    return initPromise.thenInBackground({ dict in
+    return initPromise.thenInBackground { (dict: InitDict) throws -> T in
       guard let value = dict[self.attribute] else {
         print("Missing attribute \(self.attribute) on window element \(self.axElement)")
         throw PropertyError.Invalid(error: OSXDriverError.MissingAttribute)
       }
       return value as! T
-    } as (InitDict) throws -> (T))
+    }
   }
 }
 

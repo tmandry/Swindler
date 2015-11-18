@@ -8,6 +8,7 @@
 
 import Cocoa
 import Swindler
+import PromiseKit
 
 func dispatchAfter(delay: NSTimeInterval, block: dispatch_block_t) {
   let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC)))
@@ -37,9 +38,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     dispatchAfter(10.0) {
       for window in self.swindler.visibleWindows {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-          print("resizing \(window.title)")
-          window.size.value = CGSize(width: 200, height: 200)
-          print("done with \(window.title), valid: \(window.valid)")
+          let title = window.title.value
+          print("resizing \(title)")
+          window.size.set(CGSize(width: 200, height: 200)).then { newValue in
+            print("done with \(title), valid: \(window.valid), newValue: \(newValue)")
+          }.error { error in
+            print("failed to resize \(title), valid: \(window.valid)")
+          }
         }
       }
     }

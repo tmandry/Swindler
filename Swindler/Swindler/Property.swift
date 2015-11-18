@@ -43,6 +43,7 @@ public class Property<Type: Equatable> {
     let (initialized, fulfill, reject) = Promise<Void>.pendingPromise()
     self.initialized = initialized
     delegate.initialize().then { (value: Type) -> () in
+      print(value)
       self.value_ = value
       fulfill()
     }.error { error in
@@ -62,21 +63,21 @@ public class Property<Type: Equatable> {
   public func refresh() -> Promise<Type> {
     return Promise<Void>().thenInBackground {
       return try self.delegate_.readValue()
-    }.then({ actual in
+    }.then { (actual: Type) throws -> Type in
       if self.value_ != actual {
         let oldValue = self.value_
         self.value_ = actual
         self.notifier.notify(external: true, oldValue: oldValue, newValue: self.value_)
       }
       return self.value_
-    } as (Type) throws -> Type).recover({ error in
+    }.recover { (error: ErrorType) throws -> Type in
       do {
         throw error
       } catch PropertyError.Invalid(let wrappedError) {
         self.notifier.notifyInvalid()
         throw wrappedError
       }
-    } as (ErrorType) throws -> Type)
+    }
   }
 }
 
@@ -96,17 +97,17 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
   /// Sets the value of the property.
   /// - returns: A promise that resolves to the new actual value of the property.
   public func set(newValue: Type) -> Promise<Type> {
-    return Promise<Void>().thenInBackground({
+    return Promise<Void>().thenInBackground { () throws -> Type in
       try self.delegate_.writeValue(newValue)
       return try self.delegate_.readValue()
-    } as () throws -> Type).then({ actual in
+    }.then { (actual: Type) -> Type in
       if actual != self.value_ {
         let oldValue = self.value_
         self.value_ = actual
         self.notifier.notify(external: false, oldValue: oldValue, newValue: actual)
       }
       return actual
-    } as (Type) -> Type).recover({ error in
+    }.recover { (error: ErrorType) throws -> Type in
       switch error {
       case PropertyError.Invalid(let wrappedError):
         self.notifier.notifyInvalid()
@@ -114,7 +115,7 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
       default:
         throw error
       }
-    } as (ErrorType) throws -> Type)
+    }
   }
 }
 
