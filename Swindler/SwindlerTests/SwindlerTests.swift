@@ -63,11 +63,13 @@ class TestWindow: TestUIElement {
   init(forApp app: BaseTestApplication) {
     self.app = app
     super.init()
-    processID = app.processID
-    attrs[.Role]     = AXSwift.Role.Window
-    attrs[.Position] = CGPoint(x: 0, y: 0)
-    attrs[.Size]     = CGSize(width: 0, height: 0)
-    attrs[.Title]    = "Window \(id)"
+    processID         = app.processID
+    attrs[.Role]      = AXSwift.Role.Window
+    attrs[.Position]  = CGPoint(x: 0, y: 0)
+    attrs[.Size]      = CGSize(width: 0, height: 0)
+    attrs[.Title]     = "Window \(id)"
+    attrs[.Minimized] = false
+    attrs[.Main]      = true
   }
 }
 

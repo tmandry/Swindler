@@ -175,11 +175,12 @@ class OSXWindow<
   var pos: WriteableProperty<CGPoint>!
   var size: WriteableProperty<CGSize>!
   var title: Property<String>!
+  var minimized: WriteableProperty<Bool>!
+  var main: WriteableProperty<Bool>!
 
   private var watchedAxProperties: [AXSwift.Notification: PropertyType]!
 
-  // Do not use -- internal for testing only
-  init(notifier: EventNotifier, axElement: UIElement, observer: Observer) throws {
+  private init(notifier: EventNotifier, axElement: UIElement, observer: Observer) throws {
     // TODO: reject invalid roles (Chrome ghost windows)
 
     self.notifier = notifier
@@ -192,14 +193,17 @@ class OSXWindow<
     pos = WriteableProperty(WindowPosChangedEvent.self, self, AXPropertyDelegate(axElement, .Position, initPromise))
     size = WriteableProperty(WindowSizeChangedEvent.self, self, AXPropertyDelegate(axElement, .Size, initPromise))
     title = Property(WindowTitleChangedEvent.self, self, AXPropertyDelegate(axElement, .Title, initPromise))
+    minimized = WriteableProperty(WindowMinimizedChangedEvent.self, self, AXPropertyDelegate(axElement, .Minimized, initPromise))
+    main = WriteableProperty(WindowMainChangedEvent.self, self, AXPropertyDelegate(axElement, .Main, initPromise))
 
     // Map notifications to the corresponding property.
     watchedAxProperties = [
       .Moved: pos,
       .Resized: size,
-      .TitleChanged: title
+      .TitleChanged: title,
+      .WindowMiniaturized: minimized,
+      .WindowDeminiaturized: minimized
     ]
-    let axProperties = watchedAxProperties.values
 
     // Start watching for notifications.
     for notification in watchedAxProperties.keys {
@@ -208,9 +212,11 @@ class OSXWindow<
     try observer.addNotification(.UIElementDestroyed, forElement: axElement)
 
     // Asynchronously fetch the attribute values.
+    let axProperties = watchedAxProperties.values  // might contain duplicates
     let attrNames: [Attribute] = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
+    let uniqueAttrNames = Array(Set(attrNames))
     Promise<Void>().thenInBackground {
-      return try axElement.getMultipleAttributes(attrNames)
+      return try axElement.getMultipleAttributes(uniqueAttrNames)
     }.then { attributes in
       fulfill(attributes)
     }.error { error in

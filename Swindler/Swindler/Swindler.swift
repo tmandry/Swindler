@@ -20,6 +20,14 @@ public protocol WindowType {
 
   /// The window title.
   var title: Property<String>! { get }
+
+  /// Whether the window is minimized.
+  var minimized: WriteableProperty<Bool>! { get }
+
+  /// Whether the window is currently the main window of its application.
+  var main: WriteableProperty<Bool>! { get }
+
+  /// TODO: fullScreen, focused, screen, space
 }
 
 extension WindowType {
@@ -104,6 +112,22 @@ public struct WindowSizeChangedEvent: WindowPropertyEventTypeInternal {
 
 public struct WindowTitleChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = String
+  public var external: Bool
+  public var window: WindowType
+  public var oldVal: PropertyType
+  public var newVal: PropertyType
+}
+
+public struct WindowMinimizedChangedEvent: WindowPropertyEventTypeInternal {
+  public typealias PropertyType = Bool
+  public var external: Bool
+  public var window: WindowType
+  public var oldVal: PropertyType
+  public var newVal: PropertyType
+}
+
+public struct WindowMainChangedEvent: WindowPropertyEventTypeInternal {
+  public typealias PropertyType = Bool
   public var external: Bool
   public var window: WindowType
   public var oldVal: PropertyType
