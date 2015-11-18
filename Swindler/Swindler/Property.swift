@@ -6,29 +6,31 @@ protocol WindowPropertyNotifier: class {
   func notifyInvalid()
 }
 
+/// A PropertyDelegate is responsible for reading and writing property values to/from the OS.
 protocol PropertyDelegate {
   typealias T: Equatable
   func writeValue(newValue: T) throws
   func readValue() throws -> T
 
-  // Returns a promise of the property's initial value. It's the responsibility of whoever defines
-  // the property to ensure that the property is not accessed before this promise resolves.
-  // We could make this optional and use `readValue()` otherwise.
+  /// Returns a promise of the property's initial value. It's the responsibility of whoever defines
+  /// the property to ensure that the property is not accessed before this promise resolves.
+  /// We could make this optional and use `readValue()` otherwise.
   func initialize() -> Promise<T>
 }
 
-// If the underlying UI object becomes invalid, throw a PropertyError.Invalid which wraps a public
-// error type from your delegate. The unwrapped error will be presented to the user.
+/// If the underlying UI object becomes invalid, throw a PropertyError.Invalid which wraps a public
+/// error type from your delegate. The unwrapped error will be presented to the user.
 enum PropertyError: ErrorType {
   case Invalid(error: ErrorType)
 }
 
+/// A property on a window. Property values are watched and cached in the background, so they are
+/// always available to read.
 public class Property<Type: Equatable> {
   private var value_: Type!
   private var notifier: PropertyNotifierThunk<Type>
   private var delegate_: PropertyDelegateThunk<Type>
 
-  public var value: Type { return value_ }
   private(set) var delegate: Any
   private(set) var initialized: Promise<Void>
 
@@ -52,6 +54,11 @@ public class Property<Type: Equatable> {
     }
   }
 
+  /// The value of the property.
+  public var value: Type { return value_ }
+
+  /// Forces the value of the property to refresh. Most properties are watched so you don't need to
+  /// call this yourself.
   public func refresh() -> Promise<Type> {
     return Promise<Void>().thenInBackground {
       return try self.delegate_.readValue()
@@ -73,16 +80,21 @@ public class Property<Type: Equatable> {
   }
 }
 
+/// A property that can be set. Writes happen asynchronously.
 public class WriteableProperty<Type: Equatable>: Property<Type> {
+  override init<Event: WindowPropertyEventTypeInternal, Impl: PropertyDelegate where Event.PropertyType == Type, Impl.T == Type>(_ eventType: Event.Type, _ notifier: WindowPropertyNotifier, _ delegate: Impl) {
+    super.init(eventType, notifier, delegate)
+  }
+
+  /// The value of the property. Reading is instant and synchronous, but writing is asynchronous and
+  /// the value will not be updated until the write is complete. Use `set` to retrieve a promise.
   override public var value: Type {
     get { return value_ }
     set { set(newValue) }
   }
 
-  override init<Event: WindowPropertyEventTypeInternal, Impl: PropertyDelegate where Event.PropertyType == Type, Impl.T == Type>(_ eventType: Event.Type, _ notifier: WindowPropertyNotifier, _ delegate: Impl) {
-    super.init(eventType, notifier, delegate)
-  }
-
+  /// Sets the value of the property.
+  /// - returns: A promise that resolves to the new actual value of the property.
   public func set(newValue: Type) -> Promise<Type> {
     return Promise<Void>().thenInBackground({
       try self.delegate_.writeValue(newValue)
