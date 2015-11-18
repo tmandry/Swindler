@@ -34,16 +34,14 @@ public class Property<Type: Equatable> {
   private(set) var delegate: Any
   private(set) var initialized: Promise<Void>
 
-  init<Event: WindowPropertyEventTypeInternal, Impl: PropertyDelegate where Event.PropertyType == Type, Impl.T == Type>(_ eventType: Event.Type, _ notifier: WindowPropertyNotifier, _ delegate: Impl) {
-    self.notifier = PropertyNotifierThunk<Type>(eventType, notifier)
+  init<Impl: PropertyDelegate where Impl.T == Type>(_ delegate: Impl, notifier: WindowPropertyNotifier) {
+    self.notifier = PropertyNotifierThunk<Type>(notifier)
     self.delegate = delegate
     self.delegate_ = PropertyDelegateThunk(delegate)
 
-    // Must initialize `initialized` before capturing self in a closure, so do it this way.
     let (initialized, fulfill, reject) = Promise<Void>.pendingPromise()
-    self.initialized = initialized
+    self.initialized = initialized  // must be set before capturing `self` in a closure
     delegate.initialize().then { (value: Type) -> () in
-      print(value)
       self.value_ = value
       fulfill()
     }.error { error in
@@ -53,6 +51,12 @@ public class Property<Type: Equatable> {
         reject(error)
       }
     }
+  }
+
+  /// Use this initializer if there is an event associated with the property.
+  convenience init<Event: WindowPropertyEventTypeInternal, Impl: PropertyDelegate where Event.PropertyType == Type, Impl.T == Type>(_ delegate: Impl, withEvent: Event.Type, notifier: WindowPropertyNotifier) {
+    self.init(delegate, notifier: notifier)
+    self.notifier = PropertyNotifierThunk<Type>(notifier, withEvent: Event.self)
   }
 
   /// The value of the property.
@@ -67,7 +71,7 @@ public class Property<Type: Equatable> {
       if self.value_ != actual {
         let oldValue = self.value_
         self.value_ = actual
-        self.notifier.notify(external: true, oldValue: oldValue, newValue: self.value_)
+        self.notifier.notify?(external: true, oldValue: oldValue, newValue: self.value_)
       }
       return self.value_
     }.recover { (error: ErrorType) throws -> Type in
@@ -83,8 +87,9 @@ public class Property<Type: Equatable> {
 
 /// A property that can be set. Writes happen asynchronously.
 public class WriteableProperty<Type: Equatable>: Property<Type> {
-  override init<Event: WindowPropertyEventTypeInternal, Impl: PropertyDelegate where Event.PropertyType == Type, Impl.T == Type>(_ eventType: Event.Type, _ notifier: WindowPropertyNotifier, _ delegate: Impl) {
-    super.init(eventType, notifier, delegate)
+  // Due to a Swift bug I have to override this.
+  override init<Impl: PropertyDelegate where Impl.T == Type>(_ delegate: Impl, notifier: WindowPropertyNotifier) {
+    super.init(delegate, notifier: notifier)
   }
 
   /// The value of the property. Reading is instant and synchronous, but writing is asynchronous and
@@ -104,7 +109,7 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
       if actual != self.value_ {
         let oldValue = self.value_
         self.value_ = actual
-        self.notifier.notify(external: false, oldValue: oldValue, newValue: actual)
+        self.notifier.notify?(external: false, oldValue: oldValue, newValue: actual)
       }
       return actual
     }.recover { (error: ErrorType) throws -> Type in
@@ -140,19 +145,21 @@ private struct PropertyDelegateThunk<Type: Equatable>: PropertyDelegate {
 
 class PropertyNotifierThunk<PropertyType: Equatable> {
   let wrappedNotifier: WindowPropertyNotifier
-  let notify_: (external: Bool, oldValue: PropertyType, newValue: PropertyType) -> ()
+  // Will be nil if not initialized with an event type.
+  let notify: Optional<(external: Bool, oldValue: PropertyType, newValue: PropertyType) -> ()>
 
-  init<Event: WindowPropertyEventTypeInternal where Event.PropertyType == PropertyType>(_ eventType: Event.Type, _ wrappedNotifier: WindowPropertyNotifier) {
+  init<Event: WindowPropertyEventTypeInternal where Event.PropertyType == PropertyType>(_ wrappedNotifier: WindowPropertyNotifier, withEvent: Event.Type) {
     self.wrappedNotifier = wrappedNotifier
-
-    notify_ = { (external: Bool, oldValue: PropertyType, newValue: PropertyType) in
+    self.notify = { (external: Bool, oldValue: PropertyType, newValue: PropertyType) in
       wrappedNotifier.notify(Event.self, external: external, oldValue: oldValue, newValue: newValue)
     }
   }
 
-  func notify(external external: Bool, oldValue: PropertyType, newValue: PropertyType) {
-    notify_(external: external, oldValue: oldValue, newValue: newValue)
+  init(_ wrappedNotifier: WindowPropertyNotifier) {
+    self.wrappedNotifier = wrappedNotifier
+    self.notify = nil
   }
+
   func notifyInvalid() {
     wrappedNotifier.notifyInvalid()
   }

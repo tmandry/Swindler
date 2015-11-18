@@ -287,7 +287,7 @@ class OSXDriverSpec: QuickSpec {
 
         context("when the event fires but the value is not changed") {
 
-          it("does not emit a ChangedEvent", closure: {
+          it("does not emit a ChangedEvent") { () -> Promise<Void> in
             var callbacks = 0
             state.on { (event: WindowPosChangedEvent) in
               callbacks++
@@ -296,12 +296,12 @@ class OSXDriverSpec: QuickSpec {
             return window.pos.refresh().then { _ in
               expect(callbacks).to(equal(0), description: "callback should not be called")
             }
-          } as () -> Promise<Void>)
+          }
 
         }
       }
 
-      it("calls multiple event handlers", closure: {
+      it("calls multiple event handlers") { () -> Promise<Void> in
         var callbacks1 = 0
         var callbacks2 = 0
         state.on { (event: WindowPosChangedEvent) in
@@ -312,11 +312,11 @@ class OSXDriverSpec: QuickSpec {
         }
         windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
         observer.emit(.Moved, forElement: windowElement)
-        return window.pos.refresh().then({ _ in
+        return window.pos.refresh().then { (CGPoint) -> () in
           expect(callbacks1).toEventually(equal(1), description: "callback1 should be called once")
           expect(callbacks2).toEventually(equal(1), description: "callback2 should be called once")
-        } as (CGPoint) -> ())
-      } as () -> Promise<Void>)
+        }
+      }
 
     }
 
@@ -383,7 +383,8 @@ class AXPropertySpec: QuickSpec {
       windowElement.attrs = attrs
       let initPromise = Promise<[AXSwift.Attribute: Any]>(attrs)
       notifier = TestWindowPropertyNotifier()
-      property = WriteableProperty(WindowPosChangedEvent.self, notifier, AXPropertyDelegate(windowElement, .Position, initPromise))
+      property = WriteableProperty(AXPropertyDelegate(windowElement, .Position, initPromise),
+        withEvent: WindowPosChangedEvent.self, notifier: notifier)
     }
 
     beforeEach {
@@ -424,10 +425,10 @@ class AXPropertySpec: QuickSpec {
       }
 
       it("changes the property on the UIElement") {
-        return property.set(CGPoint(x: 100, y: 100)).then({ _ in
+        return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
           expect(windowElement.attrs[.Position]! is CGPoint).to(beTrue())
           expect(windowElement.attrs[.Position]! as? CGPoint).to(equal(CGPoint(x: 100, y: 100)))
-        } as (CGPoint) -> ())
+        }
       }
 
       it("emits a ChangedEvent") {
@@ -437,20 +438,20 @@ class AXPropertySpec: QuickSpec {
       }
 
       it("includes the correct oldVal and newVal in the event") {
-        return property.set(CGPoint(x: 100, y: 100)).then({ _ in
+        return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
           if let event = notifier.events.first {
             expect(event.oldValue as? CGPoint).to(equal(CGPoint(x: 5, y: 5)))
             expect(event.newValue as? CGPoint).to(equal(CGPoint(x: 100, y: 100)))
           }
-        } as (CGPoint) -> ())
+        }
       }
 
       it("marks the event as internal") {
-        return property.set(CGPoint(x: 100, y: 100)).then({ _ in
+        return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
           if let event = notifier.events.first {
             expect(event.external).to(beFalse())
           }
-        } as (CGPoint) -> ())
+        }
       }
 
       context("when the new value is the same as the old value") {
@@ -491,10 +492,6 @@ class AXPropertySpec: QuickSpec {
         }
 
       }
-    }
-
-    describe("optional properties") {
-
     }
 
   }

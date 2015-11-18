@@ -125,11 +125,3 @@ public struct WindowMinimizedChangedEvent: WindowPropertyEventTypeInternal {
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
-
-public struct WindowMainChangedEvent: WindowPropertyEventTypeInternal {
-  public typealias PropertyType = Bool
-  public var external: Bool
-  public var window: WindowType
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
-}

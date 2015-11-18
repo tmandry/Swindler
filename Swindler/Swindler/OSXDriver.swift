@@ -190,13 +190,26 @@ class OSXWindow<
     let (initPromise, fulfill, _) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
 
     // Initialize all properties.
-    pos = WriteableProperty(WindowPosChangedEvent.self, self, AXPropertyDelegate(axElement, .Position, initPromise))
-    size = WriteableProperty(WindowSizeChangedEvent.self, self, AXPropertyDelegate(axElement, .Size, initPromise))
-    title = Property(WindowTitleChangedEvent.self, self, AXPropertyDelegate(axElement, .Title, initPromise))
-    minimized = WriteableProperty(WindowMinimizedChangedEvent.self, self, AXPropertyDelegate(axElement, .Minimized, initPromise))
-    main = WriteableProperty(WindowMainChangedEvent.self, self, AXPropertyDelegate(axElement, .Main, initPromise))
+    pos = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
+        withEvent: WindowPosChangedEvent.self, notifier: self)
+    size = WriteableProperty(AXPropertyDelegate(axElement, .Size, initPromise),
+        withEvent: WindowSizeChangedEvent.self, notifier: self)
+    title = Property(AXPropertyDelegate(axElement, .Title, initPromise),
+        withEvent: WindowTitleChangedEvent.self, notifier: self)
+    minimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
+        withEvent: WindowMinimizedChangedEvent.self, notifier: self)
+    main = WriteableProperty(AXPropertyDelegate(axElement, .Main, initPromise),
+        notifier: self)
 
-    // Map notifications to the corresponding property.
+    let axProperties: [PropertyType] = [
+      pos,
+      size,
+      title,
+      minimized,
+      main
+    ]
+
+    // Map notifications on this element to the corresponding property.
     watchedAxProperties = [
       .Moved: pos,
       .Resized: size,
@@ -212,9 +225,8 @@ class OSXWindow<
     try observer.addNotification(.UIElementDestroyed, forElement: axElement)
 
     // Asynchronously fetch the attribute values.
-    let axProperties = watchedAxProperties.values  // might contain duplicates
     let attrNames: [Attribute] = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
-    let uniqueAttrNames = Array(Set(attrNames))
+    let uniqueAttrNames = attrNames
     Promise<Void>().thenInBackground {
       return try axElement.getMultipleAttributes(uniqueAttrNames)
     }.then { attributes in
@@ -311,7 +323,7 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
   }
 
   func initialize() -> Promise<T> {
-    return initPromise.thenInBackground { (dict: InitDict) throws -> T in
+    return initPromise.then { (dict: InitDict) throws -> T in
       guard let value = dict[self.attribute] else {
         print("Missing attribute \(self.attribute) on window element \(self.axElement)")
         throw PropertyError.Invalid(error: OSXDriverError.MissingAttribute)
