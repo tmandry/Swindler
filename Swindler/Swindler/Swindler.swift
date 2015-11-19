@@ -24,10 +24,7 @@ public protocol WindowType {
   /// Whether the window is minimized.
   var minimized: WriteableProperty<Bool>! { get }
 
-  /// Whether the window is currently the main window of its application.
-  var main: WriteableProperty<Bool>! { get }
-
-  /// TODO: fullScreen, focused, screen, space
+  /// TODO: main, fullScreen, focused, screen, space
 }
 
 extension WindowType {

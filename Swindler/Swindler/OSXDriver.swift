@@ -198,15 +198,12 @@ class OSXWindow<
         withEvent: WindowTitleChangedEvent.self, notifier: self)
     minimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
         withEvent: WindowMinimizedChangedEvent.self, notifier: self)
-    main = WriteableProperty(AXPropertyDelegate(axElement, .Main, initPromise),
-        notifier: self)
 
     let axProperties: [PropertyType] = [
       pos,
       size,
       title,
       minimized,
-      main
     ]
 
     // Map notifications on this element to the corresponding property.
