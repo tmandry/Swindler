@@ -2,7 +2,10 @@ import AXSwift
 import PromiseKit
 
 protocol WindowPropertyNotifier: class {
+  /// Called when the property value has been updated.
   func notify<Event: WindowPropertyEventTypeInternal>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType)
+
+  /// Called when the underlying object has become invalid.
   func notifyInvalid()
 }
 
@@ -30,9 +33,12 @@ enum PropertyError: ErrorType {
 /// A property on a window. Property values are watched and cached in the background, so they are
 /// always available to read.
 public class Property<Type: Equatable> {
+  // The backing store
   private var value_: Type!
-  private var notifier: PropertyNotifierThunk<Type>
+  // Implementation of how to read and write the value
   private var delegate_: PropertyDelegateThunk<Type>
+  // Where events go
+  private var notifier: PropertyNotifierThunk<Type>
 
   // Only do one request on a given property at a time. This ensures that events get emitted from
   // the right operation.
@@ -41,12 +47,13 @@ public class Property<Type: Equatable> {
   // This lock MUST NOT be held during a slow call. Only hold it as long as necessary.
   private let backingStoreLock = NSLock()
 
-  // Internal properties
-  private(set) var delegate: Any
-  private(set) var initialized: Promise<Void>
-
   // Exposed for testing only.
   var backgroundQueue: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+
+  // Property definer is responsible for ensuring that it is NOT used before this promise resolves.
+  private(set) var initialized: Promise<Void>
+  // Property definer can access the delegate they provided here
+  private(set) var delegate: Any
 
   init<Impl: PropertyDelegate where Impl.T == Type>(_ delegate: Impl, notifier: WindowPropertyNotifier) {
     self.notifier = PropertyNotifierThunk<Type>(notifier)
