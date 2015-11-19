@@ -9,12 +9,15 @@ protocol WindowPropertyNotifier: class {
 /// A PropertyDelegate is responsible for reading and writing property values to/from the OS.
 protocol PropertyDelegate {
   typealias T: Equatable
-  func writeValue(newValue: T) throws
+
+  /// Synchronously read the property value from the OS. May be called on a background thread.
   func readValue() throws -> T
+
+  /// Synchronously write the property value to the OS. May be called on a background thread.
+  func writeValue(newValue: T) throws
 
   /// Returns a promise of the property's initial value. It's the responsibility of whoever defines
   /// the property to ensure that the property is not accessed before this promise resolves.
-  /// We could make this optional and use `readValue()` otherwise.
   func initialize() -> Promise<T>
 }
 
@@ -85,26 +88,37 @@ public class Property<Type: Equatable> {
       defer { self.requestLock.unlock() }
 
       let actual = try self.delegate_.readValue()
-
-      // Update backing store.
-      self.backingStoreLock.lock()
-      defer { self.backingStoreLock.unlock() }
-      let oldValue = self.value_
-      self.value_ = actual
+      let oldValue = try self.updateBackingStore(actual)
 
       return (oldValue, actual)
     }.then { (oldValue: Type, actual: Type) throws -> Type in
+      // Back on main thread.
       if oldValue != actual {
         self.notifier.notify?(external: true, oldValue: oldValue, newValue: actual)
       }
       return actual
-    }.recover { (error: ErrorType) throws -> Type in
-      do {
-        throw error
-      } catch PropertyError.Invalid(let wrappedError) {
-        self.notifier.notifyInvalid()
-        throw wrappedError
-      }
+    }.recover { error in
+      try self.unwrapInvalidError(error)
+    }
+  }
+
+  /// Synchronously updates the backing store and returns the old value.
+  private func updateBackingStore(newValue: Type) throws -> Type {
+    self.backingStoreLock.lock()
+    defer { self.backingStoreLock.unlock() }
+
+    let oldValue = self.value_
+    self.value_ = newValue
+
+    return oldValue
+  }
+
+  private func unwrapInvalidError(error: ErrorType) throws -> Type {
+    do {
+      throw error
+    } catch PropertyError.Invalid(let wrappedError) {
+      self.notifier.notifyInvalid()
+      throw wrappedError
     }
   }
 }
@@ -140,27 +154,17 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
       // Write, then read back the value to see what actually changed.
       try self.delegate_.writeValue(newValue)
       let actual = try self.delegate_.readValue()
-
-      // Update backing store.
-      self.backingStoreLock.lock()
-      defer { self.backingStoreLock.unlock() }
-      let oldValue = self.value_
-      self.value_ = actual
+      let oldValue = try self.updateBackingStore(actual)
 
       return (oldValue, actual)
     }.then { (oldValue: Type, actual: Type) -> Type in
+      // Back on main thread.
       if actual != oldValue {
         self.notifier.notify?(external: false, oldValue: oldValue, newValue: actual)
       }
       return actual
-    }.recover { (error: ErrorType) throws -> Type in
-      switch error {
-      case PropertyError.Invalid(let wrappedError):
-        self.notifier.notifyInvalid()
-        throw wrappedError
-      default:
-        throw error
-      }
+    }.recover { error in
+      try self.unwrapInvalidError(error)
     }
   }
 }
