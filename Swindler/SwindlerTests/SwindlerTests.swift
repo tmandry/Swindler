@@ -119,6 +119,23 @@ class FakeObserver: TestObserver {
   }
 }
 
+class TestPropertyDelegate<T: Equatable>: PropertyDelegate {
+  var systemValue: T
+
+  init(value: T) {
+    systemValue = value
+  }
+  func initialize() -> Promise<T> {
+    return Promise(systemValue)
+  }
+  func readValue() throws -> T {
+    return systemValue
+  }
+  func writeValue(newValue: T) throws {
+    systemValue = newValue
+  }
+}
+
 
 class OSXDriverSpec: QuickSpec {
   override func spec() {
@@ -313,8 +330,8 @@ class OSXDriverSpec: QuickSpec {
         windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
         observer.emit(.Moved, forElement: windowElement)
         return window.pos.refresh().then { (CGPoint) -> () in
-          expect(callbacks1).toEventually(equal(1), description: "callback1 should be called once")
-          expect(callbacks2).toEventually(equal(1), description: "callback2 should be called once")
+          expect(callbacks1).to(equal(1), description: "callback1 should be called once")
+          expect(callbacks2).to(equal(1), description: "callback2 should be called once")
         }
       }
 
@@ -452,6 +469,51 @@ class AXPropertySpec: QuickSpec {
             expect(event.external).to(beFalse())
           }
         }
+      }
+
+      context("when the system notification is received before reading back the new value") {
+        class MyPropertyDelegate<T: Equatable>: TestPropertyDelegate<T> {
+          let onWrite: () -> ()
+          init(value: T, onWrite: () -> ()) {
+            self.onWrite = onWrite
+            super.init(value: value)
+          }
+          override func writeValue(newValue: T) throws {
+            systemValue = newValue
+            onWrite()
+          }
+        }
+
+        var delegate: MyPropertyDelegate<CGPoint>!
+        var property: WriteableProperty<CGPoint>!
+        beforeEach {
+          delegate = MyPropertyDelegate(value: CGPoint(x: 5, y: 5), onWrite: {
+            property.refresh()
+          })
+          property = WriteableProperty(delegate,
+              withEvent: WindowPosChangedEvent.self, notifier: notifier)
+
+          waitUntil { done in
+            property.initialized.then {
+              done()
+            }
+          }
+        }
+
+        it("only emits one event") {
+          return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
+            expect(notifier.events.count).to(equal(1))
+          }
+        }
+
+        it("marks the event as internal") {
+          return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
+            if let event = notifier.events.first {
+              expect(event.external).to(beFalse())
+            }
+          }
+        }
+
       }
 
       context("when the new value is the same as the old value") {

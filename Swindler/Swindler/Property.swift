@@ -31,8 +31,19 @@ public class Property<Type: Equatable> {
   private var notifier: PropertyNotifierThunk<Type>
   private var delegate_: PropertyDelegateThunk<Type>
 
+  // Only do one request on a given property at a time. This ensures that events get emitted from
+  // the right operation.
+  private let requestLock = NSLock()
+  // Since the backing store can be updated on another thread, we need to lock it.
+  // This lock MUST NOT be held during a slow call. Only hold it as long as necessary.
+  private let backingStoreLock = NSLock()
+
+  // Internal properties
   private(set) var delegate: Any
   private(set) var initialized: Promise<Void>
+
+  // Exposed for testing only.
+  var backgroundQueue: dispatch_queue_t = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 
   init<Impl: PropertyDelegate where Impl.T == Type>(_ delegate: Impl, notifier: WindowPropertyNotifier) {
     self.notifier = PropertyNotifierThunk<Type>(notifier)
@@ -60,20 +71,33 @@ public class Property<Type: Equatable> {
   }
 
   /// The value of the property.
-  public var value: Type { return value_ }
+  public var value: Type {
+    backingStoreLock.lock()
+    defer { backingStoreLock.unlock() }
+    return value_
+  }
 
   /// Forces the value of the property to refresh. Most properties are watched so you don't need to
   /// call this yourself.
   public func refresh() -> Promise<Type> {
-    return Promise<Void>().thenInBackground {
-      return try self.delegate_.readValue()
-    }.then { (actual: Type) throws -> Type in
-      if self.value_ != actual {
-        let oldValue = self.value_
-        self.value_ = actual
-        self.notifier.notify?(external: true, oldValue: oldValue, newValue: self.value_)
+    return Promise<Void>().then(on: backgroundQueue) { () -> (Type, Type) in
+      self.requestLock.lock()
+      defer { self.requestLock.unlock() }
+
+      let actual = try self.delegate_.readValue()
+
+      // Update backing store.
+      self.backingStoreLock.lock()
+      defer { self.backingStoreLock.unlock() }
+      let oldValue = self.value_
+      self.value_ = actual
+
+      return (oldValue, actual)
+    }.then { (oldValue: Type, actual: Type) throws -> Type in
+      if oldValue != actual {
+        self.notifier.notify?(external: true, oldValue: oldValue, newValue: actual)
       }
-      return self.value_
+      return actual
     }.recover { (error: ErrorType) throws -> Type in
       do {
         throw error
@@ -95,20 +119,37 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
   /// The value of the property. Reading is instant and synchronous, but writing is asynchronous and
   /// the value will not be updated until the write is complete. Use `set` to retrieve a promise.
   override public var value: Type {
-    get { return value_ }
-    set { set(newValue) }
+    get {
+      backingStoreLock.lock()
+      defer { backingStoreLock.unlock() }
+      return value_
+    }
+    set {
+      // `set` takes care of locking.
+      set(newValue)
+    }
   }
 
   /// Sets the value of the property.
   /// - returns: A promise that resolves to the new actual value of the property.
   public func set(newValue: Type) -> Promise<Type> {
-    return Promise<Void>().thenInBackground { () throws -> Type in
+    return Promise<Void>().then(on: backgroundQueue) { () throws -> (Type, Type) in
+      self.requestLock.lock()
+      defer { self.requestLock.unlock() }
+
+      // Write, then read back the value to see what actually changed.
       try self.delegate_.writeValue(newValue)
-      return try self.delegate_.readValue()
-    }.then { (actual: Type) -> Type in
-      if actual != self.value_ {
-        let oldValue = self.value_
-        self.value_ = actual
+      let actual = try self.delegate_.readValue()
+
+      // Update backing store.
+      self.backingStoreLock.lock()
+      defer { self.backingStoreLock.unlock() }
+      let oldValue = self.value_
+      self.value_ = actual
+
+      return (oldValue, actual)
+    }.then { (oldValue: Type, actual: Type) -> Type in
+      if actual != oldValue {
         self.notifier.notify?(external: false, oldValue: oldValue, newValue: actual)
       }
       return actual
