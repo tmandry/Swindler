@@ -6,6 +6,8 @@ import AXSwift
 import PromiseKit
 
 class TestUIElement: UIElementType, Hashable {
+  static var globalMessagingTimeout: Float = 0
+
   static var elementCount: Int = 0
 
   var id: Int = elementCount++
@@ -325,7 +327,9 @@ class OSXWindowSpec: QuickSpec {
           windowElement.attrs.removeValueForKey(.Position)
 
           let promise = Window.initialize(notifier: TestNotifier(), axElement: windowElement, observer: TestObserver())
-          return expectToFail(promise, with: OSXDriverError.MissingAttribute)
+          let expectedError = PropertyError.InvalidObject(cause:
+              OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement))
+          return expectToFail(promise, with: expectedError)
         }
       }
     }
@@ -388,7 +392,9 @@ class PropertySpec: QuickSpec {
 
         it("reports an error") { () -> Promise<Void> in
           setUpWithAttributes([:])
-          return expectToFail(property.initialized, with: OSXDriverError.MissingAttribute)
+          let expectedError = PropertyError.InvalidObject(cause:
+              OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement))
+          return expectToFail(property.initialized, with: expectedError)
         }
 
       }
@@ -456,7 +462,7 @@ class PropertySpec: QuickSpec {
         }
 
         it("returns an error") {
-          return expectToFail(property.refresh(), with: AXSwift.Error.InvalidUIElement)
+          return expectToFail(property.refresh(), with: PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement))
         }
 
         it("calls notifier.notifyInvalid()", failOnError: false) {
@@ -660,7 +666,7 @@ class PropertySpec: QuickSpec {
         }
 
         it("returns an error") {
-          return expectToFail(property.refresh(), with: AXSwift.Error.InvalidUIElement)
+          return expectToFail(property.refresh(), with: PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement))
         }
 
         it("calls notifier.notifyInvalid()", failOnError: false) {

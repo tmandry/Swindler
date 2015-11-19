@@ -10,6 +10,10 @@ protocol WindowPropertyNotifier: class {
 }
 
 /// A PropertyDelegate is responsible for reading and writing property values to/from the OS.
+///
+/// - important: You must only throw PropertyErrors from your methods.
+/// - note: Throw PropertyError.InvalidObject from any method, and `notifyInvalid()` will be called
+///         on the WindowPropertyNotifier.
 protocol PropertyDelegate {
   typealias T: Equatable
 
@@ -24,14 +28,26 @@ protocol PropertyDelegate {
   func initialize() -> Promise<T>
 }
 
-/// If the underlying UI object becomes invalid, throw a PropertyError.Invalid which wraps a public
-/// error type from your delegate. The unwrapped error will be presented to the user.
-enum PropertyError: ErrorType {
-  case Invalid(error: ErrorType)
+public enum PropertyError: ErrorType {
+  /// The value the property was set to is illegal.
+  /// - note: In practice, applications often simply ignore illegal values.
+  case IllegalValue
+
+  /// The application did not respond to our request quickly enough.
+  case Timeout(time: NSTimeInterval)
+
+  /// The underlying object for the property has become invalid (e.g. the window has been destroyed).
+  /// This is considered a permanent failure.
+  case InvalidObject(cause: ErrorType)
+
+  /// Some other, hopefully temporary, failure.
+  case Failure(cause: ErrorType)
 }
 
 /// A property on a window. Property values are watched and cached in the background, so they are
 /// always available to read.
+///
+/// - throws: Only `PropertyError` errors are given for rejected promises.
 public class Property<Type: Equatable> {
   // The backing store
   private var value_: Type!
@@ -62,13 +78,14 @@ public class Property<Type: Equatable> {
 
     let (initialized, fulfill, reject) = Promise<Void>.pendingPromise()
     self.initialized = initialized  // must be set before capturing `self` in a closure
+
     delegate.initialize().then { (value: Type) -> () in
       self.value_ = value
       fulfill()
     }.error { error in
-      if case PropertyError.Invalid(let wrappedError) = error {
-        reject(wrappedError)
-      } else {
+      do {
+        try self.handleError(error)
+      } catch {
         reject(error)
       }
     }
@@ -95,7 +112,7 @@ public class Property<Type: Equatable> {
       defer { self.requestLock.unlock() }
 
       let actual = try self.delegate_.readValue()
-      let oldValue = try self.updateBackingStore(actual)
+      let oldValue = self.updateBackingStore(actual)
 
       return (oldValue, actual)
     }.then { (oldValue: Type, actual: Type) throws -> Type in
@@ -105,12 +122,12 @@ public class Property<Type: Equatable> {
       }
       return actual
     }.recover { error in
-      try self.unwrapInvalidError(error)
+      try self.handleError(error)
     }
   }
 
   /// Synchronously updates the backing store and returns the old value.
-  private func updateBackingStore(newValue: Type) throws -> Type {
+  private func updateBackingStore(newValue: Type) -> Type {
     self.backingStoreLock.lock()
     defer { self.backingStoreLock.unlock() }
 
@@ -120,13 +137,16 @@ public class Property<Type: Equatable> {
     return oldValue
   }
 
-  private func unwrapInvalidError(error: ErrorType) throws -> Type {
-    do {
-      throw error
-    } catch PropertyError.Invalid(let wrappedError) {
+  /// Checks and re-throws an error.
+  private func handleError(error: ErrorType) throws -> Type {
+    assert(error is PropertyError,
+      "Errors thrown from PropertyDelegate must be PropertyErrors, but got \(error)")
+
+    if case PropertyError.InvalidObject = error {
       self.notifier.notifyInvalid()
-      throw wrappedError
     }
+
+    throw error
   }
 }
 
@@ -160,10 +180,16 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
 
       // Write, then read back the value to see what actually changed.
       try self.delegate_.writeValue(newValue)
-      let actual = try self.delegate_.readValue()
-      let oldValue = try self.updateBackingStore(actual)
-
-      return (oldValue, actual)
+      do {
+        let actual = try self.delegate_.readValue()
+        let oldValue = self.updateBackingStore(actual)
+        return (oldValue, actual)
+      } catch PropertyError.Timeout(let time) {
+        NSLog("A readback timed out (in \(time) seconds) after successfully writing a property (of " +
+              "type \(Type.self)). This can result in an inconsistent property state in Swindler " +
+              "where ChangedEvents are marked as external that are actually internal.")
+        throw PropertyError.Timeout(time: time)
+      }
     }.then { (oldValue: Type, actual: Type) -> Type in
       // Back on main thread.
       if actual != oldValue {
@@ -171,7 +197,7 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
       }
       return actual
     }.recover { error in
-      try self.unwrapInvalidError(error)
+      try self.handleError(error)
     }
   }
 }

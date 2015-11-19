@@ -6,6 +6,8 @@ public var state: StateType = OSXState<UIElement, Application, Observer>()
 // MARK: - Injectable protocols
 
 protocol UIElementType: Equatable {
+  static var globalMessagingTimeout: Float { get }
+
   func pid() throws -> pid_t
   func attribute<T>(attribute: Attribute) throws -> T?
   func setAttribute(attribute: Attribute, value: Any) throws
@@ -45,7 +47,7 @@ protocol EventNotifier: class {
 // MARK: - Errors
 
 enum OSXDriverError: ErrorType {
-  case MissingAttribute
+  case MissingAttribute(attribute: AXSwift.Attribute, onElement: UIElementType)
 }
 
 // MARK: - Implementation
@@ -59,8 +61,8 @@ class OSXState<
   var observers: [Observer] = []
   var windows: [Window] = []
 
-  // TODO: handle errors
   // TODO: fix strong ref cycle
+  // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
 
   init() {
     print("Initializing Swindler")
@@ -73,7 +75,6 @@ class OSXState<
         applications.append(app)
         observers.append(observer)
       } catch {
-        // TODO: handle timeouts
         let application = try? NSRunningApplication(processIdentifier: app.pid())
         print("Could not watch application \(application): \(error)")
         assert(error is AXSwift.Error)
@@ -99,7 +100,6 @@ class OSXState<
       self.windows.append(window)
       self.notify(WindowCreatedEvent(external: true, window: window))
     }.error { error in
-      // TODO: handle timeouts
       print("Error: Could not watch [\(windowElement)]: \(error)")
       assert(error is AXSwift.Error || error is OSXDriverError)
     }
@@ -150,7 +150,7 @@ class OSXState<
   }
 }
 
-// Making this private = compiler segfault
+// Making this private = Swift compiler segfault
 protocol PropertyType {
   func refresh()
   var delegate: Any { get }
@@ -178,6 +178,7 @@ class OSXWindow<
   var minimized: WriteableProperty<Bool>!
   var main: WriteableProperty<Bool>!
 
+  private var axProperties: [PropertyType]!
   private var watchedAxProperties: [AXSwift.Notification: PropertyType]!
 
   private init(notifier: EventNotifier, axElement: UIElement, observer: Observer) throws {
@@ -187,7 +188,7 @@ class OSXWindow<
     self.axElement = axElement
 
     // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
-    let (initPromise, fulfill, _) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
+    let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
 
     // Initialize all properties.
     pos = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
@@ -199,7 +200,7 @@ class OSXWindow<
     minimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
         withEvent: WindowMinimizedChangedEvent.self, notifier: self)
 
-    let axProperties: [PropertyType] = [
+    axProperties = [
       pos,
       size,
       title,
@@ -221,35 +222,59 @@ class OSXWindow<
     }
     try observer.addNotification(.UIElementDestroyed, forElement: axElement)
 
-    // Asynchronously fetch the attribute values.
-    let attrNames: [Attribute] = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
-    let uniqueAttrNames = attrNames
+    // Fetch attribute values.
+    fetchAttributes(fulfill, reject)
+  }
+
+  // Asynchronously fetches all the window attributes.
+  func fetchAttributes(fulfill: ([Attribute: Any]) -> (), _ reject: (ErrorType) -> ()) {
+    let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
     Promise<Void>().thenInBackground {
-      return try axElement.getMultipleAttributes(uniqueAttrNames)
-    }.then { attributes in
+      // Issue a request in the background.
+      return try self.axElement.getMultipleAttributes(attributes)
+    }.then { attributes -> () in
       fulfill(attributes)
+    }.recover { error -> () in
+      // Rewrite errors as PropertyErrors.
+      do {
+        throw error
+      } catch AXSwift.Error.CannotComplete {
+        // If messaging timeout unspecified, we'll pass -1.
+        let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
+        throw PropertyError.Timeout(time: NSTimeInterval(time))
+      } catch AXSwift.Error.IllegalArgument {
+        throw PropertyError.InvalidObject(cause: AXSwift.Error.IllegalArgument)
+      } catch AXSwift.Error.NotImplemented {
+        throw PropertyError.InvalidObject(cause: AXSwift.Error.NotImplemented)
+      } catch AXSwift.Error.InvalidUIElement {
+        throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
+      } catch {
+        unexpectedError(error, onElement: self.axElement)
+        throw PropertyError.InvalidObject(cause: error)
+      }
     }.error { error in
-      // TODO: handle timeouts
-      unexpectedError(error, onElement: axElement)
+      // Can't recover from an error during initialization.
       self.notifyInvalid()
+      reject(error)
     }
   }
 
+  // Initializes the window and returns it as a Promise once it's ready.
   static func initialize(notifier notifier: EventNotifier, axElement: UIElement, observer: Observer) -> Promise<OSXWindow> {
-    return firstly {
+    return firstly {  // capture thrown errors in promise
       let window = try OSXWindow(notifier: notifier, axElement: axElement, observer: observer)
-      let axProperties = window.watchedAxProperties.values
-      let attrPromises = axProperties.map({ $0.initialized })
-      return when(Array(attrPromises)).then { _ -> OSXWindow in
+
+      let propertiesInitialized = Array(window.axProperties.map({ $0.initialized }))
+      return when(propertiesInitialized).then { _ -> OSXWindow in
         return window
-      }
-    }.recover { (error: ErrorType) -> OSXWindow in
-      // Pass through errors wrapped by when
-      switch error {
-      case PromiseKit.Error.When(_, let wrappedError):
-        throw wrappedError
-      default:
-        throw error
+      }.recover { (error: ErrorType) -> OSXWindow in
+        // Unwrap When errors
+        switch error {
+        case PromiseKit.Error.When(_, let wrappedError):
+          throw wrappedError
+        default:
+          throw error
+        }
       }
     }
   }
@@ -276,6 +301,7 @@ class OSXWindow<
   }
 }
 
+// Used by OSXWindow to pull out the AXSwift attributes.
 protocol AXPropertyDelegateType {
   var attribute: AXSwift.Attribute { get }
 }
@@ -294,36 +320,47 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
 
   func readValue() throws -> T {
     do {
-      // TODO: handle missing values
-      return try axElement.attribute(attribute)!
+      guard let value: T = try axElement.attribute(attribute) else {
+        // This will be caught as an unexpected error.
+        throw OSXDriverError.MissingAttribute(attribute: attribute, onElement: axElement)
+      }
+      return value
+    } catch AXSwift.Error.CannotComplete {
+      // If messaging timeout unspecified, we'll pass -1.
+      let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
+      throw PropertyError.Timeout(time: NSTimeInterval(time))
     } catch AXSwift.Error.InvalidUIElement {
-      throw PropertyError.Invalid(error: AXSwift.Error.InvalidUIElement)
+      throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
     } catch let error {
-      // TODO: handle kAXErrorAttributeUnsupported, kAXErrorCannotComplete, kAXErrorNotImplemented
       unexpectedError(error)
-      throw PropertyError.Invalid(error: error)
+      throw PropertyError.InvalidObject(cause: error)
     }
   }
 
   func writeValue(newValue: T) throws {
     do {
       try axElement.setAttribute(attribute, value: newValue)
-    } catch AXSwift.Error.InvalidUIElement {
-      throw PropertyError.Invalid(error: AXSwift.Error.InvalidUIElement)
+    } catch AXSwift.Error.IllegalArgument {
+      throw PropertyError.IllegalValue
+    } catch AXSwift.Error.CannotComplete {
+      // If messaging timeout unspecified, we'll pass -1.
+      let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
+      throw PropertyError.Timeout(time: NSTimeInterval(time))
     } catch AXSwift.Error.Failure {
-      throw AXSwift.Error.Failure
+      throw PropertyError.Failure(cause: AXSwift.Error.Failure)
+    } catch AXSwift.Error.InvalidUIElement {
+      throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
     } catch let error {
-      // TODO: handle kAXErrorIllegalArgument, kAXErrorAttributeUnsupported, kAXErrorCannotComplete, kAXErrorNotImplemented
       unexpectedError(error)
-      throw PropertyError.Invalid(error: error)
+      throw PropertyError.InvalidObject(cause: error)
     }
   }
 
   func initialize() -> Promise<T> {
     return initPromise.then { (dict: InitDict) throws -> T in
       guard let value = dict[self.attribute] else {
-        print("Missing attribute \(self.attribute) on window element \(self.axElement)")
-        throw PropertyError.Invalid(error: OSXDriverError.MissingAttribute)
+        throw PropertyError.InvalidObject(
+          cause: OSXDriverError.MissingAttribute(attribute: self.attribute, onElement: self.axElement))
       }
       return value as! T
     }
@@ -333,13 +370,20 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
 // MARK: - Error handling
 
 // Handle unexpected errors with detailed logging, and abort when in debug mode.
-func unexpectedError(error: ErrorType, file: String = __FILE__, line: Int = __LINE__) {
+func unexpectedError(error: String, file: String = __FILE__, line: Int = __LINE__) {
   print("unexpected error: \(error) at \(file):\(line)")
   assertionFailure()
 }
 func unexpectedError<UIElement: UIElementType>(
-    error: ErrorType, onElement element: UIElement, file: String = __FILE__, line: Int = __LINE__) {
+    error: String, onElement element: UIElement, file: String = __FILE__, line: Int = __LINE__) {
   let application = try? NSRunningApplication(processIdentifier: element.pid())
   print("unexpected error: \(error) on element: \(element) of application: \(application) at \(file):\(line)")
   assertionFailure()
+}
+func unexpectedError(error: ErrorType, file: String = __FILE__, line: Int = __LINE__) {
+  unexpectedError(String(error), file: file, line: line)
+}
+func unexpectedError<UIElement: UIElementType>(
+  error: ErrorType, onElement element: UIElement, file: String = __FILE__, line: Int = __LINE__) {
+    unexpectedError(String(error), onElement: element, file: file, line: line)
 }
