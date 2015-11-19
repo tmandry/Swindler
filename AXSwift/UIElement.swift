@@ -59,7 +59,7 @@ public class UIElement {
 
   /// Timeout in seconds for all UIElement messages. Use this to control how long a method call can
   /// delay execution. The default is `0` which means to use the system default.
-  public var globalMessagingTimeout: Float {
+  public class var globalMessagingTimeout: Float {
     get { return systemWideElement.messagingTimeout }
     set { systemWideElement.messagingTimeout = newValue }
   }

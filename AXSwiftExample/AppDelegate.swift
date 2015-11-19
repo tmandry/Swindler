@@ -36,6 +36,17 @@ class ApplicationDelegate: NSObject, NSApplicationDelegate {
     NSLog("multi: \(try! app.getMultipleAttributes(["AXRole", "asdf", "AXTitle"]))")
     NSLog("multi: \(try! app.getMultipleAttributes(.Role, .Title))")
 
+    // Try to set an unsettable attribute
+    if let window = try! app.windows()?.first {
+      do {
+        try window.setAttribute(.Title, value: "my title")
+        let newTitle: String = try! window.attribute(.Title)!
+        NSLog("title set; result = \(newTitle)")
+      } catch {
+        NSLog("error caught trying to set title of window: \(error)")
+      }
+    }
+
     NSLog("system wide:")
     NSLog("role: \(try! systemWideElement.role()!)")
     // NSLog("windows: \(try! sys.windows())")
