@@ -261,9 +261,7 @@ class OSXDriverSpec: QuickSpec {
       }
 
       context("when a window property changes") {
-        // TODO: We depend on window.pos.refresh() here to ensure that an event has finished
-        // its own async refresh before checking conditions. This is necessary when testing that
-        // callbacks doesn't change. We are probably testing this at the wrong level of abstraction.
+        // See `PropertySpec` for property unit tests.
 
         it("emits a ChangedEvent") {
           var callbacks = 0
@@ -275,24 +273,6 @@ class OSXDriverSpec: QuickSpec {
           expect(callbacks).toEventually(equal(1), description: "callback should be called once")
         }
 
-        it("includes the correct oldVal and newVal in the event") {
-          state.on { (event: WindowPosChangedEvent) in
-            expect(event.oldVal).to(equal(CGPoint(x: 5, y: 5)))
-            expect(event.newVal).to(equal(CGPoint(x: 100, y: 100)))
-          }
-          windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
-          observer.emit(.Moved, forElement: windowElement)
-        }
-
-        it("property value equals event.newVal") {
-          state.on { (event: WindowPosChangedEvent) in
-            expect(event.window.pos.value).to(equal(event.newVal))
-          }
-          windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
-          observer.emit(.Moved, forElement: windowElement)
-          return window.pos.refresh()
-        }
-
         it("marks the event as external") {
           state.on { (event: WindowPosChangedEvent) in
             expect(event.external).to(beTrue())
@@ -302,23 +282,9 @@ class OSXDriverSpec: QuickSpec {
           return window.pos.refresh()
         }
 
-        context("when the event fires but the value is not changed") {
-
-          it("does not emit a ChangedEvent") { () -> Promise<Void> in
-            var callbacks = 0
-            state.on { (event: WindowPosChangedEvent) in
-              callbacks++
-            }
-            observer.emit(.Moved, forElement: windowElement)
-            return window.pos.refresh().then { _ in
-              expect(callbacks).to(equal(0), description: "callback should not be called")
-            }
-          }
-
-        }
       }
 
-      it("calls multiple event handlers") { () -> Promise<Void> in
+      it("calls multiple event handlers") {
         var callbacks1 = 0
         var callbacks2 = 0
         state.on { (event: WindowPosChangedEvent) in
@@ -329,10 +295,8 @@ class OSXDriverSpec: QuickSpec {
         }
         windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
         observer.emit(.Moved, forElement: windowElement)
-        return window.pos.refresh().then { (CGPoint) -> () in
-          expect(callbacks1).to(equal(1), description: "callback1 should be called once")
-          expect(callbacks2).to(equal(1), description: "callback2 should be called once")
-        }
+        expect(callbacks1).toEventually(equal(1), description: "callback1 should be called once")
+        expect(callbacks2).toEventually(equal(1), description: "callback2 should be called once")
       }
 
     }
@@ -388,10 +352,10 @@ class TestWindowPropertyNotifier: WindowPropertyNotifier {
   }
 }
 
-class AXPropertySpec: QuickSpec {
+class PropertySpec: QuickSpec {
   override func spec() {
 
-    // Set up a state with a single application containing a single window.
+    // Set up a position property on a test AX window.
     var property: WriteableProperty<CGPoint>!
     var windowElement: TestWindow!
     var notifier: TestWindowPropertyNotifier!
@@ -400,17 +364,23 @@ class AXPropertySpec: QuickSpec {
       windowElement.attrs = attrs
       let initPromise = Promise<[AXSwift.Attribute: Any]>(attrs)
       notifier = TestWindowPropertyNotifier()
-      property = WriteableProperty(AXPropertyDelegate(windowElement, .Position, initPromise),
-        withEvent: WindowPosChangedEvent.self, notifier: notifier)
+      let delegate = AXPropertyDelegate<CGPoint, TestWindow>(windowElement, .Position, initPromise)
+      property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, notifier: notifier)
     }
-
-    beforeEach {
-      setUpWithAttributes([.Position: CGPoint(x: 5, y: 5)])
+    func finishPropertyInit() {
       waitUntil { done in
         property.initialized.then {
           done()
         }
       }
+    }
+
+    let firstPoint  = CGPoint(x: 5, y: 5)
+    let secondPoint = CGPoint(x: 100, y: 100)
+
+    beforeEach {
+      setUpWithAttributes([.Position: firstPoint])
+      finishPropertyInit()
     }
 
     describe("initialization") {
@@ -425,53 +395,226 @@ class AXPropertySpec: QuickSpec {
     }
 
     describe("refresh") {
-      // TODO: implement
       context("when the attribute has changed") {
+        beforeEach {
+          windowElement.attrs[.Position] = secondPoint
+        }
+
+        it("resolves to the new value") {
+          return property.refresh().then { newValue in
+            expect(newValue).to(equal(secondPoint))
+          }
+        }
+
+        it("emits a ChangedEvent of the correct type") {
+          return property.refresh().then { _ -> () in
+            expect(notifier.events.count).to(equal(1))
+            if let event = notifier.events.first {
+              expect(event.type == WindowPosChangedEvent.self).to(beTrue())
+            }
+          }
+        }
+
+        it("includes the correct oldVal and newVal in the event") {
+          return property.refresh().then { _ -> () in
+            if let event = notifier.events.first {
+              expect(event.oldValue as? CGPoint).to(equal(firstPoint))
+              expect(event.newValue as? CGPoint).to(equal(secondPoint))
+            }
+          }
+        }
+
+        it("marks the event as external") {
+          return property.refresh().then { _ -> () in
+            if let event = notifier.events.first {
+              expect(event.external).to(beTrue())
+            }
+          }
+        }
+
+      }
+
+      context("when the attribute has not changed") {
+
+        it("resolves to the correct value") {
+          return property.refresh().then { newValue in
+            expect(newValue).to(equal(firstPoint))
+          }
+        }
+
+        it("does not emit a ChangedEvent") {
+          return property.refresh().then { _ -> () in
+            expect(notifier.events.count).to(equal(0))
+          }
+        }
+
+      }
+
+      context("when the window element becomes invalid") {
+        beforeEach {
+          windowElement.throwInvalid = true
+        }
+
+        it("returns an error") {
+          return expectToFail(property.refresh(), with: AXSwift.Error.InvalidUIElement)
+        }
+
+        it("calls notifier.notifyInvalid()", failOnError: false) {
+          return property.refresh().always {
+            expect(notifier.stillValid).to(beFalse())
+          }
+        }
+
+        it("still allows reading", failOnError: false) {
+          return property.refresh().always {
+            expect(property.value).to(equal(firstPoint))
+          }
+        }
+
+        it("does not emit a ChangedEvent", failOnError: false) {
+          return property.refresh().always {
+            expect(notifier.events.count).to(equal(0))
+          }
+        }
 
       }
     }
 
-    // TODO: set() promise tests
+    describe("set") {
 
-    describe("when the value is set") {
-
-      it("updates the property value") {
-        return property.set(CGPoint(x: 100, y: 100)).then({ _ in
-          expect(property.value).toEventually(equal(CGPoint(x: 100, y: 100)))
-        })
+      it("eventually updates the property value") {
+        property.set(secondPoint)
+        expect(property.value).toEventually(equal(secondPoint))
       }
 
-      it("changes the property on the UIElement") {
-        return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
-          expect(windowElement.attrs[.Position]! is CGPoint).to(beTrue())
-          expect(windowElement.attrs[.Position]! as? CGPoint).to(equal(CGPoint(x: 100, y: 100)))
+      it("resolves to the new value") {
+        return property.set(secondPoint).then { newValue in
+          expect(newValue).to(equal(secondPoint))
         }
       }
 
-      it("emits a ChangedEvent") {
-        return property.set(CGPoint(x: 100, y: 100)).then { _ in
+      it("sets the attribute on the UIElement") {
+        return property.set(secondPoint).then { _ -> () in
+          expect(windowElement.attrs[.Position]! is CGPoint).to(beTrue())
+          expect(windowElement.attrs[.Position]! as? CGPoint).to(equal(secondPoint))
+        }
+      }
+
+      it("emits a ChangedEvent of the correct type") {
+        return property.set(secondPoint).then { _ -> () in
           expect(notifier.events.count).to(equal(1))
+          if let event = notifier.events.first {
+            expect(event.type == WindowPosChangedEvent.self).to(beTrue())
+          }
         }
       }
 
       it("includes the correct oldVal and newVal in the event") {
-        return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
+        return property.set(secondPoint).then { _ -> () in
           if let event = notifier.events.first {
-            expect(event.oldValue as? CGPoint).to(equal(CGPoint(x: 5, y: 5)))
-            expect(event.newValue as? CGPoint).to(equal(CGPoint(x: 100, y: 100)))
+            expect(event.oldValue as? CGPoint).to(equal(firstPoint))
+            expect(event.newValue as? CGPoint).to(equal(secondPoint))
           }
         }
       }
 
       it("marks the event as internal") {
-        return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
+        return property.set(secondPoint).then { _ -> () in
           if let event = notifier.events.first {
             expect(event.external).to(beFalse())
           }
         }
       }
 
-      context("when the system notification is received before reading back the new value") {
+      it("updates the property value before emitting the event") {
+        return property.set(secondPoint).then { _ -> () in
+          expect(property.value).to(equal(secondPoint))
+        }
+      }
+
+      context("when the new value is the same as the old value") {
+        it("does not emit a ChangedEvent") {
+          return property.set(firstPoint).then { _ in
+            expect(notifier.events.count).to(equal(0))
+          }
+        }
+      }
+
+      context("when the UIElement") {
+        class MyPropertyDelegate: TestPropertyDelegate<CGPoint> {
+          let setTo: CGPoint
+          init(value: CGPoint, setTo: CGPoint) {
+            self.setTo = setTo
+            super.init(value: value)
+          }
+          override func writeValue(newValue: CGPoint) throws {
+            systemValue = setTo
+          }
+        }
+
+        var delegate: MyPropertyDelegate!
+        func initPropertyWithDelegate(delegate_: MyPropertyDelegate) {
+          delegate = delegate_
+          property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, notifier: notifier)
+          finishPropertyInit()
+        }
+
+        context("does not change its value") {
+          beforeEach {
+            initPropertyWithDelegate(MyPropertyDelegate(value: firstPoint, setTo: firstPoint))
+          }
+
+          it("reports the actual value") {
+            return property.set(secondPoint).then { newValue -> () in
+              expect(newValue).to(equal(firstPoint))
+              expect(property.value).to(equal(firstPoint))
+            }
+          }
+
+          it("does not emit a ChangedEvent") {
+            return property.set(secondPoint).then { newValue in
+              expect(notifier.events.count).to(equal(0))
+            }
+          }
+
+        }
+
+        context("changes to a different value than the one requested") {
+          let resultingPoint = CGPoint(x: 50, y: 75)
+          beforeEach {
+            initPropertyWithDelegate(MyPropertyDelegate(value: firstPoint, setTo: resultingPoint))
+          }
+
+          it("reports the actual value") {
+            return property.set(secondPoint).then { newValue -> () in
+              expect(newValue).to(equal(resultingPoint))
+              expect(property.value).to(equal(resultingPoint))
+            }
+          }
+
+          it("emits a ChangedEvent with the actual value") {
+            return property.set(secondPoint).then { newValue -> () in
+              expect(notifier.events.count).to(equal(1))
+              if let event = notifier.events.first {
+                expect(event.oldValue as? CGPoint).to(equal(firstPoint))
+                expect(event.newValue as? CGPoint).to(equal(resultingPoint))
+              }
+            }
+          }
+
+          it("marks the event as internal") {
+            return property.set(secondPoint).then { newValue -> () in
+              if let event = notifier.events.first {
+                expect(event.external).to(beFalse())
+              }
+            }
+          }
+
+        }
+      }
+
+      // This happens, for instance, if the system notification for the change is received first.
+      context("when a refresh is requested before reading back the new value") {
         class MyPropertyDelegate<T: Equatable>: TestPropertyDelegate<T> {
           let onWrite: () -> ()
           init(value: T, onWrite: () -> ()) {
@@ -487,27 +630,22 @@ class AXPropertySpec: QuickSpec {
         var delegate: MyPropertyDelegate<CGPoint>!
         var property: WriteableProperty<CGPoint>!
         beforeEach {
-          delegate = MyPropertyDelegate(value: CGPoint(x: 5, y: 5), onWrite: {
+          delegate = MyPropertyDelegate(value: firstPoint, onWrite: {
             property.refresh()
           })
           property = WriteableProperty(delegate,
               withEvent: WindowPosChangedEvent.self, notifier: notifier)
-
-          waitUntil { done in
-            property.initialized.then {
-              done()
-            }
-          }
+          finishPropertyInit()
         }
 
         it("only emits one event") {
-          return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
+          return property.set(secondPoint).then { _ -> () in
             expect(notifier.events.count).to(equal(1))
           }
         }
 
         it("marks the event as internal") {
-          return property.set(CGPoint(x: 100, y: 100)).then { (_: CGPoint) -> () in
+          return property.set(secondPoint).then { _ -> () in
             if let event = notifier.events.first {
               expect(event.external).to(beFalse())
             }
@@ -516,39 +654,29 @@ class AXPropertySpec: QuickSpec {
 
       }
 
-      context("when the new value is the same as the old value") {
-        it("does not emit a ChangedEvent") {
-          return property.set(CGPoint(x: 5, y: 5)).then { _ in
-            expect(notifier.events.count).to(equal(0))
-          }
-        }
-      }
-
       context("when the window element becomes invalid") {
         beforeEach {
           windowElement.throwInvalid = true
         }
 
-        it("returns an error", failOnError: false) {
-          return property.set(CGPoint(x: 100, y: 100)).then { _ in
-            fail("expected to return an error")
-          }
+        it("returns an error") {
+          return expectToFail(property.refresh(), with: AXSwift.Error.InvalidUIElement)
         }
 
         it("calls notifier.notifyInvalid()", failOnError: false) {
-          return property.set(CGPoint(x: 100, y: 100)).always {
+          return property.set(secondPoint).always {
             expect(notifier.stillValid).to(beFalse())
           }
         }
 
         it("does not update the property value, but still allows reading", failOnError: false) {
-          return property.set(CGPoint(x: 100, y: 100)).always {
-            expect(property.value).to(equal(CGPoint(x: 5, y: 5)))
+          return property.set(secondPoint).always {
+            expect(property.value).to(equal(firstPoint))
           }
         }
 
         it("does not emit a ChangedEvent", failOnError: false) {
-          return property.set(CGPoint(x: 100, y: 100)).always {
+          return property.set(secondPoint).always {
             expect(notifier.events.count).to(equal(0))
           }
         }
