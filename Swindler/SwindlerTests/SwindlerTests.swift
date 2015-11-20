@@ -55,7 +55,7 @@ class BaseTestApplication: TestUIElement {
     attrs[.Windows] = Array<TestUIElement>()
   }
 }
-final class TestApplication: BaseTestApplication, ApplicationType {
+final class TestApplication: BaseTestApplication, ApplicationElementType {
   static var allApps: [TestApplication] = []
   static func all() -> [TestApplication] { return TestApplication.allApps }
 }

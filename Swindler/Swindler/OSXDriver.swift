@@ -25,7 +25,7 @@ extension AXSwift.Observer: ObserverType {
   typealias UIElement = AXSwift.UIElement
 }
 
-protocol ApplicationType: UIElementType {
+protocol ApplicationElementType: UIElementType {
   typealias UIElement: UIElementType
 
   static func all() -> [Self]
@@ -33,7 +33,7 @@ protocol ApplicationType: UIElementType {
   // Until the Swift type system improves, I don't see a way around this.
   var toElement: UIElement { get }
 }
-extension AXSwift.Application: ApplicationType {
+extension AXSwift.Application: ApplicationElementType {
   typealias UIElement = AXSwift.UIElement
   var toElement: UIElement { return self }
 }
@@ -53,83 +53,35 @@ enum OSXDriverError: ErrorType {
 // MARK: - Implementation
 
 class OSXState<
-    UIElement: UIElementType, Application: ApplicationType, Observer: ObserverType
-    where Observer.UIElement == UIElement, Application.UIElement == UIElement
+    UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+    where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: StateType, EventNotifier {
-  typealias Window = OSXWindow<UIElement, Application, Observer>
-  var applications: [Application] = []
-  var observers: [Observer] = []
-  var windows: [Window] = []
+  typealias Window = OSXWindow<UIElement, ApplicationElement, Observer>
+  typealias Application = OSXApplication<UIElement, ApplicationElement, Observer>
+  private typealias EventHandler = (EventType) -> ()
+
+  private var applications: [Application] = []
+  private var eventHandlers: [String: [EventHandler]] = [:]
+
+  var visibleWindows: [WindowType] { return applications.flatMap({ $0.visibleWindows }) }
 
   // TODO: fix strong ref cycle
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
 
   init() {
     print("Initializing Swindler")
-    for app in Application.all() {
+    for appElement in ApplicationElement.all() {
       do {
-        let observer = try Observer(processID: app.pid(), callback: handleEvent)
-        try observer.addNotification(.WindowCreated,     forElement: app.toElement)
-        try observer.addNotification(.MainWindowChanged, forElement: app.toElement)
-
-        applications.append(app)
-        observers.append(observer)
+        let application = try Application(appElement, notifier: self)
+        applications.append(application)
       } catch {
-        let application = try? NSRunningApplication(processIdentifier: app.pid())
-        print("Could not watch application \(application): \(error)")
+        let runningApplication = try? NSRunningApplication(processIdentifier: appElement.pid())
+        print("Could not watch application \(runningApplication): \(error)")
         assert(error is AXSwift.Error)
       }
     }
     print("Done initializing")
   }
-
-  private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
-    if .WindowCreated == notification {
-      onWindowCreated(element, observer: observer)
-      return
-    }
-
-    let handled = onWindowEvent(notification, windowElement: element, observer: observer)
-    if !handled {
-      print("Event \(notification) on unknown element \(element)")
-    }
-  }
-
-  private func onWindowCreated(windowElement: UIElement, observer: Observer) {
-    Window.initialize(notifier: self, axElement: windowElement, observer: observer).then { (window: Window) -> () in
-      self.windows.append(window)
-      self.notify(WindowCreatedEvent(external: true, window: window))
-    }.error { error in
-      print("Error: Could not watch [\(windowElement)]: \(error)")
-      assert(error is AXSwift.Error || error is OSXDriverError)
-    }
-  }
-
-  private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement, observer: Observer) -> Bool {
-    guard let (index, window) = findWindowAndIndex(windowElement) else {
-      return false
-    }
-
-    window.handleEvent(notification, observer: observer)
-
-    if .UIElementDestroyed == notification {
-      windows.removeAtIndex(index)
-      notify(WindowDestroyedEvent(external: true, window: window))
-    }
-
-    return true
-  }
-
-  private func findWindowAndIndex(axElement: UIElement) -> (Int, Window)? {
-    return windows.enumerate().filter({ $0.1.axElement == axElement }).first
-  }
-
-  var visibleWindows: [WindowType] {
-    return windows.map({ $0 as WindowType })
-  }
-
-  private typealias EventHandler = (EventType) -> ()
-  private var eventHandlers: [String: [EventHandler]] = [:]
 
   func on<Event: EventType>(handler: (Event) -> ()) {
     let notification = Event.typeName
@@ -150,6 +102,70 @@ class OSXState<
   }
 }
 
+class OSXApplication<
+    UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+    where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
+> {
+  typealias Window = OSXWindow<UIElement, ApplicationElement, Observer>
+
+  private let notifier: EventNotifier
+  private var observer: Observer!
+  private var windows: [Window] = []
+
+  var visibleWindows: [WindowType] {
+    return windows.map({ $0 as WindowType })
+  }
+
+  init(_ app: ApplicationElement, notifier: EventNotifier) throws {
+    self.notifier = notifier
+
+    observer = try Observer(processID: app.pid(), callback: handleEvent)
+    try observer.addNotification(.WindowCreated,     forElement: app.toElement)
+    try observer.addNotification(.MainWindowChanged, forElement: app.toElement)
+  }
+
+  private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
+    if .WindowCreated == notification {
+      onWindowCreated(element)
+      return
+    }
+
+    let handled = onWindowEvent(notification, windowElement: element)
+    if !handled {
+      print("Event \(notification) on unknown element \(element)")
+    }
+  }
+
+  private func onWindowCreated(windowElement: UIElement) {
+    Window.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
+      self.windows.append(window)
+      self.notifier.notify(WindowCreatedEvent(external: true, window: window))
+    }.error { error in
+      print("Error: Could not watch [\(windowElement)]: \(error)")
+      assert(error is AXSwift.Error || error is OSXDriverError)
+    }
+  }
+
+  private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) -> Bool {
+    guard let (index, window) = findWindowAndIndex(windowElement) else {
+      return false
+    }
+
+    window.handleEvent(notification, observer: observer)
+
+    if .UIElementDestroyed == notification {
+      windows.removeAtIndex(index)
+      notifier.notify(WindowDestroyedEvent(external: true, window: window))
+    }
+
+    return true
+  }
+
+  private func findWindowAndIndex(axElement: UIElement) -> (Int, Window)? {
+    return windows.enumerate().filter({ $0.1.axElement == axElement }).first
+  }
+}
+
 // Making this private = Swift compiler segfault
 protocol PropertyType {
   func refresh()
@@ -163,10 +179,10 @@ extension Property: PropertyType {
 }
 
 class OSXWindow<
-    UIElement: UIElementType, Application: ApplicationType, Observer: ObserverType
-    where Observer.UIElement == UIElement, Application.UIElement == UIElement
+    UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+    where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: WindowType, WindowPropertyNotifier {
-  typealias State = OSXState<UIElement, Application, Observer>
+  typealias State = OSXState<UIElement, ApplicationElement, Observer>
   let notifier: EventNotifier
   let axElement: UIElement
 
