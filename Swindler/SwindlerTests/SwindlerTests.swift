@@ -337,7 +337,9 @@ class OSXWindowSpec: QuickSpec {
   }
 }
 
-class TestWindowPropertyNotifier: WindowPropertyNotifier {
+class TestWindowPropertyNotifier: PropertyNotifier {
+  typealias Object = WindowType
+
   // We must make our own struct because we don't have a window.
   struct Event {
     var type: Any.Type
@@ -348,7 +350,7 @@ class TestWindowPropertyNotifier: WindowPropertyNotifier {
   var events: [Event] = []
   var stillValid = true
 
-  func notify<EventT: WindowPropertyEventType>(event: EventT.Type, external: Bool, oldValue: EventT.PropertyType, newValue: EventT.PropertyType) {
+  func notify<EventT: PropertyEventTypeInternal where EventT.Object == WindowType>(event: EventT.Type, external: Bool, oldValue: EventT.PropertyType, newValue: EventT.PropertyType) {
     events.append(Event(type: event, external: external, oldValue: oldValue, newValue: newValue))
   }
   func notifyInvalid() {
@@ -369,7 +371,7 @@ class PropertySpec: QuickSpec {
       let initPromise = Promise<[AXSwift.Attribute: Any]>(attrs)
       notifier = TestWindowPropertyNotifier()
       let delegate = AXPropertyDelegate<CGPoint, TestWindow>(windowElement, .Position, initPromise)
-      property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, notifier: notifier)
+      property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: notifier)
     }
     func finishPropertyInit() {
       waitUntil { done in
@@ -561,7 +563,7 @@ class PropertySpec: QuickSpec {
         var delegate: MyPropertyDelegate!
         func initPropertyWithDelegate(delegate_: MyPropertyDelegate) {
           delegate = delegate_
-          property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, notifier: notifier)
+          property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: notifier)
           finishPropertyInit()
         }
 
@@ -640,7 +642,7 @@ class PropertySpec: QuickSpec {
             property.refresh()
           })
           property = WriteableProperty(delegate,
-              withEvent: WindowPosChangedEvent.self, notifier: notifier)
+            withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: notifier)
           finishPropertyInit()
         }
 

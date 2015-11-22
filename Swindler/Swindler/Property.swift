@@ -1,9 +1,11 @@
 import AXSwift
 import PromiseKit
 
-protocol WindowPropertyNotifier: class {
+protocol PropertyNotifier: class {
+  typealias Object
+
   /// Called when the property value has been updated.
-  func notify<Event: WindowPropertyEventTypeInternal>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType)
+  func notify<Event: PropertyEventTypeInternal where Event.Object == Object>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType)
 
   /// Called when the underlying object has become invalid.
   func notifyInvalid()
@@ -71,7 +73,7 @@ public class Property<Type: Equatable> {
   // Property definer can access the delegate they provided here
   private(set) var delegate: Any
 
-  init<Impl: PropertyDelegate where Impl.T == Type>(_ delegate: Impl, notifier: WindowPropertyNotifier) {
+  init<Impl: PropertyDelegate, Notifier: PropertyNotifier where Impl.T == Type>(_ delegate: Impl, notifier: Notifier) {
     self.notifier = PropertyNotifierThunk<Type>(notifier)
     self.delegate = delegate
     self.delegate_ = PropertyDelegateThunk(delegate)
@@ -92,9 +94,9 @@ public class Property<Type: Equatable> {
   }
 
   /// Use this initializer if there is an event associated with the property.
-  convenience init<Event: WindowPropertyEventTypeInternal, Impl: PropertyDelegate where Event.PropertyType == Type, Impl.T == Type>(_ delegate: Impl, withEvent: Event.Type, notifier: WindowPropertyNotifier) {
+  convenience init<Impl: PropertyDelegate, Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Impl.T == Type, Event.PropertyType == Type, Event.Object == Object, Notifier.Object == Object>(_ delegate: Impl, withEvent: Event.Type, receivingObject: Object.Type, notifier: Notifier) {
     self.init(delegate, notifier: notifier)
-    self.notifier = PropertyNotifierThunk<Type>(notifier, withEvent: Event.self)
+    self.notifier = PropertyNotifierThunk<Type>(notifier, withEvent: Event.self, receivingObject: Object.self)
   }
 
   /// The value of the property.
@@ -153,7 +155,7 @@ public class Property<Type: Equatable> {
 /// A property that can be set. Writes happen asynchronously.
 public class WriteableProperty<Type: Equatable>: Property<Type> {
   // Due to a Swift bug I have to override this.
-  override init<Impl: PropertyDelegate where Impl.T == Type>(_ delegate: Impl, notifier: WindowPropertyNotifier) {
+  override init<Impl: PropertyDelegate, Notifier: PropertyNotifier where Impl.T == Type>(_ delegate: Impl, notifier: Notifier) {
     super.init(delegate, notifier: notifier)
   }
 
@@ -222,23 +224,19 @@ private struct PropertyDelegateThunk<Type: Equatable>: PropertyDelegate {
 }
 
 class PropertyNotifierThunk<PropertyType: Equatable> {
-  let wrappedNotifier: WindowPropertyNotifier
   // Will be nil if not initialized with an event type.
   let notify: Optional<(external: Bool, oldValue: PropertyType, newValue: PropertyType) -> ()>
+  let notifyInvalid: () -> ()
 
-  init<Event: WindowPropertyEventTypeInternal where Event.PropertyType == PropertyType>(_ wrappedNotifier: WindowPropertyNotifier, withEvent: Event.Type) {
-    self.wrappedNotifier = wrappedNotifier
+  init<Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Event.PropertyType == PropertyType, Notifier.Object == Object, Event.Object == Object>(_ wrappedNotifier: Notifier, withEvent: Event.Type, receivingObject: Object.Type) {
+    self.notifyInvalid = { wrappedNotifier.notifyInvalid() }
     self.notify = { (external: Bool, oldValue: PropertyType, newValue: PropertyType) in
       wrappedNotifier.notify(Event.self, external: external, oldValue: oldValue, newValue: newValue)
     }
   }
 
-  init(_ wrappedNotifier: WindowPropertyNotifier) {
-    self.wrappedNotifier = wrappedNotifier
+  init<Notifier: PropertyNotifier>(_ wrappedNotifier: Notifier) {
+    self.notifyInvalid = { wrappedNotifier.notifyInvalid() }
     self.notify = nil
-  }
-
-  func notifyInvalid() {
-    wrappedNotifier.notifyInvalid()
   }
 }

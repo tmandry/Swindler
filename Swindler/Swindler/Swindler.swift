@@ -61,7 +61,7 @@ extension EventType {
 
 /// An event on a window.
 public protocol WindowEventType: EventType {
-  var external: Bool { get }
+  var external: Bool { get }  // TODO: remove
   /// The window corresponding to the event.
   var window: WindowType { get }
 }
@@ -76,10 +76,11 @@ public struct WindowDestroyedEvent: WindowEventType {
   public var window: WindowType
 }
 
-/// An event describing a window property change.
-public protocol WindowPropertyEventType: WindowEventType {
+/// An event describing a property change.
+public protocol PropertyEventType: EventType {
   typealias PropertyType: Equatable
 
+  var external: Bool { get }
   /// The old value of the property.
   var oldVal: PropertyType { get }
   /// The new value of the property.
@@ -87,8 +88,21 @@ public protocol WindowPropertyEventType: WindowEventType {
   // TODO: requestedVal?
 }
 
-protocol WindowPropertyEventTypeInternal: WindowPropertyEventType {
-  init(external: Bool, window: WindowType, oldVal: PropertyType, newVal: PropertyType)
+protocol PropertyEventTypeInternal: PropertyEventType {
+  typealias Object
+  init(external: Bool, object: Object, oldVal: PropertyType, newVal: PropertyType)
+}
+
+public protocol WindowPropertyEventType: WindowEventType, PropertyEventType {}
+
+protocol WindowPropertyEventTypeInternal: WindowPropertyEventType, PropertyEventTypeInternal {
+  typealias Object = WindowType
+  init(external: Bool, window: Object, oldVal: PropertyType, newVal: PropertyType)
+}
+extension WindowPropertyEventTypeInternal {
+  init(external: Bool, object: Object, oldVal: PropertyType, newVal: PropertyType) {
+    self.init(external: external, window: object, oldVal: oldVal, newVal: newVal)
+  }
 }
 
 public struct WindowPosChangedEvent: WindowPropertyEventTypeInternal {
@@ -119,6 +133,30 @@ public struct WindowMinimizedChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = Bool
   public var external: Bool
   public var window: WindowType
+  public var oldVal: PropertyType
+  public var newVal: PropertyType
+}
+
+public protocol ApplicationEventType: EventType {
+  var application: ApplicationType { get }
+}
+
+public protocol ApplicationPropertyEventType: ApplicationEventType, PropertyEventType {}
+
+protocol ApplicationPropertyEventTypeInternal: ApplicationPropertyEventType, PropertyEventTypeInternal {
+  typealias Object = ApplicationType
+  init(external: Bool, application: Object, oldVal: PropertyType, newVal: PropertyType)
+}
+extension ApplicationPropertyEventTypeInternal {
+  init(external: Bool, object: Object, oldVal: PropertyType, newVal: PropertyType) {
+    self.init(external: external, application: object, oldVal: oldVal, newVal: newVal)
+  }
+}
+
+public struct ApplicationFrontmostChangedEvent: ApplicationPropertyEventTypeInternal {
+  public typealias PropertyType = Bool
+  public var external: Bool
+  public var application: ApplicationType
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }

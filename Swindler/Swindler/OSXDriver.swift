@@ -5,6 +5,7 @@ public var state: StateType = OSXState<UIElement, Application, Observer>()
 
 // MARK: - Injectable protocols
 
+/// Protocol that wraps AXSwift.UIElement.
 protocol UIElementType: Equatable {
   static var globalMessagingTimeout: Float { get }
 
@@ -15,6 +16,7 @@ protocol UIElementType: Equatable {
 }
 extension AXSwift.UIElement: UIElementType { }
 
+/// Protocol that wraps AXSwift.Observer.
 protocol ObserverType {
   typealias UIElement: UIElementType
 
@@ -25,6 +27,7 @@ extension AXSwift.Observer: ObserverType {
   typealias UIElement = AXSwift.UIElement
 }
 
+/// Protocol that wraps AXSwift.Application.
 protocol ApplicationElementType: UIElementType {
   typealias UIElement: UIElementType
 
@@ -102,37 +105,72 @@ class OSXState<
   }
 }
 
+public protocol ApplicationType {}
+
 class OSXApplication<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
-> {
+>: PropertyNotifier, ApplicationType {
+  typealias Object = ApplicationType
   typealias Window = OSXWindow<UIElement, ApplicationElement, Observer>
 
   private let notifier: EventNotifier
+  private let axElement: UIElement
   private var observer: Observer!
   private var windows: [Window] = []
+
+  private var axProperties: [PropertyType]!
+
+  // let mainWindow: Property<Window>!
+  var frontmost: WriteableProperty<Bool>!
 
   var visibleWindows: [WindowType] {
     return windows.map({ $0 as WindowType })
   }
 
-  init(_ app: ApplicationElement, notifier: EventNotifier) throws {
+  init(_ appElement: ApplicationElement, notifier: EventNotifier) throws {
+    self.axElement = appElement.toElement
     self.notifier = notifier
 
-    observer = try Observer(processID: app.pid(), callback: handleEvent)
-    try observer.addNotification(.WindowCreated,     forElement: app.toElement)
-    try observer.addNotification(.MainWindowChanged, forElement: app.toElement)
+    // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
+    let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
+
+    // mainWindow = Property<Window>(AXPropertyDelegate(axElement, .MainWindow, initPromise), notifier: self)
+    frontmost = WriteableProperty<Bool>(AXPropertyDelegate(axElement, .Frontmost, initPromise),
+        withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: ApplicationType.self, notifier: self)
+
+    axProperties = [
+      frontmost
+    ]
+
+    // Set up notifications.
+    observer = try Observer(processID: appElement.pid(), callback: handleEvent)
+    try observer.addNotification(.WindowCreated,          forElement: appElement.toElement)
+    try observer.addNotification(.MainWindowChanged,      forElement: appElement.toElement)
+    try observer.addNotification(.ApplicationActivated,   forElement: appElement.toElement)
+    try observer.addNotification(.ApplicationDeactivated, forElement: appElement.toElement)
+
+    // Fetch attribute values.
+    fetchAttributes(axProperties, forElement: axElement, fulfill: fulfill, reject: reject)
+
+    // Can't recover from an error during initialization.
+    initPromise.error { error in
+      self.notifyInvalid()
+    }
   }
 
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
-    if .WindowCreated == notification {
+    switch notification {
+    case .WindowCreated:
       onWindowCreated(element)
-      return
-    }
-
-    let handled = onWindowEvent(notification, windowElement: element)
-    if !handled {
-      print("Event \(notification) on unknown element \(element)")
+    case .MainWindowChanged:
+      onMainWindowChanged(element)
+    case .ApplicationActivated:
+      onActivationChanged()
+    case .ApplicationDeactivated:
+      onActivationChanged()
+    default:
+      onWindowEvent(notification, windowElement: element)
     }
   }
 
@@ -142,13 +180,27 @@ class OSXApplication<
       self.notifier.notify(WindowCreatedEvent(external: true, window: window))
     }.error { error in
       print("Error: Could not watch [\(windowElement)]: \(error)")
-      assert(error is AXSwift.Error || error is OSXDriverError)
     }
   }
 
-  private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) -> Bool {
+  private func onMainWindowChanged(windowElement: UIElement) {
+    // do we need to do this with dispatch_async?
+    guard let (_, _) = findWindowAndIndex(windowElement) else {
+      print("Main window for application changed to unknown element \(windowElement)")
+      return
+    }
+
+    // TODO
+  }
+
+  private func onActivationChanged() {
+    frontmost.refresh() as ()
+  }
+
+  private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) {
     guard let (index, window) = findWindowAndIndex(windowElement) else {
-      return false
+      print("Event \(notification) on unknown element \(windowElement)")
+      return
     }
 
     window.handleEvent(notification, observer: observer)
@@ -157,8 +209,14 @@ class OSXApplication<
       windows.removeAtIndex(index)
       notifier.notify(WindowDestroyedEvent(external: true, window: window))
     }
+  }
 
-    return true
+  func notify<Event: PropertyEventTypeInternal where Event.Object == ApplicationType>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+    notifier.notify(Event(external: external, object: self, oldVal: oldValue, newVal: newValue))
+  }
+
+  func notifyInvalid() {
+    // TODO
   }
 
   private func findWindowAndIndex(axElement: UIElement) -> (Int, Window)? {
@@ -181,8 +239,9 @@ extension Property: PropertyType {
 class OSXWindow<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
->: WindowType, WindowPropertyNotifier {
+>: WindowType, PropertyNotifier {
   typealias State = OSXState<UIElement, ApplicationElement, Observer>
+  typealias Object = WindowType
   let notifier: EventNotifier
   let axElement: UIElement
 
@@ -208,13 +267,13 @@ class OSXWindow<
 
     // Initialize all properties.
     pos = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
-        withEvent: WindowPosChangedEvent.self, notifier: self)
+        withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: self)
     size = WriteableProperty(AXPropertyDelegate(axElement, .Size, initPromise),
-        withEvent: WindowSizeChangedEvent.self, notifier: self)
+        withEvent: WindowSizeChangedEvent.self, receivingObject: WindowType.self, notifier: self)
     title = Property(AXPropertyDelegate(axElement, .Title, initPromise),
-        withEvent: WindowTitleChangedEvent.self, notifier: self)
+        withEvent: WindowTitleChangedEvent.self, receivingObject: WindowType.self, notifier: self)
     minimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
-        withEvent: WindowMinimizedChangedEvent.self, notifier: self)
+        withEvent: WindowMinimizedChangedEvent.self, receivingObject: WindowType.self, notifier: self)
 
     axProperties = [
       pos,
@@ -239,39 +298,11 @@ class OSXWindow<
     try observer.addNotification(.UIElementDestroyed, forElement: axElement)
 
     // Fetch attribute values.
-    fetchAttributes(fulfill, reject)
-  }
+    fetchAttributes(axProperties, forElement: axElement, fulfill: fulfill, reject: reject)
 
-  // Asynchronously fetches all the window attributes.
-  func fetchAttributes(fulfill: ([Attribute: Any]) -> (), _ reject: (ErrorType) -> ()) {
-    let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
-    Promise<Void>().thenInBackground {
-      // Issue a request in the background.
-      return try self.axElement.getMultipleAttributes(attributes)
-    }.then { attributes -> () in
-      fulfill(attributes)
-    }.recover { error -> () in
-      // Rewrite errors as PropertyErrors.
-      do {
-        throw error
-      } catch AXSwift.Error.CannotComplete {
-        // If messaging timeout unspecified, we'll pass -1.
-        let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
-        throw PropertyError.Timeout(time: NSTimeInterval(time))
-      } catch AXSwift.Error.IllegalArgument {
-        throw PropertyError.InvalidObject(cause: AXSwift.Error.IllegalArgument)
-      } catch AXSwift.Error.NotImplemented {
-        throw PropertyError.InvalidObject(cause: AXSwift.Error.NotImplemented)
-      } catch AXSwift.Error.InvalidUIElement {
-        throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
-      } catch {
-        unexpectedError(error, onElement: self.axElement)
-        throw PropertyError.InvalidObject(cause: error)
-      }
-    }.error { error in
-      // Can't recover from an error during initialization.
+    // Can't recover from an error during initialization.
+    initPromise.error { error in
       self.notifyInvalid()
-      reject(error)
     }
   }
 
@@ -308,8 +339,8 @@ class OSXWindow<
     }
   }
 
-  func notify<Event: WindowPropertyEventTypeInternal>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier.notify(Event(external: external, window: self, oldVal: oldValue, newVal: newValue))
+  func notify<Event: PropertyEventTypeInternal where Event.Object == WindowType>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+    notifier.notify(Event(external: external, object: self, oldVal: oldValue, newVal: newValue))
   }
 
   func notifyInvalid() {
@@ -380,6 +411,37 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
       }
       return value as! T
     }
+  }
+}
+
+// Asynchronously fetches all the window attributes.
+func fetchAttributes<UIElement: UIElementType>(axProperties: [PropertyType], forElement axElement: UIElement, fulfill: ([Attribute: Any]) -> (), reject: (ErrorType) -> ()) {
+  let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
+  Promise<Void>().thenInBackground {
+    // Issue a request in the background.
+    return try axElement.getMultipleAttributes(attributes)
+  }.then { attributes -> () in
+    fulfill(attributes)
+  }.recover { error -> () in
+    // Rewrite errors as PropertyErrors.
+    do {
+      throw error
+    } catch AXSwift.Error.CannotComplete {
+      // If messaging timeout unspecified, we'll pass -1.
+      let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
+      throw PropertyError.Timeout(time: NSTimeInterval(time))
+    } catch AXSwift.Error.IllegalArgument {
+      throw PropertyError.InvalidObject(cause: AXSwift.Error.IllegalArgument)
+    } catch AXSwift.Error.NotImplemented {
+      throw PropertyError.InvalidObject(cause: AXSwift.Error.NotImplemented)
+    } catch AXSwift.Error.InvalidUIElement {
+      throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
+    } catch {
+      unexpectedError(error, onElement: axElement)
+      throw PropertyError.InvalidObject(cause: error)
+    }
+  }.error { error in
+    reject(error)
   }
 }
 
