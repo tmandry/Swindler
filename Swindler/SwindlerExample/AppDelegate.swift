@@ -17,7 +17,7 @@ func dispatchAfter(delay: NSTimeInterval, block: dispatch_block_t) {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
-  var swindler: Swindler.StateType!
+  var swindler: Swindler.State!
 
   func applicationDidFinishLaunching(aNotification: NSNotification) {
     swindler = Swindler.state

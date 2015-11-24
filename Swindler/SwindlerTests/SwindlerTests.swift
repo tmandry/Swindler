@@ -44,7 +44,7 @@ func ==(lhs: TestUIElement, rhs: TestUIElement) -> Bool {
   return lhs === rhs
 }
 
-class BaseTestApplication: TestUIElement {
+class TestApplicationElementBase: TestUIElement {
   typealias UIElementType = TestUIElement
   var toElement: TestUIElement { return self }
 
@@ -55,14 +55,14 @@ class BaseTestApplication: TestUIElement {
     attrs[.Windows] = Array<TestUIElement>()
   }
 }
-final class TestApplication: BaseTestApplication, ApplicationElementType {
-  static var allApps: [TestApplication] = []
-  static func all() -> [TestApplication] { return TestApplication.allApps }
+final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
+  static var allApps: [TestApplicationElement] = []
+  static func all() -> [TestApplicationElement] { return TestApplicationElement.allApps }
 }
 
-class TestWindow: TestUIElement {
-  var app: BaseTestApplication
-  init(forApp app: BaseTestApplication) {
+class TestWindowElement: TestUIElement {
+  var app: TestApplicationElementBase
+  init(forApp app: TestApplicationElementBase) {
     self.app = app
     super.init()
     processID         = app.processID
@@ -105,7 +105,7 @@ class FakeObserver: TestObserver {
     watchedElements[element]!.append(notification)
   }
 
-  func emit(notification: AXSwift.Notification, forElement window: TestWindow) {
+  func emit(notification: AXSwift.Notification, forElement window: TestWindowElement) {
     if notification == .WindowCreated {
       doEmit(notification, watchedElement: window.app, passedElement: window)
     } else {
@@ -142,7 +142,7 @@ class TestPropertyDelegate<T: Equatable>: PropertyDelegate {
 class OSXDriverSpec: QuickSpec {
   override func spec() {
 
-    beforeEach { TestApplication.allApps = [] }
+    beforeEach { TestApplicationElement.allApps = [] }
     beforeEach { FakeObserver.observers = [] }
 
     context("during initialization") {
@@ -156,8 +156,8 @@ class OSXDriverSpec: QuickSpec {
           }
         }
 
-        TestApplication.allApps = [TestApplication(), TestApplication()]
-        let _ = OSXState<TestUIElement, TestApplication, MyTestObserver>()
+        TestApplicationElement.allApps = [TestApplicationElement(), TestApplicationElement()]
+        let _ = OSXStateDelegate<TestUIElement, TestApplicationElement, MyTestObserver>()
 
         expect(MyTestObserver.numObservers).to(equal(2), description: "should be 2 observers")
       }
@@ -169,8 +169,8 @@ class OSXDriverSpec: QuickSpec {
           }
         }
 
-        TestApplication.allApps = [TestApplication()]
-        let _ = OSXState<TestUIElement, TestApplication, MyTestObserver>()
+        TestApplicationElement.allApps = [TestApplicationElement()]
+        let _ = OSXStateDelegate<TestUIElement, TestApplicationElement, MyTestObserver>()
         // test that it doesn't crash
       }
 
@@ -178,17 +178,17 @@ class OSXDriverSpec: QuickSpec {
 
     context("after initialization") {
       // Set up a state with a single application containing a single window.
-      var app: TestApplication!
-      var windowElement: TestWindow!
+      var app: TestApplicationElement!
+      var windowElement: TestWindowElement!
       var observer: FakeObserver!
-      var state: OSXState<TestUIElement, TestApplication, FakeObserver>!
-      var window: WindowType!
+      var state: State!
+      var window: Window!
       beforeEach {
-        app = TestApplication()
-        windowElement = TestWindow(forApp: app)
+        app = TestApplicationElement()
+        windowElement = TestWindowElement(forApp: app)
         windowElement.attrs[.Position] = CGPoint(x: 5, y: 5)
-        TestApplication.allApps = [app]
-        state = OSXState<TestUIElement, TestApplication, FakeObserver>()
+        TestApplicationElement.allApps = [app]
+        state = State(delegate: OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>())
         observer = FakeObserver.observers.first!
         observer.emit(.WindowCreated, forElement: windowElement)
         expect(state.visibleWindows.count).toEventually(equal(1))
@@ -222,7 +222,7 @@ class OSXDriverSpec: QuickSpec {
             callbacks++
           }
 
-          let window = TestWindow(forApp: app)
+          let window = TestWindowElement(forApp: app)
           observer.emit(.WindowCreated, forElement: window)
           expect(state.visibleWindows.count).toEventually(equal(2))
           expect(callbacks).to(equal(1), description: "callback should be called once")
@@ -316,17 +316,16 @@ class TestNotifier: EventNotifier {
 class OSXWindowSpec: QuickSpec {
   override func spec() {
 
-    typealias Window = OSXWindow<TestUIElement, TestApplication, TestObserver>
-
-    beforeEach { TestApplication.allApps = [] }
+    beforeEach { TestApplicationElement.allApps = [] }
 
     describe("initialize") {
       context("when called with a window that is missing attributes") {
         it("returns an error") { () -> Promise<Void> in
-          let windowElement = TestWindow(forApp: TestApplication())
+          let windowElement = TestWindowElement(forApp: TestApplicationElement())
           windowElement.attrs.removeValueForKey(.Position)
 
-          let promise = Window.initialize(notifier: TestNotifier(), axElement: windowElement, observer: TestObserver())
+          let promise = OSXWindowDelegate<TestUIElement, TestApplicationElement, TestObserver>.initialize(
+              notifier: TestNotifier(), axElement: windowElement, observer: TestObserver())
           let expectedError = PropertyError.InvalidObject(cause:
               OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement))
           return expectToFail(promise, with: expectedError)
@@ -338,7 +337,7 @@ class OSXWindowSpec: QuickSpec {
 }
 
 class TestWindowPropertyNotifier: PropertyNotifier {
-  typealias Object = WindowType
+  typealias Object = Window
 
   // We must make our own struct because we don't have a window.
   struct Event {
@@ -350,7 +349,7 @@ class TestWindowPropertyNotifier: PropertyNotifier {
   var events: [Event] = []
   var stillValid = true
 
-  func notify<EventT: PropertyEventTypeInternal where EventT.Object == WindowType>(event: EventT.Type, external: Bool, oldValue: EventT.PropertyType, newValue: EventT.PropertyType) {
+  func notify<EventT: PropertyEventTypeInternal where EventT.Object == Window>(event: EventT.Type, external: Bool, oldValue: EventT.PropertyType, newValue: EventT.PropertyType) {
     events.append(Event(type: event, external: external, oldValue: oldValue, newValue: newValue))
   }
   func notifyInvalid() {
@@ -363,15 +362,15 @@ class PropertySpec: QuickSpec {
 
     // Set up a position property on a test AX window.
     var property: WriteableProperty<CGPoint>!
-    var windowElement: TestWindow!
+    var windowElement: TestWindowElement!
     var notifier: TestWindowPropertyNotifier!
     func setUpWithAttributes(attrs: [AXSwift.Attribute: Any]) {
-      windowElement = TestWindow(forApp: TestApplication())
+      windowElement = TestWindowElement(forApp: TestApplicationElement())
       windowElement.attrs = attrs
       let initPromise = Promise<[AXSwift.Attribute: Any]>(attrs)
       notifier = TestWindowPropertyNotifier()
-      let delegate = AXPropertyDelegate<CGPoint, TestWindow>(windowElement, .Position, initPromise)
-      property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: notifier)
+      let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+      property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
     }
     func finishPropertyInit() {
       waitUntil { done in
@@ -563,7 +562,7 @@ class PropertySpec: QuickSpec {
         var delegate: MyPropertyDelegate!
         func initPropertyWithDelegate(delegate_: MyPropertyDelegate) {
           delegate = delegate_
-          property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: notifier)
+          property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
           finishPropertyInit()
         }
 
@@ -642,7 +641,7 @@ class PropertySpec: QuickSpec {
             property.refresh()
           })
           property = WriteableProperty(delegate,
-            withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: notifier)
+            withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
           finishPropertyInit()
         }
 

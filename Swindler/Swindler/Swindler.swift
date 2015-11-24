@@ -1,41 +1,74 @@
 /// The state represents the entire state of the OS, including all known windows, applications, and
 /// spaces.
-public protocol StateType {
-  var visibleWindows: [WindowType] { get }
+public class State {
+  let delegate: StateDelegate
+  init(delegate: StateDelegate) {
+    self.delegate = delegate
+  }
+
+  public var visibleWindows: [Window] { return delegate.visibleWindows.map({ Window(delegate: $0) }) }
+  public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
+}
+
+// All public classes in Swindler are implemented with an internal delegate. This decoupling aids in
+// testing and hides implementation details from the API.
+//
+// Our delegates differ from most Apple API delegates in that they are internal and are critical to
+// the functioning of the class, so they are not held with weak references.
+protocol StateDelegate {
+  var visibleWindows: [WindowDelegate] { get }
   func on<Event: EventType>(handler: (Event) -> ())
 }
 
+/// A running application.
+public class Application {
+  let delegate: ApplicationDelegate
+  init(delegate: ApplicationDelegate) {
+    self.delegate = delegate
+  }
+}
+
+protocol ApplicationDelegate {}
+
 /// A window.
-public protocol WindowType {
+public class Window: Equatable {
+  let delegate: WindowDelegate
+  init(delegate: WindowDelegate) {
+    self.delegate = delegate
+  }
+
   /// Whether or not the window referred to by this type remains valid. Windows usually become
   /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
   /// They can also become invalid because they do not have all the required properties, or because
   /// the application that owns them is otherwise not giving a well-behaved response.
-  var valid: Bool { get }
+  public var valid: Bool { return delegate.valid }
 
   /// The position of the top-left corner of the window in screen coordinates.
-  var pos: WriteableProperty<CGPoint>! { get }
+  public var pos: WriteableProperty<CGPoint> { return delegate.pos }
   /// The size of the window in screen coordinates.
-  var size: WriteableProperty<CGSize>! { get }
+  public var size: WriteableProperty<CGSize> { return delegate.size }
 
   /// The window title.
-  var title: Property<String>! { get }
+  public var title: Property<String> { return delegate.title }
 
   /// Whether the window is minimized.
-  var minimized: WriteableProperty<Bool>! { get }
+  public var minimized: WriteableProperty<Bool> { return delegate.minimized }
 
   /// TODO: main, fullScreen, focused, screen, space
 }
+public func ==(lhs: Window, rhs: Window) -> Bool {
+  return lhs.delegate.equalTo(rhs.delegate)
+}
 
-extension WindowType {
-  /// Convenience parameter for getting the position and size as a rectangle.
-  var rect: CGRect {
-    get { return CGRect(origin: pos.value, size: size.value) }
-    set {
-      pos.value = newValue.origin
-      size.value = newValue.size
-    }
-  }
+protocol WindowDelegate {
+  var valid: Bool { get }
+
+  var pos: WriteableProperty<CGPoint>! { get }
+  var size: WriteableProperty<CGSize>! { get }
+  var title: Property<String>! { get }
+  var minimized: WriteableProperty<Bool>! { get }
+
+  func equalTo(other: WindowDelegate) -> Bool
 }
 
 // (oldSpace, newSpace, windowsArrived, windowsDeparted)
@@ -63,17 +96,17 @@ extension EventType {
 public protocol WindowEventType: EventType {
   var external: Bool { get }  // TODO: remove
   /// The window corresponding to the event.
-  var window: WindowType { get }
+  var window: Window { get }
 }
 
 public struct WindowCreatedEvent: WindowEventType {
   public var external: Bool
-  public var window: WindowType
+  public var window: Window
 }
 
 public struct WindowDestroyedEvent: WindowEventType {
   public var external: Bool
-  public var window: WindowType
+  public var window: Window
 }
 
 /// An event describing a property change.
@@ -96,7 +129,7 @@ protocol PropertyEventTypeInternal: PropertyEventType {
 public protocol WindowPropertyEventType: WindowEventType, PropertyEventType {}
 
 protocol WindowPropertyEventTypeInternal: WindowPropertyEventType, PropertyEventTypeInternal {
-  typealias Object = WindowType
+  typealias Object = Window
   init(external: Bool, window: Object, oldVal: PropertyType, newVal: PropertyType)
 }
 extension WindowPropertyEventTypeInternal {
@@ -108,7 +141,7 @@ extension WindowPropertyEventTypeInternal {
 public struct WindowPosChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGPoint
   public var external: Bool
-  public var window: WindowType
+  public var window: Window
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
@@ -116,7 +149,7 @@ public struct WindowPosChangedEvent: WindowPropertyEventTypeInternal {
 public struct WindowSizeChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGSize
   public var external: Bool
-  public var window: WindowType
+  public var window: Window
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
@@ -124,7 +157,7 @@ public struct WindowSizeChangedEvent: WindowPropertyEventTypeInternal {
 public struct WindowTitleChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = String
   public var external: Bool
-  public var window: WindowType
+  public var window: Window
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
@@ -132,19 +165,19 @@ public struct WindowTitleChangedEvent: WindowPropertyEventTypeInternal {
 public struct WindowMinimizedChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = Bool
   public var external: Bool
-  public var window: WindowType
+  public var window: Window
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
 
 public protocol ApplicationEventType: EventType {
-  var application: ApplicationType { get }
+  var application: Application { get }
 }
 
 public protocol ApplicationPropertyEventType: ApplicationEventType, PropertyEventType {}
 
 protocol ApplicationPropertyEventTypeInternal: ApplicationPropertyEventType, PropertyEventTypeInternal {
-  typealias Object = ApplicationType
+  typealias Object = Application
   init(external: Bool, application: Object, oldVal: PropertyType, newVal: PropertyType)
 }
 extension ApplicationPropertyEventTypeInternal {
@@ -156,7 +189,15 @@ extension ApplicationPropertyEventTypeInternal {
 public struct ApplicationFrontmostChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Bool
   public var external: Bool
-  public var application: ApplicationType
+  public var application: Application
   public var oldVal: PropertyType
   public var newVal: PropertyType
 }
+
+//public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventTypeInternal {
+//  public typealias PropertyType = Window
+//  public var external: Bool
+//  public var application: Application
+//  public var oldVal: PropertyType
+//  public var newVal: PropertyType
+//}

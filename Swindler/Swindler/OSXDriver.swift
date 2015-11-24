@@ -1,7 +1,7 @@
 import AXSwift
 import PromiseKit
 
-public var state: StateType = OSXState<UIElement, Application, Observer>()
+public var state = State(delegate: OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>())
 
 // MARK: - Injectable protocols
 
@@ -55,18 +55,18 @@ enum OSXDriverError: ErrorType {
 
 // MARK: - Implementation
 
-class OSXState<
+class OSXStateDelegate<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
->: StateType, EventNotifier {
-  typealias Window = OSXWindow<UIElement, ApplicationElement, Observer>
-  typealias Application = OSXApplication<UIElement, ApplicationElement, Observer>
+>: StateDelegate, EventNotifier {
+  typealias Window = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
+  typealias Application = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
   private typealias EventHandler = (EventType) -> ()
 
   private var applications: [Application] = []
   private var eventHandlers: [String: [EventHandler]] = [:]
 
-  var visibleWindows: [WindowType] { return applications.flatMap({ $0.visibleWindows }) }
+  var visibleWindows: [WindowDelegate] { return applications.flatMap({ $0.visibleWindows }) }
 
   // TODO: fix strong ref cycle
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
@@ -105,27 +105,25 @@ class OSXState<
   }
 }
 
-public protocol ApplicationType {}
-
-class OSXApplication<
+class OSXApplicationDelegate<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
->: PropertyNotifier, ApplicationType {
-  typealias Object = ApplicationType
-  typealias Window = OSXWindow<UIElement, ApplicationElement, Observer>
+>: ApplicationDelegate, PropertyNotifier {
+  typealias Object = Application
+  typealias OSXWindow = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
 
   private let notifier: EventNotifier
   private let axElement: UIElement
   private var observer: Observer!
-  private var windows: [Window] = []
+  private var windows: [OSXWindow] = []
 
   private var axProperties: [PropertyType]!
 
-  // let mainWindow: Property<Window>!
+  var mainWindow: Property<Window>!
   var frontmost: WriteableProperty<Bool>!
 
-  var visibleWindows: [WindowType] {
-    return windows.map({ $0 as WindowType })
+  var visibleWindows: [WindowDelegate] {
+    return windows.map({ $0 as WindowDelegate })
   }
 
   init(_ appElement: ApplicationElement, notifier: EventNotifier) throws {
@@ -135,11 +133,14 @@ class OSXApplication<
     // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
     let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
 
-    // mainWindow = Property<Window>(AXPropertyDelegate(axElement, .MainWindow, initPromise), notifier: self)
+    // TODO: support applications without main windows
+//    mainWindow = Property<Window>(AXPropertyDelegate(axElement, .MainWindow, initPromise),
+//        withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
     frontmost = WriteableProperty<Bool>(AXPropertyDelegate(axElement, .Frontmost, initPromise),
-        withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: ApplicationType.self, notifier: self)
+        withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     axProperties = [
+//      mainWindow,
       frontmost
     ]
 
@@ -175,22 +176,23 @@ class OSXApplication<
   }
 
   private func onWindowCreated(windowElement: UIElement) {
-    Window.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
+    OSXWindow.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
       self.windows.append(window)
-      self.notifier.notify(WindowCreatedEvent(external: true, window: window))
+      self.notifier.notify(WindowCreatedEvent(external: true, window: Window(delegate: window)))
     }.error { error in
       print("Error: Could not watch [\(windowElement)]: \(error)")
     }
   }
 
   private func onMainWindowChanged(windowElement: UIElement) {
+    // update .main properties of windows here
     // do we need to do this with dispatch_async?
-    guard let (_, _) = findWindowAndIndex(windowElement) else {
-      print("Main window for application changed to unknown element \(windowElement)")
-      return
-    }
+//    guard let (_, _) = findWindowAndIndex(windowElement) else {
+//      print("Main window for application changed to unknown element \(windowElement)")
+//      return
+//    }
 
-    // TODO
+//    mainWindow.refresh() as ()
   }
 
   private func onActivationChanged() {
@@ -207,19 +209,19 @@ class OSXApplication<
 
     if .UIElementDestroyed == notification {
       windows.removeAtIndex(index)
-      notifier.notify(WindowDestroyedEvent(external: true, window: window))
+      notifier.notify(WindowDestroyedEvent(external: true, window: Window(delegate: window)))
     }
   }
 
-  func notify<Event: PropertyEventTypeInternal where Event.Object == ApplicationType>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier.notify(Event(external: external, object: self, oldVal: oldValue, newVal: newValue))
+  func notify<Event: PropertyEventTypeInternal where Event.Object == Application>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+    notifier.notify(Event(external: external, object: Application(delegate: self), oldVal: oldValue, newVal: newValue))
   }
 
   func notifyInvalid() {
     // TODO
   }
 
-  private func findWindowAndIndex(axElement: UIElement) -> (Int, Window)? {
+  private func findWindowAndIndex(axElement: UIElement) -> (Int, OSXWindow)? {
     return windows.enumerate().filter({ $0.1.axElement == axElement }).first
   }
 }
@@ -236,12 +238,12 @@ extension Property: PropertyType {
   }
 }
 
-class OSXWindow<
+class OSXWindowDelegate<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
->: WindowType, PropertyNotifier {
-  typealias State = OSXState<UIElement, ApplicationElement, Observer>
-  typealias Object = WindowType
+>: WindowDelegate, PropertyNotifier {
+  typealias State = OSXStateDelegate<UIElement, ApplicationElement, Observer>
+  typealias Object = Window
   let notifier: EventNotifier
   let axElement: UIElement
 
@@ -267,13 +269,13 @@ class OSXWindow<
 
     // Initialize all properties.
     pos = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
-        withEvent: WindowPosChangedEvent.self, receivingObject: WindowType.self, notifier: self)
+        withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: self)
     size = WriteableProperty(AXPropertyDelegate(axElement, .Size, initPromise),
-        withEvent: WindowSizeChangedEvent.self, receivingObject: WindowType.self, notifier: self)
+        withEvent: WindowSizeChangedEvent.self, receivingObject: Window.self, notifier: self)
     title = Property(AXPropertyDelegate(axElement, .Title, initPromise),
-        withEvent: WindowTitleChangedEvent.self, receivingObject: WindowType.self, notifier: self)
+        withEvent: WindowTitleChangedEvent.self, receivingObject: Window.self, notifier: self)
     minimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
-        withEvent: WindowMinimizedChangedEvent.self, receivingObject: WindowType.self, notifier: self)
+        withEvent: WindowMinimizedChangedEvent.self, receivingObject: Window.self, notifier: self)
 
     axProperties = [
       pos,
@@ -307,14 +309,14 @@ class OSXWindow<
   }
 
   // Initializes the window and returns it as a Promise once it's ready.
-  static func initialize(notifier notifier: EventNotifier, axElement: UIElement, observer: Observer) -> Promise<OSXWindow> {
+  static func initialize(notifier notifier: EventNotifier, axElement: UIElement, observer: Observer) -> Promise<OSXWindowDelegate> {
     return firstly {  // capture thrown errors in promise
-      let window = try OSXWindow(notifier: notifier, axElement: axElement, observer: observer)
+      let window = try OSXWindowDelegate(notifier: notifier, axElement: axElement, observer: observer)
 
       let propertiesInitialized = Array(window.axProperties.map({ $0.initialized }))
-      return when(propertiesInitialized).then { _ -> OSXWindow in
+      return when(propertiesInitialized).then { _ -> OSXWindowDelegate in
         return window
-      }.recover { (error: ErrorType) -> OSXWindow in
+      }.recover { (error: ErrorType) -> OSXWindowDelegate in
         // Unwrap When errors
         switch error {
         case PromiseKit.Error.When(_, let wrappedError):
@@ -339,16 +341,24 @@ class OSXWindow<
     }
   }
 
-  func notify<Event: PropertyEventTypeInternal where Event.Object == WindowType>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier.notify(Event(external: external, object: self, oldVal: oldValue, newVal: newValue))
+  func notify<Event: PropertyEventTypeInternal where Event.Object == Window>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+    notifier.notify(Event(external: external, object: Window(delegate: self), oldVal: oldValue, newVal: newValue))
   }
 
   func notifyInvalid() {
     valid = false
   }
+
+  func equalTo(rhs: WindowDelegate) -> Bool {
+    if let other = rhs as? OSXWindowDelegate {
+      return self.axElement == other.axElement
+    } else {
+      return false
+    }
+  }
 }
 
-// Used by OSXWindow to pull out the AXSwift attributes.
+// Used by OSXWindowDelegate to pull out the AXSwift attributes.
 protocol AXPropertyDelegateType {
   var attribute: AXSwift.Attribute { get }
 }
