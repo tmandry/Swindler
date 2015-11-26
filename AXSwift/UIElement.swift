@@ -172,8 +172,12 @@ public class UIElement {
   }
 
   // Checks if the value is an AXValue and if so, unwraps it.
+  // If the value is an AXUIElement, wraps it in UIElement.
   private func unpackAXValue(value: AnyObject) -> Any {
     guard CFGetTypeID(value) == AXValueGetTypeID() else {
+      if CFGetTypeID(value) == AXUIElementGetTypeID() {
+        return UIElement(value as! AXUIElement)
+      }
       return value
     }
 
@@ -229,8 +233,11 @@ public class UIElement {
   }
 
   // Checks if the value is one supported by AXValue and if so, wraps it.
+  // If the value is a UIElement, unwraps it to an AXUIElement.
   private func packAXValue(value: Any) -> AnyObject {
     switch value {
+    case let val as UIElement:
+      return val.element
     case var val as CFRange:
       return AXValueCreate(AXValueType(rawValue: kAXValueCFRangeType)!, &val)!.takeRetainedValue()
     case var val as CGPoint:
