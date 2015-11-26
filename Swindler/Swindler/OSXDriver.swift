@@ -427,10 +427,9 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
 // Asynchronously fetches all the window attributes.
 func fetchAttributes<UIElement: UIElementType>(axProperties: [PropertyType], forElement axElement: UIElement, fulfill: ([Attribute: Any]) -> (), reject: (ErrorType) -> ()) {
   let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
-  Promise<Void>().thenInBackground {
+  Promise<Void>().thenInBackground { () -> () in
     // Issue a request in the background.
-    return try axElement.getMultipleAttributes(attributes)
-  }.then { attributes -> () in
+    let attributes = try axElement.getMultipleAttributes(attributes)
     fulfill(attributes)
   }.recover { error -> () in
     // Rewrite errors as PropertyErrors.

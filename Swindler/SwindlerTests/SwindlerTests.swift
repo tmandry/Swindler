@@ -485,6 +485,31 @@ class PropertySpec: QuickSpec {
         }
 
       }
+
+      context("when called before the property is initialized") {
+
+        var fulfillInitPromise: ([AXSwift.Attribute: Any] -> ())!
+        beforeEach {
+          let (initPromise, fulfill, _) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
+          fulfillInitPromise = fulfill
+          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+          property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
+        }
+
+        it("doesn't crash") { () -> () in
+          property.refresh()
+        }
+
+        it("refreshes the property value after initialization is complete") { () -> Promise<Void> in
+          let promise = property.refresh().then { newValue -> () in
+            expect(newValue).to(equal(secondPoint))
+          }
+          windowElement.attrs[.Position] = secondPoint
+          fulfillInitPromise([.Position: firstPoint])
+          return promise
+        }
+
+      }
     }
 
     describe("set") {

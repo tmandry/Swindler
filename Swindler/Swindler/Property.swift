@@ -27,6 +27,7 @@ protocol PropertyDelegate {
 
   /// Returns a promise of the property's initial value. It's the responsibility of whoever defines
   /// the property to ensure that the property is not accessed before this promise resolves.
+  /// You can call `refresh()` on the property, however, as it will wait for this to resolve.
   func initialize() -> Promise<T>
 }
 
@@ -109,7 +110,10 @@ public class Property<Type: Equatable> {
   /// Forces the value of the property to refresh. Most properties are watched so you don't need to
   /// call this yourself.
   public func refresh() -> Promise<Type> {
-    return Promise<Void>().then(on: backgroundQueue) { () -> (Type, Type) in
+    // Allow queueing up a refresh before initialization is complete, which means "assume the value
+    // you will be initialized with is going to be stale". This is useful if an event is received
+    // before fully initializing.
+    return self.initialized.then(on: backgroundQueue) { () -> (Type, Type) in
       self.requestLock.lock()
       defer { self.requestLock.unlock() }
 
@@ -223,7 +227,7 @@ private struct PropertyDelegateThunk<Type: Equatable>: PropertyDelegate {
   func initialize() -> Promise<Type> { return initialize_() }
 }
 
-class PropertyNotifierThunk<PropertyType: Equatable> {
+private struct PropertyNotifierThunk<PropertyType: Equatable> {
   // Will be nil if not initialized with an event type.
   let notify: Optional<(external: Bool, oldValue: PropertyType, newValue: PropertyType) -> ()>
   let notifyInvalid: () -> ()
