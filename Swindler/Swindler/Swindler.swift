@@ -44,15 +44,15 @@ public class Window: Equatable {
   public var valid: Bool { return delegate.valid }
 
   /// The position of the top-left corner of the window in screen coordinates.
-  public var pos: WriteableProperty<CGPoint> { return delegate.pos }
+  public var pos: WriteableProperty<OfType<CGPoint>> { return delegate.pos }
   /// The size of the window in screen coordinates.
-  public var size: WriteableProperty<CGSize> { return delegate.size }
+  public var size: WriteableProperty<OfType<CGSize>> { return delegate.size }
 
   /// The window title.
-  public var title: Property<String> { return delegate.title }
+  public var title: Property<OfType<String>> { return delegate.title }
 
   /// Whether the window is minimized.
-  public var minimized: WriteableProperty<Bool> { return delegate.minimized }
+  public var minimized: WriteableProperty<OfType<Bool>> { return delegate.minimized }
 
   /// TODO: main, fullScreen, focused, screen, space
 }
@@ -63,10 +63,10 @@ public func ==(lhs: Window, rhs: Window) -> Bool {
 protocol WindowDelegate {
   var valid: Bool { get }
 
-  var pos: WriteableProperty<CGPoint>! { get }
-  var size: WriteableProperty<CGSize>! { get }
-  var title: Property<String>! { get }
-  var minimized: WriteableProperty<Bool>! { get }
+  var pos: WriteableProperty<OfType<CGPoint>>! { get }
+  var size: WriteableProperty<OfType<CGSize>>! { get }
+  var title: Property<OfType<String>>! { get }
+  var minimized: WriteableProperty<OfType<Bool>>! { get }
 
   func equalTo(other: WindowDelegate) -> Bool
 }
@@ -111,7 +111,7 @@ public struct WindowDestroyedEvent: WindowEventType {
 
 /// An event describing a property change.
 public protocol PropertyEventType: EventType {
-  typealias PropertyType: Equatable
+  typealias PropertyType
 
   var external: Bool { get }
   /// The old value of the property.

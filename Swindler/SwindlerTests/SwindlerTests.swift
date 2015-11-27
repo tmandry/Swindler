@@ -122,15 +122,15 @@ class FakeObserver: TestObserver {
 }
 
 class TestPropertyDelegate<T: Equatable>: PropertyDelegate {
-  var systemValue: T
+  var systemValue: T?
 
-  init(value: T) {
+  init(value: T?) {
     systemValue = value
   }
-  func initialize() -> Promise<T> {
+  func initialize() -> Promise<T?> {
     return Promise(systemValue)
   }
-  func readValue() throws -> T {
+  func readValue() throws -> T? {
     return systemValue
   }
   func writeValue(newValue: T) throws {
@@ -326,8 +326,7 @@ class OSXWindowSpec: QuickSpec {
 
           let promise = OSXWindowDelegate<TestUIElement, TestApplicationElement, TestObserver>.initialize(
               notifier: TestNotifier(), axElement: windowElement, observer: TestObserver())
-          let expectedError = PropertyError.InvalidObject(cause:
-              OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement))
+          let expectedError = OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement)
           return expectToFail(promise, with: expectedError)
         }
       }
@@ -361,7 +360,7 @@ class PropertySpec: QuickSpec {
   override func spec() {
 
     // Set up a position property on a test AX window.
-    var property: WriteableProperty<CGPoint>!
+    var property: WriteableProperty<OfType<CGPoint>>!
     var windowElement: TestWindowElement!
     var notifier: TestWindowPropertyNotifier!
     func setUpWithAttributes(attrs: [AXSwift.Attribute: Any]) {
@@ -389,13 +388,40 @@ class PropertySpec: QuickSpec {
     }
 
     describe("initialization") {
-      context("when the attribute is missing") {
+      context("when a non-optional attribute is missing") {
 
         it("reports an error") { () -> Promise<Void> in
           setUpWithAttributes([:])
-          let expectedError = PropertyError.InvalidObject(cause:
-              OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement))
+          let expectedError = PropertyError.InvalidObject(cause: PropertyError.MissingValue)
           return expectToFail(property.initialized, with: expectedError)
+        }
+
+        it("marks the object as invalid", failOnError: false) { () -> Promise<Void> in
+          setUpWithAttributes([:])
+          return property.initialized.always {
+            expect(notifier.stillValid).to(beFalse())
+          }
+        }
+
+      }
+
+      context("when an optional attribute is missing") {
+
+        var optProperty: WriteableProperty<OfOptionalType<CGPoint>>!
+        beforeEach {
+          let initPromise = Promise<[AXSwift.Attribute: Any]>([:])
+          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+          optProperty = WriteableProperty(delegate, notifier: notifier)
+        }
+
+        it("reports no error") { () -> Promise<Void> in
+          return optProperty.initialized
+        }
+
+        it("does not mark the object as invalid") { () -> Promise<Void> in
+          return optProperty.initialized.then {
+            expect(notifier.stillValid).to(beTrue())
+          }
         }
 
       }
@@ -452,6 +478,47 @@ class PropertySpec: QuickSpec {
         it("does not emit a ChangedEvent") {
           return property.refresh().then { _ -> () in
             expect(notifier.events.count).to(equal(0))
+          }
+        }
+
+      }
+
+      context("when a non-optional attribute is missing") {
+
+        it("reports an error") { () -> Promise<Void> in
+          windowElement.attrs[.Position] = nil
+          let expectedError = PropertyError.InvalidObject(cause: PropertyError.MissingValue)
+          return expectToFail(property.refresh(), with: expectedError)
+        }
+
+        it("marks the object as invalid", failOnError: false) { () -> Promise<Void> in
+          windowElement.attrs[.Position] = nil
+          return property.refresh().asVoid().always {
+            expect(notifier.stillValid).to(beFalse())
+          }
+        }
+
+      }
+
+      context("when an optional attribute is missing") {
+        var optProperty: WriteableProperty<OfOptionalType<CGPoint>>!
+        beforeEach {
+          let initPromise = Promise<[AXSwift.Attribute: Any]>([.Position: firstPoint])
+          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+          optProperty = WriteableProperty(delegate, notifier: notifier)
+          waitUntil { done in
+            optProperty.initialized.then { done() }
+          }
+        }
+
+        it("reports no error") { () -> Promise<Void> in
+          windowElement.attrs[.Position] = nil
+          return optProperty.refresh().asVoid()
+        }
+
+        it("does not mark the object as invalid") { () -> Promise<Void> in
+          return optProperty.initialized.then {
+            expect(notifier.stillValid).to(beTrue())
           }
         }
 
@@ -574,12 +641,12 @@ class PropertySpec: QuickSpec {
 
       context("when the UIElement") {
         class MyPropertyDelegate: TestPropertyDelegate<CGPoint> {
-          let setTo: CGPoint
+          let setTo: CGPoint?
           init(value: CGPoint, setTo: CGPoint) {
             self.setTo = setTo
             super.init(value: value)
           }
-          override func writeValue(newValue: CGPoint) throws {
+          override func writeValue(newValue: CGPoint?) throws {
             systemValue = setTo
           }
         }
@@ -653,14 +720,14 @@ class PropertySpec: QuickSpec {
             self.onWrite = onWrite
             super.init(value: value)
           }
-          override func writeValue(newValue: T) throws {
+          override func writeValue(newValue: T?) throws {
             systemValue = newValue
             onWrite()
           }
         }
 
         var delegate: MyPropertyDelegate<CGPoint>!
-        var property: WriteableProperty<CGPoint>!
+        var property: WriteableProperty<OfType<CGPoint>>!
         beforeEach {
           delegate = MyPropertyDelegate(value: firstPoint, onWrite: {
             property.refresh()

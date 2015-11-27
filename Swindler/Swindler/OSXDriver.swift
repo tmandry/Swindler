@@ -119,8 +119,8 @@ class OSXApplicationDelegate<
 
   private var axProperties: [PropertyType]!
 
-  var mainWindow: Property<Window>!
-  var frontmost: WriteableProperty<Bool>!
+  var mainWindow: Property<OfType<Window>>!
+  var frontmost: WriteableProperty<OfType<Bool>>!
 
   var visibleWindows: [WindowDelegate] {
     return windows.map({ $0 as WindowDelegate })
@@ -134,9 +134,9 @@ class OSXApplicationDelegate<
     let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
 
     // TODO: support applications without main windows
-//    mainWindow = Property<Window>(AXPropertyDelegate(axElement, .MainWindow, initPromise),
+//    mainWindow = Property<OfType<Window>>(AXPropertyDelegate(axElement, .MainWindow, initPromise),
 //        withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
-    frontmost = WriteableProperty<Bool>(AXPropertyDelegate(axElement, .Frontmost, initPromise),
+    frontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initPromise),
         withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     axProperties = [
@@ -249,11 +249,11 @@ class OSXWindowDelegate<
 
   private(set) var valid: Bool = true
 
-  var pos: WriteableProperty<CGPoint>!
-  var size: WriteableProperty<CGSize>!
-  var title: Property<String>!
-  var minimized: WriteableProperty<Bool>!
-  var main: WriteableProperty<Bool>!
+  var pos: WriteableProperty<OfType<CGPoint>>!
+  var size: WriteableProperty<OfType<CGSize>>!
+  var title: Property<OfType<String>>!
+  var minimized: WriteableProperty<OfType<Bool>>!
+  var main: WriteableProperty<OfType<Bool>>!
 
   private var axProperties: [PropertyType]!
   private var watchedAxProperties: [AXSwift.Notification: PropertyType]!
@@ -319,8 +319,15 @@ class OSXWindowDelegate<
       }.recover { (error: ErrorType) -> OSXWindowDelegate in
         // Unwrap When errors
         switch error {
-        case PromiseKit.Error.When(_, let wrappedError):
-          throw wrappedError
+        case PromiseKit.Error.When(let index, let wrappedError):
+          switch wrappedError {
+          case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
+            // Add more information
+            let propertyDelegate = window.axProperties[index].delegate as! AXPropertyDelegateType
+            throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
+          default:
+            throw wrappedError
+          }
         default:
           throw error
         }
@@ -375,13 +382,9 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
     self.initPromise = initPromise
   }
 
-  func readValue() throws -> T {
+  func readValue() throws -> T? {
     do {
-      guard let value: T = try axElement.attribute(attribute) else {
-        // This will be caught as an unexpected error.
-        throw OSXDriverError.MissingAttribute(attribute: attribute, onElement: axElement)
-      }
-      return value
+      return try axElement.attribute(attribute)
     } catch AXSwift.Error.CannotComplete {
       // If messaging timeout unspecified, we'll pass -1.
       let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
@@ -413,13 +416,12 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
     }
   }
 
-  func initialize() -> Promise<T> {
-    return initPromise.then { (dict: InitDict) throws -> T in
+  func initialize() -> Promise<T?> {
+    return initPromise.then { (dict: InitDict) throws -> T? in
       guard let value = dict[self.attribute] else {
-        throw PropertyError.InvalidObject(
-          cause: OSXDriverError.MissingAttribute(attribute: self.attribute, onElement: self.axElement))
+        return nil
       }
-      return value as! T
+      return (value as! T)
     }
   }
 }

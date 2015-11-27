@@ -1,6 +1,7 @@
 import AXSwift
 import PromiseKit
 
+/// A PropertyNotifier handles property events and directs them to the right place.
 protocol PropertyNotifier: class {
   typealias Object
 
@@ -20,7 +21,7 @@ protocol PropertyDelegate {
   typealias T: Equatable
 
   /// Synchronously read the property value from the OS. May be called on a background thread.
-  func readValue() throws -> T
+  func readValue() throws -> T?
 
   /// Synchronously write the property value to the OS. May be called on a background thread.
   func writeValue(newValue: T) throws
@@ -28,16 +29,20 @@ protocol PropertyDelegate {
   /// Returns a promise of the property's initial value. It's the responsibility of whoever defines
   /// the property to ensure that the property is not accessed before this promise resolves.
   /// You can call `refresh()` on the property, however, as it will wait for this to resolve.
-  func initialize() -> Promise<T>
+  func initialize() -> Promise<T?>
 }
 
 public enum PropertyError: ErrorType {
   /// The value the property was set to is illegal.
-  /// - note: In practice, applications often simply ignore illegal values.
+  /// - note: In practice, applications often simply ignore illegal values instead of returning this
+  ///         error.
   case IllegalValue
 
   /// The application did not respond to our request quickly enough.
   case Timeout(time: NSTimeInterval)
+
+  /// The value of the (required) property is missing from the object on the OS.
+  case MissingValue
 
   /// The underlying object for the property has become invalid (e.g. the window has been destroyed).
   /// This is considered a permanent failure.
@@ -47,17 +52,55 @@ public enum PropertyError: ErrorType {
   case Failure(cause: ErrorType)
 }
 
+// In Swift, even when T: Equatable, we don't have T?: Equatable (but you CAN compare optionals with ==).
+// To get around this while keeping our code general, we have to specify all this explicitly.
+
+public protocol PropertyTypeSpec {
+  typealias NonOptionalType: Equatable
+  /// The property type, which might be the same as the base type, or Optional<NonOptionalType>.
+  typealias PropertyType
+  static func equal(lhs: PropertyType, _ rhs: PropertyType) -> Bool
+  static func toPropertyType(from: NonOptionalType?) throws -> PropertyType
+  static func toOptionalType(from: PropertyType) -> NonOptionalType?
+}
+
+public struct OfType<T: Equatable>: PropertyTypeSpec {
+  public typealias NonOptionalType = T
+  public typealias PropertyType = T
+  public static func equal(lhs: T, _ rhs: T) -> Bool { return lhs == rhs }
+  public static func toPropertyType(from: T?) throws -> T {
+    guard let to: T = from else {
+      // TODO: unexpected error
+      throw PropertyError.InvalidObject(cause: PropertyError.MissingValue)
+    }
+    return to
+  }
+  public static func toOptionalType(from: T) -> T? { return from }
+}
+
+public struct OfOptionalType<T: Equatable>: PropertyTypeSpec {
+  public typealias NonOptionalType = T
+  public typealias PropertyType = T?
+  public static func equal(lhs: T?, _ rhs: T?) -> Bool { return lhs == rhs }
+  public static func toPropertyType(from: T?) throws -> T? { return from }
+  public static func toOptionalType(from: T?) -> T? { return from }
+}
+
 /// A property on a window. Property values are watched and cached in the background, so they are
 /// always available to read.
 ///
 /// - throws: Only `PropertyError` errors are given for rejected promises.
-public class Property<Type: Equatable> {
+public class Property<TypeSpec: PropertyTypeSpec> {
+  typealias Type = TypeSpec.PropertyType
+  typealias NonOptionalType = TypeSpec.NonOptionalType
+  typealias OptionalType = TypeSpec.NonOptionalType?
+
   // The backing store
   private var value_: Type!
   // Implementation of how to read and write the value
-  private var delegate_: PropertyDelegateThunk<Type>
+  private var delegate_: PropertyDelegateThunk<TypeSpec>
   // Where events go
-  private var notifier: PropertyNotifierThunk<Type>
+  private var notifier: PropertyNotifierThunk<TypeSpec>
 
   // Only do one request on a given property at a time. This ensures that events get emitted from
   // the right operation.
@@ -74,16 +117,16 @@ public class Property<Type: Equatable> {
   // Property definer can access the delegate they provided here
   private(set) var delegate: Any
 
-  init<Impl: PropertyDelegate, Notifier: PropertyNotifier where Impl.T == Type>(_ delegate: Impl, notifier: Notifier) {
-    self.notifier = PropertyNotifierThunk<Type>(notifier)
+  init<Impl: PropertyDelegate, Notifier: PropertyNotifier where Impl.T == NonOptionalType>(_ delegate: Impl, notifier: Notifier) {
+    self.notifier = PropertyNotifierThunk(notifier)
     self.delegate = delegate
     self.delegate_ = PropertyDelegateThunk(delegate)
 
     let (initialized, fulfill, reject) = Promise<Void>.pendingPromise()
     self.initialized = initialized  // must be set before capturing `self` in a closure
 
-    delegate.initialize().then { (value: Type) -> () in
-      self.value_ = value
+    delegate.initialize().then { (value: OptionalType) -> () in
+      self.value_ = try TypeSpec.toPropertyType(value)
       fulfill()
     }.error { error in
       do {
@@ -95,9 +138,9 @@ public class Property<Type: Equatable> {
   }
 
   /// Use this initializer if there is an event associated with the property.
-  convenience init<Impl: PropertyDelegate, Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Impl.T == Type, Event.PropertyType == Type, Event.Object == Object, Notifier.Object == Object>(_ delegate: Impl, withEvent: Event.Type, receivingObject: Object.Type, notifier: Notifier) {
+  convenience init<Impl: PropertyDelegate, Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Impl.T == NonOptionalType, Event.PropertyType == Type, Event.Object == Object, Notifier.Object == Object>(_ delegate: Impl, withEvent: Event.Type, receivingObject: Object.Type, notifier: Notifier) {
     self.init(delegate, notifier: notifier)
-    self.notifier = PropertyNotifierThunk<Type>(notifier, withEvent: Event.self, receivingObject: Object.self)
+    self.notifier = PropertyNotifierThunk(notifier, withEvent: Event.self, receivingObject: Object.self)
   }
 
   /// The value of the property.
@@ -117,13 +160,13 @@ public class Property<Type: Equatable> {
       self.requestLock.lock()
       defer { self.requestLock.unlock() }
 
-      let actual = try self.delegate_.readValue()
+      let actual = try TypeSpec.toPropertyType(self.delegate_.readValue())
       let oldValue = self.updateBackingStore(actual)
 
       return (oldValue, actual)
     }.then { (oldValue: Type, actual: Type) throws -> Type in
       // Back on main thread.
-      if oldValue != actual {
+      if !TypeSpec.equal(oldValue, actual) {
         self.notifier.notify?(external: true, oldValue: oldValue, newValue: actual)
       }
       return actual
@@ -157,9 +200,9 @@ public class Property<Type: Equatable> {
 }
 
 /// A property that can be set. Writes happen asynchronously.
-public class WriteableProperty<Type: Equatable>: Property<Type> {
+public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
   // Due to a Swift bug I have to override this.
-  override init<Impl: PropertyDelegate, Notifier: PropertyNotifier where Impl.T == Type>(_ delegate: Impl, notifier: Notifier) {
+  override init<Impl: PropertyDelegate, Notifier: PropertyNotifier where Impl.T == NonOptionalType>(_ delegate: Impl, notifier: Notifier) {
     super.init(delegate, notifier: notifier)
   }
 
@@ -167,19 +210,21 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
   /// the value will not be updated until the write is complete. Use `set` to retrieve a promise.
   override public var value: Type {
     get {
-      backingStoreLock.lock()
-      defer { backingStoreLock.unlock() }
-      return value_
+      return super.value
     }
     set {
-      // `set` takes care of locking.
-      set(newValue)
+      // Unwrap the value, if it's an optional.
+      guard let value = TypeSpec.toOptionalType(newValue) else {
+        NSLog("A property of type \(Type.self) was set to nil; this has no effect.")
+        return
+      }
+      set(value)
     }
   }
 
   /// Sets the value of the property.
   /// - returns: A promise that resolves to the new actual value of the property.
-  public func set(newValue: Type) -> Promise<Type> {
+  public func set(newValue: NonOptionalType) -> Promise<Type> {
     return Promise<Void>().then(on: backgroundQueue) { () throws -> (Type, Type) in
       self.requestLock.lock()
       defer { self.requestLock.unlock() }
@@ -187,7 +232,7 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
       // Write, then read back the value to see what actually changed.
       try self.delegate_.writeValue(newValue)
       do {
-        let actual = try self.delegate_.readValue()
+        let actual = try TypeSpec.toPropertyType(self.delegate_.readValue())
         let oldValue = self.updateBackingStore(actual)
         return (oldValue, actual)
       } catch PropertyError.Timeout(let time) {
@@ -198,7 +243,7 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
       }
     }.then { (oldValue: Type, actual: Type) -> Type in
       // Back on main thread.
-      if actual != oldValue {
+      if !TypeSpec.equal(actual, oldValue) {
         self.notifier.notify?(external: false, oldValue: oldValue, newValue: actual)
       }
       return actual
@@ -211,7 +256,10 @@ public class WriteableProperty<Type: Equatable>: Property<Type> {
 // Because Swift doesn't have generic protocols, we have to use these ugly thunks to simulate them.
 // Hopefully this will be addressed in a future Swift release.
 
-private struct PropertyDelegateThunk<Type: Equatable>: PropertyDelegate {
+private struct PropertyDelegateThunk<TypeSpec: PropertyTypeSpec> {
+  // Use non-optional type as base so we don't have a double optional, and preserve the Equatable info.
+  typealias Type = TypeSpec.NonOptionalType
+
   init<Impl: PropertyDelegate where Impl.T == Type>(_ impl: Impl) {
     writeValue_ = impl.writeValue
     readValue_ = impl.readValue
@@ -219,15 +267,17 @@ private struct PropertyDelegateThunk<Type: Equatable>: PropertyDelegate {
   }
 
   let writeValue_: (newValue: Type) throws -> ()
-  let readValue_: () throws -> Type
-  let initialize_: () -> Promise<Type>
+  let readValue_: () throws -> Type?
+  let initialize_: () -> Promise<Type?>
 
   func writeValue(newValue: Type) throws { try writeValue_(newValue: newValue) }
-  func readValue() throws -> Type { return try readValue_() }
-  func initialize() -> Promise<Type> { return initialize_() }
+  func readValue() throws -> Type? { return try readValue_() }
+  func initialize() -> Promise<Type?> { return initialize_() }
 }
 
-private struct PropertyNotifierThunk<PropertyType: Equatable> {
+private struct PropertyNotifierThunk<TypeSpec: PropertyTypeSpec> {
+  typealias PropertyType = TypeSpec.PropertyType
+
   // Will be nil if not initialized with an event type.
   let notify: Optional<(external: Bool, oldValue: PropertyType, newValue: PropertyType) -> ()>
   let notifyInvalid: () -> ()
