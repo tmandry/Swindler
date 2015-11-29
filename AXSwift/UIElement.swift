@@ -156,6 +156,10 @@ public class UIElement {
     return try self.attribute(attribute.rawValue)
   }
 
+  public func arrayAttribute<T>(attribute: Attribute) throws -> [T]? {
+    return try self.arrayAttribute(attribute.rawValue)
+  }
+
   public func attribute<T>(attribute: String) throws -> T? {
     var value: AnyObject?
     let error = AXUIElementCopyAttributeValue(element, attribute, &value)
@@ -171,44 +175,51 @@ public class UIElement {
     return (unpackAXValue(value!) as! T)
   }
 
+  public func arrayAttribute<T>(attribute: String) throws -> [T]? {
+    guard let array: [AnyObject] = try self.attribute(attribute) else {
+      return nil
+    }
+    return array.map({ unpackAXValue($0) as! T })
+  }
+
   // Checks if the value is an AXValue and if so, unwraps it.
   // If the value is an AXUIElement, wraps it in UIElement.
   private func unpackAXValue(value: AnyObject) -> Any {
-    guard CFGetTypeID(value) == AXValueGetTypeID() else {
-      if CFGetTypeID(value) == AXUIElementGetTypeID() {
-        return UIElement(value as! AXUIElement)
+    switch CFGetTypeID(value) {
+    case AXUIElementGetTypeID():
+      return UIElement(value as! AXUIElement)
+    case AXValueGetTypeID():
+      let type = AXValueGetType(value as! AXValue)
+      switch type {
+      case .AXError:
+        var result: AXError = .Success
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CFRange:
+        var result: CFRange = CFRange()
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CGPoint:
+        var result: CGPoint = CGPointZero
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CGRect:
+        var result: CGRect = CGRectZero
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CGSize:
+        var result: CGSize = CGSizeZero
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .Illegal:
+        return value
       }
-      return value
-    }
-
-    let type = AXValueGetType(value as! AXValue)
-    switch type {
-    case .AXError:
-      var result: AXError = .Success
-      let success = AXValueGetValue(value as! AXValue, type, &result)
-      assert(success)
-      return result
-    case .CFRange:
-      var result: CFRange = CFRange()
-      let success = AXValueGetValue(value as! AXValue, type, &result)
-      assert(success)
-      return result
-    case .CGPoint:
-      var result: CGPoint = CGPointZero
-      let success = AXValueGetValue(value as! AXValue, type, &result)
-      assert(success)
-      return result
-    case .CGRect:
-      var result: CGRect = CGRectZero
-      let success = AXValueGetValue(value as! AXValue, type, &result)
-      assert(success)
-      return result
-    case .CGSize:
-      var result: CGSize = CGSizeZero
-      let success = AXValueGetValue(value as! AXValue, type, &result)
-      assert(success)
-      return result
-    case .Illegal:
+    default:
       return value
     }
   }
