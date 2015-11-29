@@ -18,8 +18,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   func startWatcher(app: Application) throws {
     var updated = false
-    observer = app.createObserver() { (observer: Observer, element: UIElement, event: Notification) in
-      print("\(element): \(event)")
+    observer = app.createObserver() { (observer: Observer, element: UIElement, event: Notification, info: [String: AnyObject]?) in
+      var elementDesc: String!
+      if let role = try? element.role()! where role == .Window {
+        elementDesc = "\(element) \"\(try! (element.attribute(.Title) as String?)!)\""
+      } else {
+        elementDesc = "\(element)"
+      }
+      print("\(event) on \(elementDesc); info: \(info)")
 
       // Watch events on new windows
       if event == .WindowCreated {
