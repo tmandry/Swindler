@@ -574,6 +574,16 @@ extension UIElement: CustomStringConvertible {
     }
     return "\(role): \(element)"
   }
+
+  public var inspect: String {
+    guard let attributeNames = try? attributes() else {
+      return "InvalidUIElement"
+    }
+    guard let attributes = try? getMultipleAttributes(attributeNames) else {
+      return "InvalidUIElement"
+    }
+    return "\(attributes)"
+  }
 }
 
 // MARK: - Equatable
