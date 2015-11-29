@@ -6,6 +6,7 @@ public class State {
     self.delegate = delegate
   }
 
+  public var runningApplications: [Application] { return delegate.runningApplications.map({ Application(delegate: $0) }) }
   public var visibleWindows: [Window] { return delegate.visibleWindows.map({ Window(delegate: $0) }) }
   public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
 }
@@ -16,6 +17,7 @@ public class State {
 // Our delegates differ from most Apple API delegates in that they are internal and are critical to
 // the functioning of the class, so they are not held with weak references.
 protocol StateDelegate {
+  var runningApplications: [ApplicationDelegate] { get }
   var visibleWindows: [WindowDelegate] { get }
   func on<Event: EventType>(handler: (Event) -> ())
 }
@@ -26,9 +28,15 @@ public class Application {
   init(delegate: ApplicationDelegate) {
     self.delegate = delegate
   }
+
+  public var mainWindow: Property<OfOptionalType<Window>> { return delegate.mainWindow }
+  public var frontmost: WriteableProperty<OfType<Bool>> { return delegate.frontmost }
 }
 
-protocol ApplicationDelegate {}
+protocol ApplicationDelegate {
+  var mainWindow: Property<OfOptionalType<Window>>! { get }
+  var frontmost: WriteableProperty<OfType<Bool>>! { get }
+}
 
 /// A window.
 public class Window: Equatable {
@@ -194,10 +202,10 @@ public struct ApplicationFrontmostChangedEvent: ApplicationPropertyEventTypeInte
   public var newVal: PropertyType
 }
 
-//public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventTypeInternal {
-//  public typealias PropertyType = Window
-//  public var external: Bool
-//  public var application: Application
-//  public var oldVal: PropertyType
-//  public var newVal: PropertyType
-//}
+public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventTypeInternal {
+  public typealias PropertyType = Window?
+  public var external: Bool
+  public var application: Application
+  public var oldVal: PropertyType
+  public var newVal: PropertyType
+}

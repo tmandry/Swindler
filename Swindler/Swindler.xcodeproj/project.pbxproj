@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */; };
+		2F55343D1C0AC86500B87C42 /* Any+PromiseKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F55343C1C0AC86500B87C42 /* Any+PromiseKit.swift */; };
 		2F86CECA1BD60117007E8C29 /* Swindler.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F86CEC91BD60117007E8C29 /* Swindler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2F86CED11BD60117007E8C29 /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
 		2F86CED61BD60117007E8C29 /* SwindlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CED51BD60117007E8C29 /* SwindlerTests.swift */; };
@@ -33,6 +34,7 @@
 
 /* Begin PBXFileReference section */
 		2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
+		2F55343C1C0AC86500B87C42 /* Any+PromiseKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Any+PromiseKit.swift"; sourceTree = "<group>"; };
 		2F86CEC61BD60117007E8C29 /* Swindler.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Swindler.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F86CEC91BD60117007E8C29 /* Swindler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Swindler.h; sourceTree = "<group>"; };
 		2F86CECB1BD60117007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 				2F86CEC91BD60117007E8C29 /* Swindler.h */,
 				2F86CEE11BD6D9E1007E8C29 /* Swindler.swift */,
 				2F86CEE31BD6DAD7007E8C29 /* OSXDriver.swift */,
+				2F55343C1C0AC86500B87C42 /* Any+PromiseKit.swift */,
 				2F86CECB1BD60117007E8C29 /* Info.plist */,
 				2F9E31A81BF050AF00EAD248 /* Property.swift */,
 			);
@@ -380,6 +383,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F9E31A91BF050AF00EAD248 /* Property.swift in Sources */,
+				2F55343D1C0AC86500B87C42 /* Any+PromiseKit.swift in Sources */,
 				2F86CEE41BD6DAD7007E8C29 /* OSXDriver.swift in Sources */,
 				2F86CEE21BD6D9E1007E8C29 /* Swindler.swift in Sources */,
 			);

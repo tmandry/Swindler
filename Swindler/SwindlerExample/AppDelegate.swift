@@ -34,6 +34,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     swindler.on { (event: WindowDestroyedEvent) in
       print("window destroyed: \(event.window)")
     }
+    swindler.on { (event: ApplicationMainWindowChangedEvent) in
+      print("new main window: \(event.newVal?.title.value). old: \(event.oldVal?.title.value)")
+    }
 
     dispatchAfter(10.0) {
       for window in self.swindler.visibleWindows {

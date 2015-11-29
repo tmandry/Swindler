@@ -27,6 +27,13 @@ class TestUIElement: UIElementType, Hashable {
     }
     return nil
   }
+  func arrayAttribute<T>(attribute: Attribute) throws -> [T]? {
+    if throwInvalid { throw AXSwift.Error.InvalidUIElement }
+    guard let value = attrs[attribute] else  {
+      return nil
+    }
+    return (value as! [T])
+  }
   func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute: Any] {
     if throwInvalid { throw AXSwift.Error.InvalidUIElement }
     var result: [Attribute: Any] = [:]
@@ -38,6 +45,11 @@ class TestUIElement: UIElementType, Hashable {
   func setAttribute(attribute: Attribute, value: Any) throws {
     if throwInvalid { throw AXSwift.Error.InvalidUIElement }
     attrs[attribute] = value
+  }
+
+  var inspect: String {
+    let role = attrs[.Role] ?? "UIElement"
+    return "\(role) (id \(id)"
   }
 }
 func ==(lhs: TestUIElement, rhs: TestUIElement) -> Bool {
@@ -51,8 +63,9 @@ class TestApplicationElementBase: TestUIElement {
   override init() {
     super.init()
     processID = Int32(id)
-    attrs[.Role]    = AXSwift.Role.Application
-    attrs[.Windows] = Array<TestUIElement>()
+    attrs[.Role]      = AXSwift.Role.Application
+    attrs[.Windows]   = Array<TestUIElement>()
+    attrs[.Frontmost] = false
   }
 }
 final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
@@ -82,6 +95,7 @@ class TestObserver: ObserverType {
   init() { }
 
   func addNotification(notification: AXSwift.Notification, forElement: TestUIElement) throws {}
+  func processPendingNotifications() { }
 }
 
 // A more elaborate TestObserver that actually tracks which elements and notifications are being
@@ -106,9 +120,10 @@ class FakeObserver: TestObserver {
   }
 
   func emit(notification: AXSwift.Notification, forElement window: TestWindowElement) {
-    if notification == .WindowCreated {
+    switch notification {
+    case .WindowCreated, .MainWindowChanged:
       doEmit(notification, watchedElement: window.app, passedElement: window)
-    } else {
+    default:
       doEmit(notification, watchedElement: window, passedElement: window)
     }
   }
@@ -178,21 +193,38 @@ class OSXDriverSpec: QuickSpec {
 
     context("after initialization") {
       // Set up a state with a single application containing a single window.
-      var app: TestApplicationElement!
+      var appElement: TestApplicationElement!
       var windowElement: TestWindowElement!
       var observer: FakeObserver!
       var state: State!
       var window: Window!
+      var app: Swindler.Application!
       beforeEach {
-        app = TestApplicationElement()
-        windowElement = TestWindowElement(forApp: app)
+        appElement = TestApplicationElement()
+        windowElement = TestWindowElement(forApp: appElement)
         windowElement.attrs[.Position] = CGPoint(x: 5, y: 5)
-        TestApplicationElement.allApps = [app]
+        appElement.attrs[.Windows] = [windowElement as TestUIElement]
+        appElement.attrs[.MainWindow] = windowElement
+        TestApplicationElement.allApps = [appElement]
+
         state = State(delegate: OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>())
         observer = FakeObserver.observers.first!
         observer.emit(.WindowCreated, forElement: windowElement)
         expect(state.visibleWindows.count).toEventually(equal(1))
+        app = state.runningApplications.first!
         window = state.visibleWindows.first!
+      }
+      afterEach {
+        TestApplicationElement.allApps = []
+      }
+
+      it("initializes mainWindow") {
+        waitUntil { done in
+          app.mainWindow.initialized.then {
+            done()
+          }
+        }
+        expect(app.mainWindow.value).to(equal(window))
       }
 
       context("when a window is created") {
@@ -222,7 +254,7 @@ class OSXDriverSpec: QuickSpec {
             callbacks++
           }
 
-          let window = TestWindowElement(forApp: app)
+          let window = TestWindowElement(forApp: appElement)
           observer.emit(.WindowCreated, forElement: window)
           expect(state.visibleWindows.count).toEventually(equal(2))
           expect(callbacks).to(equal(1), description: "callback should be called once")
@@ -284,23 +316,56 @@ class OSXDriverSpec: QuickSpec {
           return window.pos.refresh()
         }
 
+        it("calls multiple event handlers") {
+          var callbacks1 = 0
+          var callbacks2 = 0
+          state.on { (event: WindowPosChangedEvent) in
+            callbacks1++
+          }
+          state.on { (event: WindowPosChangedEvent) in
+            callbacks2++
+          }
+          windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
+          observer.emit(.Moved, forElement: windowElement)
+          expect(callbacks1).toEventually(equal(1), description: "callback1 should be called once")
+          expect(callbacks2).toEventually(equal(1), description: "callback2 should be called once")
+        }
+
       }
 
-      it("calls multiple event handlers") {
-        var callbacks1 = 0
-        var callbacks2 = 0
-        state.on { (event: WindowPosChangedEvent) in
-          callbacks1++
-        }
-        state.on { (event: WindowPosChangedEvent) in
-          callbacks2++
-        }
-        windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
-        observer.emit(.Moved, forElement: windowElement)
-        expect(callbacks1).toEventually(equal(1), description: "callback1 should be called once")
-        expect(callbacks2).toEventually(equal(1), description: "callback2 should be called once")
-      }
+      context("when the main window of an application changes") {
+        var newWindowElement: TestWindowElement!
+        var newWindow: Window!
+        beforeEach {
+          waitUntil { done in
+            app.mainWindow.initialized.then {
+              done()
+            }
+          }
 
+          newWindowElement = TestWindowElement(forApp: appElement)
+          newWindowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
+          newWindow = state.visibleWindows.last!
+          observer.emit(.WindowCreated, forElement: newWindowElement)
+        }
+
+        it("emits an ApplicationMainWindowChangedEvent") {
+          var callbacks = 0
+          state.on { (event: ApplicationMainWindowChangedEvent) in
+            callbacks++
+          }
+          appElement.attrs[.MainWindow] = newWindowElement
+          observer.emit(.MainWindowChanged, forElement: windowElement)
+          expect(callbacks).toEventually(equal(1), description: "callback should be called once")
+        }
+
+        it("sets the mainWindow property to the new main window") {
+          appElement.attrs[.MainWindow] = newWindowElement
+          observer.emit(.MainWindowChanged, forElement: windowElement)
+          expect(app.mainWindow.value).toEventually(equal(newWindow))
+        }
+
+      }
     }
 
   }
