@@ -9,11 +9,18 @@
 /* Begin PBXBuildFile section */
 		2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */; };
 		2F55343D1C0AC86500B87C42 /* Any+PromiseKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F55343C1C0AC86500B87C42 /* Any+PromiseKit.swift */; };
+		2F7F00FC1C1152F600C97949 /* OSXApplicationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */; };
+		2F7F00FE1C1152FF00C97949 /* OSXWindowDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */; };
+		2F7F01001C1155DC00C97949 /* AXPropertyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FF1C1155DC00C97949 /* AXPropertyDelegate.swift */; };
+		2F7F01021C11570D00C97949 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01011C11570D00C97949 /* Errors.swift */; };
+		2F7F01041C11578800C97949 /* AXSwiftProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01031C11578800C97949 /* AXSwiftProtocols.swift */; };
+		2F7F01061C115CC700C97949 /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */; };
+		2F7F01081C115D4B00C97949 /* PropertySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01071C115D4B00C97949 /* PropertySpec.swift */; };
 		2F86CECA1BD60117007E8C29 /* Swindler.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F86CEC91BD60117007E8C29 /* Swindler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2F86CED11BD60117007E8C29 /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
-		2F86CED61BD60117007E8C29 /* SwindlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CED51BD60117007E8C29 /* SwindlerTests.swift */; };
+		2F86CED61BD60117007E8C29 /* OSXDriverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CED51BD60117007E8C29 /* OSXDriverSpec.swift */; };
 		2F86CEE21BD6D9E1007E8C29 /* Swindler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEE11BD6D9E1007E8C29 /* Swindler.swift */; };
-		2F86CEE41BD6DAD7007E8C29 /* OSXDriver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEE31BD6DAD7007E8C29 /* OSXDriver.swift */; };
+		2F86CEE41BD6DAD7007E8C29 /* OSXStateDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEE31BD6DAD7007E8C29 /* OSXStateDelegate.swift */; };
 		2F86CEEC1BD6EC32007E8C29 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEEB1BD6EC32007E8C29 /* AppDelegate.swift */; };
 		2F86CEEE1BD6EC32007E8C29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F86CEED1BD6EC32007E8C29 /* Assets.xcassets */; };
 		2F86CEF71BD6EC55007E8C29 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEF61BD6EC55007E8C29 /* main.swift */; };
@@ -35,14 +42,21 @@
 /* Begin PBXFileReference section */
 		2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
 		2F55343C1C0AC86500B87C42 /* Any+PromiseKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Any+PromiseKit.swift"; sourceTree = "<group>"; };
+		2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXApplicationDelegate.swift; sourceTree = "<group>"; };
+		2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXWindowDelegate.swift; sourceTree = "<group>"; };
+		2F7F00FF1C1155DC00C97949 /* AXPropertyDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AXPropertyDelegate.swift; sourceTree = "<group>"; };
+		2F7F01011C11570D00C97949 /* Errors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
+		2F7F01031C11578800C97949 /* AXSwiftProtocols.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AXSwiftProtocols.swift; sourceTree = "<group>"; };
+		2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AXSwiftFakes.swift; sourceTree = "<group>"; };
+		2F7F01071C115D4B00C97949 /* PropertySpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertySpec.swift; sourceTree = "<group>"; };
 		2F86CEC61BD60117007E8C29 /* Swindler.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Swindler.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F86CEC91BD60117007E8C29 /* Swindler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Swindler.h; sourceTree = "<group>"; };
 		2F86CECB1BD60117007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F86CED01BD60117007E8C29 /* SwindlerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwindlerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		2F86CED51BD60117007E8C29 /* SwindlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwindlerTests.swift; sourceTree = "<group>"; };
+		2F86CED51BD60117007E8C29 /* OSXDriverSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSXDriverSpec.swift; sourceTree = "<group>"; };
 		2F86CED71BD60117007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F86CEE11BD6D9E1007E8C29 /* Swindler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Swindler.swift; sourceTree = "<group>"; };
-		2F86CEE31BD6DAD7007E8C29 /* OSXDriver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXDriver.swift; sourceTree = "<group>"; };
+		2F86CEE31BD6DAD7007E8C29 /* OSXStateDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXStateDelegate.swift; sourceTree = "<group>"; };
 		2F86CEE91BD6EC32007E8C29 /* SwindlerExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwindlerExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F86CEEB1BD6EC32007E8C29 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		2F86CEED1BD6EC32007E8C29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -123,7 +137,12 @@
 			children = (
 				2F86CEC91BD60117007E8C29 /* Swindler.h */,
 				2F86CEE11BD6D9E1007E8C29 /* Swindler.swift */,
-				2F86CEE31BD6DAD7007E8C29 /* OSXDriver.swift */,
+				2F86CEE31BD6DAD7007E8C29 /* OSXStateDelegate.swift */,
+				2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */,
+				2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */,
+				2F7F00FF1C1155DC00C97949 /* AXPropertyDelegate.swift */,
+				2F7F01011C11570D00C97949 /* Errors.swift */,
+				2F7F01031C11578800C97949 /* AXSwiftProtocols.swift */,
 				2F55343C1C0AC86500B87C42 /* Any+PromiseKit.swift */,
 				2F86CECB1BD60117007E8C29 /* Info.plist */,
 				2F9E31A81BF050AF00EAD248 /* Property.swift */,
@@ -134,8 +153,10 @@
 		2F86CED41BD60117007E8C29 /* SwindlerTests */ = {
 			isa = PBXGroup;
 			children = (
-				2F86CED51BD60117007E8C29 /* SwindlerTests.swift */,
+				2F86CED51BD60117007E8C29 /* OSXDriverSpec.swift */,
+				2F7F01071C115D4B00C97949 /* PropertySpec.swift */,
 				2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */,
+				2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */,
 				2F86CED71BD60117007E8C29 /* Info.plist */,
 			);
 			path = SwindlerTests;
@@ -382,10 +403,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F7F01001C1155DC00C97949 /* AXPropertyDelegate.swift in Sources */,
+				2F7F00FE1C1152FF00C97949 /* OSXWindowDelegate.swift in Sources */,
+				2F7F01041C11578800C97949 /* AXSwiftProtocols.swift in Sources */,
 				2F9E31A91BF050AF00EAD248 /* Property.swift in Sources */,
 				2F55343D1C0AC86500B87C42 /* Any+PromiseKit.swift in Sources */,
-				2F86CEE41BD6DAD7007E8C29 /* OSXDriver.swift in Sources */,
+				2F7F01021C11570D00C97949 /* Errors.swift in Sources */,
+				2F86CEE41BD6DAD7007E8C29 /* OSXStateDelegate.swift in Sources */,
 				2F86CEE21BD6D9E1007E8C29 /* Swindler.swift in Sources */,
+				2F7F00FC1C1152F600C97949 /* OSXApplicationDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -393,8 +419,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F86CED61BD60117007E8C29 /* SwindlerTests.swift in Sources */,
+				2F86CED61BD60117007E8C29 /* OSXDriverSpec.swift in Sources */,
+				2F7F01081C115D4B00C97949 /* PropertySpec.swift in Sources */,
 				2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */,
+				2F7F01061C115CC700C97949 /* AXSwiftFakes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
