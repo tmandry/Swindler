@@ -29,11 +29,16 @@ public class Application {
     self.delegate = delegate
   }
 
+  /// The currently visible windows of the application.
+  public var visibleWindows: [Window] { return delegate.visibleWindows.map({ Window(delegate: $0) }) }
+
   public var mainWindow: Property<OfOptionalType<Window>> { return delegate.mainWindow }
   public var frontmost: WriteableProperty<OfType<Bool>> { return delegate.frontmost }
 }
 
 protocol ApplicationDelegate {
+  var visibleWindows: [WindowDelegate] { get }
+
   var mainWindow: Property<OfOptionalType<Window>>! { get }
   var frontmost: WriteableProperty<OfType<Bool>>! { get }
 }

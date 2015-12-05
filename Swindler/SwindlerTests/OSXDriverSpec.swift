@@ -270,9 +270,9 @@ class OSXApplicationDelegateSpec: QuickSpec {
         expect(observer.watchedElements[windowElement]).toNot(beNil())
       }
 
-//      it("adds the window to visibleWindows") {
-//        expect(app.visibleWindows.count).to(equal(1))
-//      }
+      it("adds the window to visibleWindows") {
+        expect(app.visibleWindows.count).toEventually(equal(1))
+      }
 
       it("emits WindowCreatedEvent") {
         if let event = notifier.expectEvent(WindowCreatedEvent.self) {
@@ -296,10 +296,6 @@ class OSXApplicationDelegateSpec: QuickSpec {
         observer.emit(.UIElementDestroyed, forElement: windowElement)
       }
 
-//      it("removes the window from visibleWindows") {
-//        expect(app.visibleWindows.count).to(equal(0))
-//      }
-
       it("emits WindowDestroyedEvent") {
         if let event = notifier.expectEvent(WindowDestroyedEvent.self) {
           expect(getWindowElement(event.window)).to(equal(windowElement))
@@ -310,6 +306,11 @@ class OSXApplicationDelegateSpec: QuickSpec {
         if let event = notifier.waitUntilEvent(WindowDestroyedEvent.self) {
           expect(event.external).to(beTrue())
         }
+      }
+
+      it("removes the window from visibleWindows") {
+        notifier.waitUntilEvent(WindowDestroyedEvent.self)
+        expect(app.visibleWindows.count).toEventually(equal(0))
       }
 
     }
