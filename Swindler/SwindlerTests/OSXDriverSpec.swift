@@ -59,7 +59,7 @@ class OSXDriverSpec: QuickSpec {
         state = State(delegate: OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>())
         observer = FakeObserver.observers.first!
         observer.emit(.WindowCreated, forElement: windowElement)
-        expect(state.visibleWindows.count).toEventually(equal(1))
+        expect(state.knownWindows.count).toEventually(equal(1))
       }
       afterEach {
         TestApplicationElement.allApps = []
@@ -69,11 +69,11 @@ class OSXDriverSpec: QuickSpec {
 
       context("when a window is created") {
         beforeEach {
-          expect(state.visibleWindows.count).toEventually(equal(1))
+          expect(state.knownWindows.count).toEventually(equal(1))
         }
 
-        it("adds the window to visibleWindows") {
-          expect(state.visibleWindows.count).to(equal(1))
+        it("adds the window to knownWindows") {
+          expect(state.knownWindows.count).to(equal(1))
         }
 
         it("emits WindowCreatedEvent") {
@@ -83,7 +83,7 @@ class OSXDriverSpec: QuickSpec {
           }
           let window = TestWindowElement(forApp: appElement)
           observer.emit(.WindowCreated, forElement: window)
-          expect(state.visibleWindows.count).toEventually(equal(2))
+          expect(state.knownWindows.count).toEventually(equal(2))
           expect(callbacks).to(equal(1), description: "callback should be called once")
         }
 
@@ -100,9 +100,9 @@ class OSXDriverSpec: QuickSpec {
           expect(callbacks).toEventually(equal(1), description: "callback should be called once")
         }
 
-        it("removes the window from visibleWindows") {
+        it("removes the window from knownWindows") {
           observer.emit(.UIElementDestroyed, forElement: windowElement)
-          expect(state.visibleWindows.count).toEventually(equal(0))
+          expect(state.knownWindows.count).toEventually(equal(0))
         }
 
       }
@@ -270,8 +270,8 @@ class OSXApplicationDelegateSpec: QuickSpec {
         expect(observer.watchedElements[windowElement]).toNot(beNil())
       }
 
-      it("adds the window to visibleWindows") {
-        expect(app.visibleWindows.count).toEventually(equal(1))
+      it("adds the window to knownWindows") {
+        expect(app.knownWindows.count).toEventually(equal(1))
       }
 
       it("emits WindowCreatedEvent") {
@@ -308,9 +308,9 @@ class OSXApplicationDelegateSpec: QuickSpec {
         }
       }
 
-      it("removes the window from visibleWindows") {
+      it("removes the window from knownWindows") {
         notifier.waitUntilEvent(WindowDestroyedEvent.self)
-        expect(app.visibleWindows.count).toEventually(equal(0))
+        expect(app.knownWindows.count).toEventually(equal(0))
       }
 
     }

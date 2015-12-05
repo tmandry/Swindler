@@ -8,8 +8,9 @@ public class State {
 
   /// The currently running applications.
   public var runningApplications: [Application] { return delegate.runningApplications.map({ Application(delegate: $0) }) }
-  /// All windows currently visible on the screen.
-  public var visibleWindows: [Window] { return delegate.visibleWindows.map({ Window(delegate: $0) }) }
+
+  /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
+  public var knownWindows: [Window] { return delegate.knownWindows.map({ Window(delegate: $0) }) }
 
   /// Calls `handler` when the specified `Event` occurs.
   public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
@@ -22,7 +23,7 @@ public class State {
 // the functioning of the class, so they are not held with weak references.
 protocol StateDelegate {
   var runningApplications: [ApplicationDelegate] { get }
-  var visibleWindows: [WindowDelegate] { get }
+  var knownWindows: [WindowDelegate] { get }
   func on<Event: EventType>(handler: (Event) -> ())
 }
 
@@ -33,8 +34,8 @@ public class Application {
     self.delegate = delegate
   }
 
-  /// The currently visible windows of the application.
-  public var visibleWindows: [Window] { return delegate.visibleWindows.map({ Window(delegate: $0) }) }
+  /// The known windows of the application. Windows on spaces that we haven't seen yet aren't included.
+  public var knownWindows: [Window] { return delegate.knownWindows.map({ Window(delegate: $0) }) }
 
   /// The main window of the application.
   public var mainWindow: Property<OfOptionalType<Window>> { return delegate.mainWindow }
@@ -43,7 +44,7 @@ public class Application {
 }
 
 protocol ApplicationDelegate {
-  var visibleWindows: [WindowDelegate] { get }
+  var knownWindows: [WindowDelegate] { get }
 
   var mainWindow: Property<OfOptionalType<Window>>! { get }
   var frontmost: WriteableProperty<OfType<Bool>>! { get }

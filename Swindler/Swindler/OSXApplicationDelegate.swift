@@ -20,7 +20,7 @@ class OSXApplicationDelegate<
   var mainWindow: Property<OfOptionalType<Window>>!
   var frontmost: WriteableProperty<OfType<Bool>>!
 
-  var visibleWindows: [WindowDelegate] {
+  var knownWindows: [WindowDelegate] {
     return windows.map({ $0 as WindowDelegate })
   }
 

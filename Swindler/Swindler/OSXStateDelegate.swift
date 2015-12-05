@@ -22,7 +22,7 @@ class OSXStateDelegate<
   private var eventHandlers: [String: [EventHandler]] = [:]
 
   var runningApplications: [ApplicationDelegate] { return applications.map({ $0 as ApplicationDelegate }) }
-  var visibleWindows: [WindowDelegate] { return applications.flatMap({ $0.visibleWindows }) }
+  var knownWindows: [WindowDelegate] { return applications.flatMap({ $0.knownWindows }) }
 
   // TODO: fix strong ref cycle
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?

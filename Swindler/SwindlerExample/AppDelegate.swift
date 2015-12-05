@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     dispatchAfter(10.0) {
-      for window in self.swindler.visibleWindows {
+      for window in self.swindler.knownWindows {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
           let title = window.title.value
           print("resizing \(title)")
