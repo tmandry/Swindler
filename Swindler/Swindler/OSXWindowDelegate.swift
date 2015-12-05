@@ -81,21 +81,21 @@ class OSXWindowDelegate<
       let propertiesInitialized = Array(window.axProperties.map({ $0.initialized }))
       return when(propertiesInitialized).then { _ -> OSXWindowDelegate in
         return window
-        }.recover { (error: ErrorType) -> OSXWindowDelegate in
-          // Unwrap When errors
-          switch error {
-          case PromiseKit.Error.When(let index, let wrappedError):
-            switch wrappedError {
-            case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
-              // Add more information
-              let propertyDelegate = window.axProperties[index].delegate as! AXPropertyDelegateType
-              throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
-            default:
-              throw wrappedError
-            }
+      }.recover { (error: ErrorType) -> OSXWindowDelegate in
+        // Unwrap When errors
+        switch error {
+        case PromiseKit.Error.When(let index, let wrappedError):
+          switch wrappedError {
+          case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
+            // Add more information
+            let propertyDelegate = window.axProperties[index].delegate as! AXPropertyDelegateType
+            throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
           default:
-            throw error
+            throw wrappedError
           }
+        default:
+          throw error
+        }
       }
     }
   }

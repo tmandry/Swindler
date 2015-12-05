@@ -30,10 +30,9 @@ class OSXStateDelegate<
   init() {
     print("Initializing Swindler")
     for appElement in ApplicationElement.all() {
-      do {
-        let application = try Application(appElement, notifier: self)
-        applications.append(application)
-      } catch {
+      Application.initialize(axElement: appElement, notifier: self).then { application in
+        self.applications.append(application)
+      }.error{ error in
         let runningApplication = try? NSRunningApplication(processIdentifier: appElement.pid())
         print("Could not watch application \(runningApplication): \(error)")
         assert(error is AXSwift.Error)

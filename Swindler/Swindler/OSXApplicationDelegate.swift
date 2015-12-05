@@ -11,7 +11,7 @@ class OSXApplicationDelegate<
 
   private let notifier: EventNotifier
   private let axElement: UIElement
-  private var observer: Observer!
+  internal var observer: Observer!  // internal for testing only
   private var windows: [OSXWindow] = []
   private var newWindowPromises: [(UIElement, Promise<Void>)] = []
 
@@ -24,10 +24,9 @@ class OSXApplicationDelegate<
     return windows.map({ $0 as WindowDelegate })
   }
 
-  init(_ appElement: ApplicationElement, notifier: EventNotifier) throws {
-    // TODO: initialize function like OSXWindowDelegate
+  private init(axElement: ApplicationElement, notifier: EventNotifier) throws {
     // TODO: filter out applications by activation policy
-    self.axElement = appElement.toElement
+    self.axElement = axElement.toElement
     self.notifier = notifier
 
     // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
@@ -53,11 +52,11 @@ class OSXApplicationDelegate<
     // Set up notifications.
     // TODO: Before fetchWindows()
     // TODO: these can hang, put them on background thread
-    observer = try Observer(processID: appElement.pid(), callback: handleEvent)
-    try observer.addNotification(.WindowCreated,          forElement: appElement.toElement)
-    try observer.addNotification(.MainWindowChanged,      forElement: appElement.toElement)
-    try observer.addNotification(.ApplicationActivated,   forElement: appElement.toElement)
-    try observer.addNotification(.ApplicationDeactivated, forElement: appElement.toElement)
+    observer = try Observer(processID: axElement.pid(), callback: handleEvent)
+    try observer.addNotification(.WindowCreated,          forElement: axElement.toElement)
+    try observer.addNotification(.MainWindowChanged,      forElement: axElement.toElement)
+    try observer.addNotification(.ApplicationActivated,   forElement: axElement.toElement)
+    try observer.addNotification(.ApplicationDeactivated, forElement: axElement.toElement)
 
     // Fetch attribute values.
     fetchAttributes(attributes, forElement: axElement, fulfill: fulfill, reject: reject)
@@ -65,6 +64,33 @@ class OSXApplicationDelegate<
     // Can't recover from an error during initialization.
     initPromise.error { error in
       self.notifyInvalid()
+    }
+  }
+
+  // Initializes the object and returns it as a Promise that resolves once it's ready.
+  static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
+    return firstly {  // capture thrown errors in promise
+      let app = try OSXApplicationDelegate(axElement: axElement, notifier: notifier)
+
+      let propertiesInitialized = Array(app.properties.map({ $0.initialized }))
+      return when(propertiesInitialized).then { _ -> OSXApplicationDelegate in
+        return app
+        }.recover { (error: ErrorType) -> OSXApplicationDelegate in
+          // Unwrap When errors
+          switch error {
+          case PromiseKit.Error.When(let index, let wrappedError):
+            switch wrappedError {
+            case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
+              // Add more information
+              let propertyDelegate = app.properties[index].delegate as! AXPropertyDelegateType
+              throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
+            default:
+              throw wrappedError
+            }
+          default:
+            throw error
+          }
+      }
     }
   }
 

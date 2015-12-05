@@ -63,6 +63,11 @@ class TestApplicationElementBase: TestUIElement {
     attrs[.Windows]   = Array<TestUIElement>()
     attrs[.Frontmost] = false
   }
+
+  var windows: [TestUIElement] {
+    get { return attrs[.Windows]! as! [TestUIElement] }
+    set { attrs[.Windows] = newValue }
+  }
 }
 final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
   static var allApps: [TestApplicationElement] = []
