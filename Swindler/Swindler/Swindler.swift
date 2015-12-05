@@ -6,8 +6,12 @@ public class State {
     self.delegate = delegate
   }
 
+  /// The currently running applications.
   public var runningApplications: [Application] { return delegate.runningApplications.map({ Application(delegate: $0) }) }
+  /// All windows currently visible on the screen.
   public var visibleWindows: [Window] { return delegate.visibleWindows.map({ Window(delegate: $0) }) }
+
+  /// Calls `handler` when the specified `Event` occurs.
   public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
 }
 
@@ -32,7 +36,9 @@ public class Application {
   /// The currently visible windows of the application.
   public var visibleWindows: [Window] { return delegate.visibleWindows.map({ Window(delegate: $0) }) }
 
+  /// The main window of the application.
   public var mainWindow: Property<OfOptionalType<Window>> { return delegate.mainWindow }
+  /// Whether the application is the frontmost application.
   public var frontmost: WriteableProperty<OfType<Bool>> { return delegate.frontmost }
 }
 
