@@ -151,7 +151,7 @@ public class UIElement {
   ///            If `attribute` is an array, all values are returned.
   ///
   /// - warning: This method force-casts the attribute to the desired type, which will abort if the
-  ///            cast fails. If you want to check the return type, ask for AnyObject.
+  ///            cast fails. If you want to check the return type, ask for Any.
   public func attribute<T>(attribute: Attribute) throws -> T? {
     return try self.attribute(attribute.rawValue)
   }
@@ -229,8 +229,9 @@ public class UIElement {
   /// - warning: Unlike read-only methods, this method throws if the attribute doesn't exist.
   ///
   /// - throws:
-  ///   - `Error.AttributeUnsupported` if `attribute` isn't supported,
-  ///   - `Error.IllegalArgument` if `value` is an illegal value
+  ///   - `Error.AttributeUnsupported`: `attribute` isn't supported.
+  ///   - `Error.IllegalArgument`: `value` is an illegal value.
+  ///   - `Error.Failure`: A temporary failure occurred.
   public func setAttribute(attribute: Attribute, value: Any) throws {
     try self.setAttribute(attribute.rawValue, value: value)
   }
