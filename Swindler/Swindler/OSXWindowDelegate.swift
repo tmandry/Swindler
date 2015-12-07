@@ -11,6 +11,8 @@ class OSXWindowDelegate<
   let notifier: EventNotifier
   let axElement: UIElement
 
+  private var initialized: Promise<OSXWindowDelegate>!
+
   private(set) var valid: Bool = true
 
   var pos: WriteableProperty<OfType<CGPoint>>!
@@ -67,36 +69,14 @@ class OSXWindowDelegate<
     let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
     fetchAttributes(attributes, forElement: axElement, fulfill: fulfill, reject: reject)
 
-    // Can't recover from an error during initialization.
-    initPromise.error { error in
-      self.notifyInvalid()
-    }
+    initialized = initializeProperties(axProperties, ofElement: axElement).then { return self }
   }
 
   // Initializes the window and returns it as a Promise once it's ready.
   static func initialize(notifier notifier: EventNotifier, axElement: UIElement, observer: Observer) -> Promise<OSXWindowDelegate> {
     return firstly {  // capture thrown errors in promise
       let window = try OSXWindowDelegate(notifier: notifier, axElement: axElement, observer: observer)
-
-      let propertiesInitialized = Array(window.axProperties.map({ $0.initialized }))
-      return when(propertiesInitialized).then { _ -> OSXWindowDelegate in
-        return window
-      }.recover { (error: ErrorType) -> OSXWindowDelegate in
-        // Unwrap When errors
-        switch error {
-        case PromiseKit.Error.When(let index, let wrappedError):
-          switch wrappedError {
-          case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
-            // Add more information
-            let propertyDelegate = window.axProperties[index].delegate as! AXPropertyDelegateType
-            throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
-          default:
-            throw wrappedError
-          }
-        default:
-          throw error
-        }
-      }
+      return window.initialized
     }
   }
 

@@ -54,6 +54,15 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
         return nil
       }
       return (value as! T)
+    }.recover { error -> T? in
+      switch error {
+      case AXSwift.Error.CannotComplete:
+        // If messaging timeout unspecified, we'll pass -1.
+        let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
+        throw PropertyError.Timeout(time: NSTimeInterval(time))
+      default:
+        throw PropertyError.InvalidObject(cause: error)
+      }
     }
   }
 }
@@ -82,25 +91,31 @@ func fetchAttributes<UIElement: UIElementType>(attributeNames: [Attribute], forE
     // Issue a request in the background.
     let attributes = try axElement.getMultipleAttributes(attributeNames)
     fulfill(attributes)
-    }.recover { error -> () in
-      // Rewrite errors as PropertyErrors.
-      do {
-        throw error
-      } catch AXSwift.Error.CannotComplete {
-        // If messaging timeout unspecified, we'll pass -1.
-        let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
-        throw PropertyError.Timeout(time: NSTimeInterval(time))
-      } catch AXSwift.Error.IllegalArgument {
-        throw PropertyError.InvalidObject(cause: AXSwift.Error.IllegalArgument)
-      } catch AXSwift.Error.NotImplemented {
-        throw PropertyError.InvalidObject(cause: AXSwift.Error.NotImplemented)
-      } catch AXSwift.Error.InvalidUIElement {
-        throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
-      } catch {
-        unexpectedError(error, onElement: axElement)
-        throw PropertyError.InvalidObject(cause: error)
+  }.error { error in
+    reject(error)
+  }
+}
+
+/// Returns a promise that resolves when all the provided properties are initialized.
+/// Adds additional error information for AXPropertyDelegates.
+func initializeProperties<UIElement: UIElementType>(properties: [PropertyType], ofElement axElement: UIElement) -> Promise<Void> {
+  let propertiesInitialized = Array(properties.map({ $0.initialized }))
+  return when(propertiesInitialized).recover { (error: ErrorType) -> () in
+    switch error {
+    case PromiseKit.Error.When(let index, let wrappedError):
+      switch wrappedError {
+      case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
+        // Add more information
+        if let propertyDelegate = properties[index].delegate as? AXPropertyDelegateType {
+          throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
+        } else {
+          throw wrappedError
+        }
+      default:
+        throw wrappedError
       }
-    }.error { error in
-      reject(error)
+    default:
+      throw error
+    }
   }
 }

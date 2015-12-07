@@ -18,6 +18,8 @@ class OSXApplicationDelegate<
   // UIElement.
   private var newWindowHandler = NewWindowHandler<UIElement>()
 
+  private var initialized: Promise<OSXApplicationDelegate>!
+
   private var properties: [PropertyType]!
 
   var mainWindow: Property<OfOptionalType<Window>>!
@@ -37,15 +39,15 @@ class OSXApplicationDelegate<
     // Some properties can't initialize until we fetch the windows. (WindowPropertyAdapter)
     let windowsFetched = fetchWindows()
 
-    let initPromise = when(attrsFetched, windowsFetched).then({ (fetchedAttrs, _) in
+    let initProperties = when(attrsFetched, windowsFetched).then({ (fetchedAttrs, _) in
       return fetchedAttrs
     }).recover(unwrapWhenErrors)
 
     mainWindow = Property<OfOptionalType<Window>>(
-      WindowPropertyAdapter(AXPropertyDelegate(axElement, .MainWindow, initPromise),
+      WindowPropertyAdapter(AXPropertyDelegate(axElement, .MainWindow, initProperties),
         windowFinder: self, windowDelegate: OSXWindow.self),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
-    frontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initPromise),
+    frontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
       withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     properties = [
@@ -69,61 +71,35 @@ class OSXApplicationDelegate<
     // Fetch attribute values.
     fetchAttributes(attributes, forElement: axElement, fulfill: fulfillAttrs, reject: rejectAttrs)
 
-    // Can't recover from an error during initialization.
-    initPromise.error { error in
-      self.notifyInvalid()
-    }
-  }
-
-  // Initializes the object and returns it as a Promise that resolves once it's ready.
-  static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
-    return firstly {  // capture thrown errors in promise
-      let app = try OSXApplicationDelegate(axElement: axElement, notifier: notifier)
-
-      let propertiesInitialized = Array(app.properties.map({ $0.initialized }))
-      return when(propertiesInitialized).then { _ -> OSXApplicationDelegate in
-        return app
-      }.recover { (error: ErrorType) -> OSXApplicationDelegate in
-        // Unwrap When errors
-        switch error {
-        case PromiseKit.Error.When(let index, let wrappedError):
-          switch wrappedError {
-          case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
-            // Add more information
-            let propertyDelegate = app.properties[index].delegate as! AXPropertyDelegateType
-            throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
-          default:
-            throw wrappedError
-          }
-        default:
-          throw error
-        }
-      }
-    }
+    initialized = initializeProperties(properties, ofElement: axElement).then { return self }
   }
 
   private func fetchWindows() -> Promise<Void> {
-    // TODO: add tests
-    var elements: [UIElement]!
     return Promise<Void>().thenInBackground { () -> [UIElement]? in
       return try self.axElement.arrayAttribute(.Windows)
     }.then { maybeWindowElements -> Promise<[OSXWindow]> in
       guard let windowElements = maybeWindowElements else {
         throw OSXDriverError.MissingAttribute(attribute: .Windows, onElement: self.axElement)
       }
-      elements = windowElements
-      let windowPromises = windowElements.map({
-        OSXWindow.initialize(notifier: self.notifier, axElement: $0, observer: self.observer)
+
+      let windowPromises = windowElements.map({ windowElement in
+        OSXWindow.initialize(notifier: self.notifier, axElement: windowElement, observer: self.observer)
       })
-      return any(windowPromises, onError: { index, error in
-        let windowElement = elements[index]
+      return successes(windowPromises, onError: { index, error in
+        let windowElement = windowElements[index]
         let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
-        print("Couldn't initialize window for element \(windowElement) (\(description)): \(error)")
+        print("Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)")
       })
     }.then { windowDelegates -> () in
       self.windows = windowDelegates
-    }.recover { error -> () in
-      // No valid windows, but no big deal
+    }
+  }
+
+  // Initializes the object and returns it as a Promise that resolves once it's ready.
+  static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
+    return firstly {  // capture thrown errors in promise chain
+      let app = try OSXApplicationDelegate(axElement: axElement, notifier: notifier)
+      return app.initialized
     }
   }
 
