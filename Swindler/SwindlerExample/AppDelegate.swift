@@ -23,7 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     swindler = Swindler.state
     swindler.on { (event: WindowCreatedEvent) in
       let window = event.window
-      print("new window: \(window)")
+      print("new window: \(window.title.value)")
     }
     swindler.on { (event: WindowPosChangedEvent) in
       print("Pos changed from \(event.oldVal) to \(event.newVal), external: \(event.external)")
@@ -32,7 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       print("Size changed from \(event.oldVal) to \(event.newVal), external: \(event.external)")
     }
     swindler.on { (event: WindowDestroyedEvent) in
-      print("window destroyed: \(event.window)")
+      print("window destroyed: \(event.window.title.value)")
     }
     swindler.on { (event: ApplicationMainWindowChangedEvent) in
       print("new main window: \(event.newVal?.title.value). old: \(event.oldVal?.title.value)")
@@ -40,14 +40,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     dispatchAfter(10.0) {
       for window in self.swindler.knownWindows {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
-          let title = window.title.value
-          print("resizing \(title)")
-          window.size.set(CGSize(width: 200, height: 200)).then { newValue in
-            print("done with \(title), valid: \(window.valid), newValue: \(newValue)")
-          }.error { error in
-            print("failed to resize \(title), valid: \(window.valid)")
-          }
+        let title = window.title.value
+        print("resizing \(title)")
+        window.size.set(CGSize(width: 200, height: 200)).then { newValue in
+          print("done with \(title), valid: \(window.valid), newValue: \(newValue)")
+        }.error { error in
+          print("failed to resize \(title), valid: \(window.valid), error: \(error)")
         }
       }
     }
