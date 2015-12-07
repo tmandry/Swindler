@@ -208,9 +208,128 @@ class OSXApplicationDelegateSpec: QuickSpec {
       return ((window?.delegate) as! WinDelegate?)?.axElement
     }
 
+    describe("initialize") {
+
+      context("when the application UIElement is invalid") {
+        it("resolves to an error") { () -> Promise<Void> in
+          appElement.throwInvalid = true
+          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
+            axElement: appElement, notifier: notifier)
+          return expectToFail(promise)
+        }
+      }
+
+      context("when the application is missing the Windows attribute") {
+        it("resolves to an error") { () -> Promise<Void> in
+          appElement.attrs[.Windows] = nil
+          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
+            axElement: appElement, notifier: notifier)
+          return expectToFail(promise)
+        }
+      }
+
+      context("when the application is missing a required property attribute") {
+        it("resolves to an error") { () -> Promise<Void> in
+          appElement.attrs[.Frontmost] = nil
+          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
+            axElement: appElement, notifier: notifier)
+          return expectToFail(promise)
+        }
+      }
+
+      context("when the application is missing an optional property attribute") {
+        it("succeeds") { () -> Promise<Void> in
+          appElement.attrs[.MainWindow] = nil
+          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
+            axElement: appElement, notifier: notifier)
+          return expectToSucceed(promise)
+        }
+      }
+
+    }
+
+    describe("knownWindows") {
+      func getWindowElements(windows: [Window]) -> [TestUIElement] {
+        return windows.map({ getWindowElement($0)! })
+      }
+
+      context("right after initialization") {
+
+        context("when there are no windows") {
+          it("is empty") {
+            expect(app.knownWindows).to(beEmpty())
+          }
+        }
+
+        context("when there are multiple windows") {
+          it("contains all windows") {
+            let windowElement1 = createWindow(emitEvent: false)
+            let windowElement2 = createWindow(emitEvent: false)
+            initializeApp()
+
+            expect(getWindowElements(app.knownWindows)).to(contain(windowElement1, windowElement2))
+          }
+        }
+
+        context("when one window is invalid") {
+          it("contains only the valid windows") {
+            let validWindowElement   = createWindow(emitEvent: false)
+            let invalidWindowElement = createWindow(emitEvent: false)
+            invalidWindowElement.throwInvalid = true
+            initializeApp()
+
+            expect(getWindowElements(app.knownWindows)).to(contain(validWindowElement))
+            expect(getWindowElements(app.knownWindows)).toNot(contain(invalidWindowElement))
+          }
+        }
+
+      }
+
+      context("when a new window is created") {
+
+        it("adds the window") {
+          let windowElement = createWindow()
+          expect(getWindowElements(app.knownWindows)).toEventually(contain(windowElement))
+        }
+
+        it("does not remove other windows") {
+          let windowElement1 = createWindow(emitEvent: false)
+          initializeApp()
+          let windowElement2 = createWindow()
+
+          waitUntil(getWindowElements(app.knownWindows).contains(windowElement2))
+          expect(getWindowElements(app.knownWindows)).to(contain(windowElement1))
+        }
+
+      }
+
+      context("when a window is destroyed") {
+
+        it("removes the window") {
+          let windowElement = createWindow(emitEvent: false)
+          initializeApp()
+          observer.emit(.UIElementDestroyed, forElement: windowElement)
+
+          expect(getWindowElements(app.knownWindows)).toEventuallyNot(contain(windowElement))
+        }
+
+        it("does not remove other windows") {
+          let windowElement1 = createWindow(emitEvent: false)
+          let windowElement2 = createWindow(emitEvent: false)
+          initializeApp()
+          observer.emit(.UIElementDestroyed, forElement: windowElement1)
+
+          waitUntil(!getWindowElements(app.knownWindows).contains(windowElement1))
+          expect(getWindowElements(app.knownWindows)).to(contain(windowElement2))
+        }
+
+      }
+    }
+
     // mainWindow is quite a bit more complicated than other properties, so we explicitly test it
     // here.
     describe("mainWindow") {
+
       context("when there is no initial main window") {
         it("initially equals nil") {
           expect(appElement.attrs[.MainWindow]).to(beNil())
@@ -325,10 +444,6 @@ class OSXApplicationDelegateSpec: QuickSpec {
         expect(observer.watchedElements[windowElement]).toNot(beNil())
       }
 
-      it("adds the window to knownWindows") {
-        expect(app.knownWindows.count).toEventually(equal(1))
-      }
-
       it("emits WindowCreatedEvent") {
         if let event = notifier.expectEvent(WindowCreatedEvent.self) {
           expect(getWindowElement(event.window)).to(equal(windowElement))
@@ -361,11 +476,6 @@ class OSXApplicationDelegateSpec: QuickSpec {
         if let event = notifier.waitUntilEvent(WindowDestroyedEvent.self) {
           expect(event.external).to(beTrue())
         }
-      }
-
-      it("removes the window from knownWindows") {
-        notifier.waitUntilEvent(WindowDestroyedEvent.self)
-        expect(app.knownWindows.count).toEventually(equal(0))
       }
 
     }

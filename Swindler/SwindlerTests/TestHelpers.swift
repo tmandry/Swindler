@@ -40,9 +40,26 @@ func setUpPromiseErrorHandler(file file: String, line: UInt) {
   }
 }
 
+@warn_unused_result
+func expectToSucceed<T>(promise: Promise<T>, file: String = __FILE__, line: UInt = __LINE__) -> Promise<Void> {
+  return promise.asVoid().recover { (error: ErrorType) -> () in
+    fail("Expected promise to succeed, but failed with \(error)", file: file, line: line)
+  }
+}
+
+@warn_unused_result
+func expectToFail<T>(promise: Promise<T>, file: String = __FILE__, line: UInt = __LINE__) -> Promise<Void> {
+  return promise.asVoid().then({
+    fail("Expected promise to fail, but succeeded", file: file, line: line)
+  }).recover { (error: ErrorType) -> () in
+    expect(file, line: line, expression: { throw error }).to(throwError())
+  }
+}
+
+@warn_unused_result
 func expectToFail<T, E: ErrorType>(promise: Promise<T>, with expectedError: E, file: String = __FILE__, line: UInt = __LINE__) -> Promise<Void> {
   return promise.asVoid().then({
-    fail("Expected to fail with error \(expectedError), but succeeded", file: file, line: line)
+    fail("Expected promise to fail with error \(expectedError), but succeeded", file: file, line: line)
   }).recover { (error: ErrorType) -> () in
     expect(file, line: line, expression: { throw error }).to(throwError(expectedError))
   }
