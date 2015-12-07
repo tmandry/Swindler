@@ -33,8 +33,13 @@ class OSXApplicationDelegate<
     self.notifier = notifier
 
     // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
-    let (fetchAttrs, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
-    let initPromise = when(fetchAttrs, fetchWindows()).then({ $0.0 }).recover(unwrapWhenErrors)
+    let (attrsFetched, fulfillAttrs, rejectAttrs) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
+    // Some properties can't initialize until we fetch the windows. (WindowPropertyAdapter)
+    let windowsFetched = fetchWindows()
+
+    let initPromise = when(attrsFetched, windowsFetched).then({ (fetchedAttrs, _) in
+      return fetchedAttrs
+    }).recover(unwrapWhenErrors)
 
     mainWindow = Property<OfOptionalType<Window>>(
       WindowPropertyAdapter(AXPropertyDelegate(axElement, .MainWindow, initPromise),
@@ -62,7 +67,7 @@ class OSXApplicationDelegate<
     try observer.addNotification(.ApplicationDeactivated, forElement: axElement.toElement)
 
     // Fetch attribute values.
-    fetchAttributes(attributes, forElement: axElement, fulfill: fulfill, reject: reject)
+    fetchAttributes(attributes, forElement: axElement, fulfill: fulfillAttrs, reject: rejectAttrs)
 
     // Can't recover from an error during initialization.
     initPromise.error { error in
@@ -78,21 +83,21 @@ class OSXApplicationDelegate<
       let propertiesInitialized = Array(app.properties.map({ $0.initialized }))
       return when(propertiesInitialized).then { _ -> OSXApplicationDelegate in
         return app
-        }.recover { (error: ErrorType) -> OSXApplicationDelegate in
-          // Unwrap When errors
-          switch error {
-          case PromiseKit.Error.When(let index, let wrappedError):
-            switch wrappedError {
-            case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
-              // Add more information
-              let propertyDelegate = app.properties[index].delegate as! AXPropertyDelegateType
-              throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
-            default:
-              throw wrappedError
-            }
+      }.recover { (error: ErrorType) -> OSXApplicationDelegate in
+        // Unwrap When errors
+        switch error {
+        case PromiseKit.Error.When(let index, let wrappedError):
+          switch wrappedError {
+          case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
+            // Add more information
+            let propertyDelegate = app.properties[index].delegate as! AXPropertyDelegateType
+            throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
           default:
-            throw error
+            throw wrappedError
           }
+        default:
+          throw error
+        }
       }
     }
   }
@@ -242,14 +247,6 @@ class OSXApplicationDelegate<
   private func findWindowAndIndex(axElement: UIElement) -> (Int, OSXWindow)? {
     return windows.enumerate().filter({ $0.1.axElement == axElement }).first
   }
-
-  func findWindowByElement(element: UIElement) -> Window? {
-    if let windowDelegate = windows.filter({ $0.axElement == element }).first {
-      return Window(delegate: windowDelegate)
-    } else {
-      return nil
-    }
-  }
 }
 
 extension OSXApplicationDelegate: CustomStringConvertible {
@@ -291,27 +288,40 @@ private struct HandlerType<UIElement> {
   let handler: Void -> Void
 }
 
+/// Used by WindowPropertyAdapter to match a UIElement to a Window object.
 protocol WindowFinder: class {
+  // This would be more elegantly implemented by passing the list of delegates with every refresh
+  // request, but currently we don't have a way of piping that through.
   typealias UIElement: UIElementType
   func findWindowByElement(element: UIElement) -> Window?
 }
-extension OSXApplicationDelegate: WindowFinder {}
-protocol HasElement {
+extension OSXApplicationDelegate: WindowFinder {
+  func findWindowByElement(element: UIElement) -> Window? {
+    if let windowDelegate = windows.filter({ $0.axElement == element }).first {
+      return Window(delegate: windowDelegate)
+    } else {
+      return nil
+    }
+  }
+}
+
+protocol OSXDelegateType {
   typealias UIElement: UIElementType
   var axElement: UIElement { get }
   var valid: Bool { get }
 }
-extension OSXWindowDelegate: HasElement {}
+extension OSXWindowDelegate: OSXDelegateType {}
 
 /// Converts a UIElement attribute into a Window property.
 class WindowPropertyAdapter<
-    Delegate: PropertyDelegate, WinFinder: WindowFinder, WinDelegate: HasElement
+    Delegate: PropertyDelegate, WinFinder: WindowFinder, WinDelegate: OSXDelegateType
     where Delegate.T == WinFinder.UIElement, WinFinder.UIElement == WinDelegate.UIElement
 >: PropertyDelegate {
   typealias T = Window
 
   let delegate: Delegate
   let windowFinder: WinFinder
+
   init(_ delegate: Delegate, windowFinder: WinFinder, windowDelegate: WinDelegate.Type) {
     self.delegate = delegate
     self.windowFinder = windowFinder
