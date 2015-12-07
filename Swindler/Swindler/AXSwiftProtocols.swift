@@ -23,19 +23,9 @@ protocol ObserverType {
 
   init(processID: pid_t, callback: (observer: Self, element: UIElement, notification: AXSwift.Notification) -> ()) throws
   func addNotification(notification: AXSwift.Notification, forElement: UIElement) throws
-  func processPendingNotifications()
 }
 extension AXSwift.Observer: ObserverType {
   typealias UIElement = AXSwift.UIElement
-
-  func processPendingNotifications() {
-    // Maybe we can configure a custom mode to only process AX notifications.
-    // TODO: not sure this works (and does it go here?)
-    var result: CFRunLoopRunResult!
-    repeat {
-      result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true)
-    } while result == CFRunLoopRunResult.HandledSource
-  }
 }
 
 /// Protocol that wraps AXSwift.Application.

@@ -196,10 +196,10 @@ class OSXApplicationDelegateSpec: QuickSpec {
       initializeApp()
     }
 
-    func createWindow() -> TestWindowElement {
+    func createWindow(emitEvent emitEvent: Bool = true) -> TestWindowElement {
       let windowElement = TestWindowElement(forApp: appElement)
       appElement.windows.append(windowElement)
-      observer.emit(.WindowCreated, forElement: windowElement)
+      if emitEvent { observer.emit(.WindowCreated, forElement: windowElement) }
       return windowElement
     }
 
@@ -230,16 +230,12 @@ class OSXApplicationDelegateSpec: QuickSpec {
       }
 
       context("when a window becomes main") {
-        func makeWindowMain(windowElement: TestWindowElement) {
-          windowElement.attrs[.Main] = true
-          appElement.attrs[.MainWindow] = windowElement
-          observer.emit(.MainWindowChanged, forElement: windowElement)
-        }
-
         var windowElement: TestWindowElement!
         beforeEach {
           windowElement = createWindow()
-          makeWindowMain(windowElement)
+          windowElement.attrs[.Main] = true
+          appElement.attrs[.MainWindow] = windowElement
+          observer.emit(.MainWindowChanged, forElement: windowElement)
         }
 
         it("updates the value") {
@@ -255,6 +251,65 @@ class OSXApplicationDelegateSpec: QuickSpec {
           }
         }
 
+      }
+
+      context("when a new window becomes the main window") {
+        it("updates the value") {
+          let windowElement = createWindow(emitEvent: false)
+          windowElement.attrs[.Main] = true
+          appElement.attrs[.MainWindow] = windowElement
+
+          // Usually we get the MWC notification before WindowCreated. Simply doing dispatch_async
+          // to wait for WindowCreated doesn't always work, so we defeat that here.
+          observer.emit(.MainWindowChanged, forElement: windowElement)
+          dispatch_async(dispatch_get_main_queue()) {
+            dispatch_async(dispatch_get_main_queue()) {
+              observer.emit(.WindowCreated, forElement: windowElement)
+            }
+          }
+
+          expect(getWindowElement(app.mainWindow.value)).toEventually(equal(windowElement))
+        }
+      }
+
+      context("when the application switches to having no main window") {
+        var mainWindowElement: TestWindowElement!
+        beforeEach {
+          mainWindowElement = createWindow()
+          mainWindowElement.attrs[.Main] = true
+          appElement.attrs[.MainWindow] = mainWindowElement
+          initializeApp()
+        }
+
+        it("becomes nil") {
+          appElement.attrs[.MainWindow] = nil
+          observer.emit(.MainWindowChanged, forElement: appElement)
+          expect(app.mainWindow.value).toEventually(beNil())
+        }
+
+        context("because the main window closes") {
+          it("becomes nil") {
+            // TODO: what if it's just destroyed?
+            appElement.attrs[.MainWindow] = nil
+            observer.emit(.UIElementDestroyed, forElement: mainWindowElement)
+            observer.emit(.MainWindowChanged, forElement: appElement)
+            expect(app.mainWindow.value).toEventually(beNil())
+          }
+        }
+
+        context("and the passed application element doesn't equal our stored application element") {
+          // Because shit happens. Finder does this.
+          it("becomes nil") {
+            let otherAppElement = TestUIElement()
+            otherAppElement.processID = appElement.processID
+            otherAppElement.attrs = appElement.attrs
+            assert(appElement != otherAppElement)
+
+            appElement.attrs[.MainWindow] = nil
+            observer.doEmit(.MainWindowChanged, watchedElement: appElement, passedElement: otherAppElement)
+            expect(app.mainWindow.value).toEventually(beNil())
+          }
+        }
       }
 
     }

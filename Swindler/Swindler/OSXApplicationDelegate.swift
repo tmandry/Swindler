@@ -13,7 +13,10 @@ class OSXApplicationDelegate<
   private let axElement: UIElement
   internal var observer: Observer!  // internal for testing only
   private var windows: [OSXWindow] = []
-  private var newWindowPromises: [(UIElement, Promise<Void>)] = []
+
+  // Used internally for deferring code until an OSXWindowDelegate has been initialized for a given
+  // UIElement.
+  private var newWindowHandler = NewWindowHandler<UIElement>()
 
   private var properties: [PropertyType]!
 
@@ -124,7 +127,7 @@ class OSXApplicationDelegate<
     case .WindowCreated:
       onWindowCreated(element)
     case .MainWindowChanged:
-      onMainWindowChanged()
+      onMainWindowChanged(element)
     case .ApplicationActivated:
       onActivationChanged()
     case .ApplicationDeactivated:
@@ -135,36 +138,78 @@ class OSXApplicationDelegate<
   }
 
   private func onWindowCreated(windowElement: UIElement) {
-    let promise = OSXWindow.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
+    OSXWindow.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
       self.windows.append(window)
       self.notifier.notify(WindowCreatedEvent(external: true, window: Window(delegate: window)))
-    }
-
-    // Maintain a list of all pending new window promises.
-    // TODO: Test usages
-    newWindowPromises.append((windowElement, promise))
-    promise.always {
-      let result = self.newWindowPromises.enumerate().filter({ arg -> Bool in
-        let axElement = arg.element.0
-        return axElement == windowElement
-      })
-      self.newWindowPromises.removeAtIndex(result.first!.index)
-    }
-
-    promise.error { error in
+      self.newWindowHandler.windowCreated(windowElement)
+    }.error { error in
       print("Error: Could not watch [\(windowElement)]: \(error)")
     }
   }
 
-  private func onMainWindowChanged() {
-    // Run through all other notifications to look for any new windows.
-    // TODO: Test different situations and orders of events
-    observer.processPendingNotifications()
-    // The main window could be changed to a Window that is pending initialization, so delay refresh
-    // until that is done.
-    when(newWindowPromises.map({ $0.1 })).then { _ in
-      self.mainWindow.refresh() as ()
+  private func onMainWindowChanged(element: UIElement) {
+    if element == axElement {
+      // Was passed the application (this means there is no main window); we can refresh immediately.
+      mainWindow.refresh() as ()
+    } else if windows.contains({ $0.axElement == element }) {
+      // Was passed an already-initialized window; we can refresh immediately.
+      mainWindow.refresh() as ()
+    } else {
+      // We don't know about the element that has been passed. Wait until the window is initialized.
+      newWindowHandler.performAfterWindowCreatedForElement(element) { self.mainWindow.refresh() }
+
+      // In some cases, the element is actually IS the application element, but equality checks
+      // inexplicably return false. (This has been observed for Finder.) In this case we will never
+      // see a new window for this element. Asynchronously check the element role to handle this case.
+      checkIfMainWindowChangedElementIsActuallyApplication(element)
     }
+  }
+
+  private func checkIfMainWindowChangedElementIsActuallyApplication(element: UIElement) {
+    Promise<Void>().thenInBackground { () -> Role? in
+      guard let role: String = try element.attribute(.Role) else {
+        return nil
+      }
+      return Role(rawValue: role)
+    }.then { role -> () in
+      if role == .Application {
+        // There is no main window; we can refresh immediately.
+        self.mainWindow.refresh() as ()
+        // Remove the handler that will never be called.
+        self.newWindowHandler.removeAllForUIElement(element)
+      }
+    }.error { error in
+      switch error {
+      case AXSwift.Error.InvalidUIElement:
+        // The window is already gone.
+        self.mainWindow.refresh() as ()
+        self.newWindowHandler.removeAllForUIElement(element)
+      default:
+        // TODO: Retry on timeout
+        // Just refresh and hope for the best. Leave the handler in case the element does show up again.
+        self.mainWindow.refresh() as ()
+        print("Warning: Received MainWindowChanged on unknown element \(element), then \(error) when",
+              "trying to read its role")
+      }
+    }
+
+    //  _______________________________
+    // < Now that's a long method name >
+    //  -------------------------------
+    // \                             .       .
+    //  \                           / `.   .' "
+    //   \                  .---.  <    > <    >  .---.
+    //    \                 |    \  \ - ~ ~ - /  /    |
+    //          _____          ..-~             ~-..-~
+    //         |     |   \~~~\.'                    `./~~~/
+    //        ---------   \__/                        \__/
+    //       .'  O    \     /               /       \  "
+    //      (_____,    `._.'               |         }  \/~~~/
+    //       `----.          /       }     |        /    \__/
+    //             `-.      |       /      |       /      `. ,~~|
+    //                 ~-.__|      /_ - ~ ^|      /- _      `..-'
+    //                      |     /        |     /     ~-.     `-. _  _  _
+    //                      |_____|        |_____|         ~ - . _ _ _ _ _>
   }
 
   private func onActivationChanged() {
@@ -220,6 +265,32 @@ extension OSXApplicationDelegate: CustomStringConvertible {
   }
 }
 
+/// Stores internal new window handlers for OSXApplicationDelegate.
+private struct NewWindowHandler<UIElement: Equatable> {
+  private var handlers: [HandlerType<UIElement>] = []
+
+  mutating func performAfterWindowCreatedForElement(windowElement: UIElement, handler: Void -> Void) {
+    assert(NSThread.currentThread().isMainThread)
+    handlers.append(HandlerType(windowElement: windowElement, handler: handler))
+  }
+
+  mutating func removeAllForUIElement(windowElement: UIElement) {
+    assert(NSThread.currentThread().isMainThread)
+    handlers = handlers.filter({ $0.windowElement != windowElement })
+  }
+
+  mutating func windowCreated(windowElement: UIElement) {
+    assert(NSThread.currentThread().isMainThread)
+    handlers.filter({ $0.windowElement == windowElement }).forEach { entry in
+      entry.handler()
+    }
+  }
+}
+private struct HandlerType<UIElement> {
+  let windowElement: UIElement
+  let handler: Void -> Void
+}
+
 protocol WindowFinder: class {
   typealias UIElement: UIElementType
   func findWindowByElement(element: UIElement) -> Window?
@@ -250,7 +321,12 @@ class WindowPropertyAdapter<
     guard let element = try delegate.readValue() else {
       return nil
     }
-    return findWindowByElement(element)
+    let window = findWindowByElement(element)
+    if window == nil {
+      // This can happen sometimes, but worth logging at a debug level.
+      print("while updating property value, could not find window matching element: \(element)")
+    }
+    return window
   }
 
   func writeValue(newValue: Window) throws {

@@ -45,11 +45,11 @@ class TestUIElement: UIElementType, Hashable {
 
   var inspect: String {
     let role = attrs[.Role] ?? "UIElement"
-    return "\(role) (id \(id)"
+    return "\(role) (id \(id))"
   }
 }
 func ==(lhs: TestUIElement, rhs: TestUIElement) -> Bool {
-  return lhs === rhs
+  return lhs.id == rhs.id
 }
 
 class TestApplicationElementBase: TestUIElement {
@@ -59,7 +59,7 @@ class TestApplicationElementBase: TestUIElement {
   override init() {
     super.init()
     processID = Int32(id)
-    attrs[.Role]      = AXSwift.Role.Application
+    attrs[.Role]      = AXSwift.Role.Application.rawValue
     attrs[.Windows]   = Array<TestUIElement>()
     attrs[.Frontmost] = false
   }
@@ -80,7 +80,7 @@ class TestWindowElement: TestUIElement {
     self.app = app
     super.init()
     processID         = app.processID
-    attrs[.Role]      = AXSwift.Role.Window
+    attrs[.Role]      = AXSwift.Role.Window.rawValue
     attrs[.Position]  = CGPoint(x: 0, y: 0)
     attrs[.Size]      = CGSize(width: 0, height: 0)
     attrs[.Title]     = "Window \(id)"
@@ -96,7 +96,6 @@ class TestObserver: ObserverType {
   init() { }
 
   func addNotification(notification: AXSwift.Notification, forElement: TestUIElement) throws {}
-  func processPendingNotifications() { }
 }
 
 // A more elaborate TestObserver that actually tracks which elements and notifications are being
@@ -120,16 +119,20 @@ class FakeObserver: TestObserver {
     watchedElements[element]!.append(notification)
   }
 
-  func emit(notification: AXSwift.Notification, forElement window: TestWindowElement) {
+  func emit(notification: AXSwift.Notification, forElement element: TestUIElement) {
     switch notification {
     case .WindowCreated, .MainWindowChanged:
-      doEmit(notification, watchedElement: window.app, passedElement: window)
+      if let window = element as? TestWindowElement {
+        doEmit(notification, watchedElement: window.app, passedElement: element)
+      } else {
+        doEmit(notification, watchedElement: element, passedElement: element)
+      }
     default:
-      doEmit(notification, watchedElement: window, passedElement: window)
+      doEmit(notification, watchedElement: element, passedElement: element)
     }
   }
 
-  private func doEmit(notification: AXSwift.Notification, watchedElement: TestUIElement, passedElement: TestUIElement) {
+  func doEmit(notification: AXSwift.Notification, watchedElement: TestUIElement, passedElement: TestUIElement) {
     let watched = watchedElements[watchedElement] ?? []
     if watched.contains(notification) {
       callback(observer: self, element: passedElement, notification: notification)

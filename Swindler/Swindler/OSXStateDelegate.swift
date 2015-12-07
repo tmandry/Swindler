@@ -32,10 +32,9 @@ class OSXStateDelegate<
     for appElement in ApplicationElement.all() {
       Application.initialize(axElement: appElement, notifier: self).then { application in
         self.applications.append(application)
-      }.error{ error in
+      }.error { error in
         let runningApplication = try? NSRunningApplication(processIdentifier: appElement.pid())
         print("Could not watch application \(runningApplication): \(error)")
-        assert(error is AXSwift.Error)
       }
     }
     print("Done initializing")
