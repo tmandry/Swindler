@@ -156,10 +156,6 @@ public class UIElement {
     return try self.attribute(attribute.rawValue)
   }
 
-  public func arrayAttribute<T>(attribute: Attribute) throws -> [T]? {
-    return try self.arrayAttribute(attribute.rawValue)
-  }
-
   public func attribute<T>(attribute: String) throws -> T? {
     var value: AnyObject?
     let error = AXUIElementCopyAttributeValue(element, attribute, &value)
@@ -173,55 +169,6 @@ public class UIElement {
     }
 
     return (unpackAXValue(value!) as! T)
-  }
-
-  public func arrayAttribute<T>(attribute: String) throws -> [T]? {
-    guard let array: [AnyObject] = try self.attribute(attribute) else {
-      return nil
-    }
-    return array.map({ unpackAXValue($0) as! T })
-  }
-
-  // Checks if the value is an AXValue and if so, unwraps it.
-  // If the value is an AXUIElement, wraps it in UIElement.
-  private func unpackAXValue(value: AnyObject) -> Any {
-    switch CFGetTypeID(value) {
-    case AXUIElementGetTypeID():
-      return UIElement(value as! AXUIElement)
-    case AXValueGetTypeID():
-      let type = AXValueGetType(value as! AXValue)
-      switch type {
-      case .AXError:
-        var result: AXError = .Success
-        let success = AXValueGetValue(value as! AXValue, type, &result)
-        assert(success)
-        return result
-      case .CFRange:
-        var result: CFRange = CFRange()
-        let success = AXValueGetValue(value as! AXValue, type, &result)
-        assert(success)
-        return result
-      case .CGPoint:
-        var result: CGPoint = CGPointZero
-        let success = AXValueGetValue(value as! AXValue, type, &result)
-        assert(success)
-        return result
-      case .CGRect:
-        var result: CGRect = CGRectZero
-        let success = AXValueGetValue(value as! AXValue, type, &result)
-        assert(success)
-        return result
-      case .CGSize:
-        var result: CGSize = CGSizeZero
-        let success = AXValueGetValue(value as! AXValue, type, &result)
-        assert(success)
-        return result
-      case .Illegal:
-        return value
-      }
-    default:
-      return value
-    }
   }
 
   /// Sets the value of `attribute` to `value`.
@@ -241,25 +188,6 @@ public class UIElement {
 
     guard error == .Success else {
       throw error
-    }
-  }
-
-  // Checks if the value is one supported by AXValue and if so, wraps it.
-  // If the value is a UIElement, unwraps it to an AXUIElement.
-  private func packAXValue(value: Any) -> AnyObject {
-    switch value {
-    case let val as UIElement:
-      return val.element
-    case var val as CFRange:
-      return AXValueCreate(AXValueType(rawValue: kAXValueCFRangeType)!, &val)!.takeRetainedValue()
-    case var val as CGPoint:
-      return AXValueCreate(AXValueType(rawValue: kAXValueCGPointType)!, &val)!.takeRetainedValue()
-    case var val as CGRect:
-      return AXValueCreate(AXValueType(rawValue: kAXValueCGRectType)!, &val)!.takeRetainedValue()
-    case var val as CGSize:
-      return AXValueCreate(AXValueType(rawValue: kAXValueCGSizeType)!, &val)!.takeRetainedValue()
-    default:
-      return value as! AnyObject  // must be an object to pass to AX
     }
   }
 
@@ -342,6 +270,26 @@ public class UIElement {
 
   // MARK: Array attributes
 
+  /// Returns all the values of the attribute as an array of the given type.
+  ///
+  /// - parameter attribute: The name of the array attribute.
+  ///
+  /// - throws: `Error.IllegalArgument` if the attribute isn't an array.
+  public func arrayAttribute<T>(attribute: Attribute) throws -> [T]? {
+    return try self.arrayAttribute(attribute.rawValue)
+  }
+
+  public func arrayAttribute<T>(attribute: String) throws -> [T]? {
+    guard let value: Any = try self.attribute(attribute) else {
+      return nil
+    }
+    guard let array = value as? [AnyObject] else {
+      // For consistency with the other array attribute APIs, throw if it's not an array.
+      throw Error.IllegalArgument
+    }
+    return array.map({ unpackAXValue($0) as! T })
+  }
+
   /// Returns a subset of values from an array attribute.
   ///
   /// - parameter attribute: The name of the array attribute.
@@ -371,7 +319,8 @@ public class UIElement {
       throw error
     }
 
-    return (values! as [AnyObject] as! [T])
+    let array = values! as [AnyObject]
+    return array.map({ unpackAXValue($0) as! T })
   }
 
   /// Returns the number of values an array attribute has.
@@ -442,7 +391,70 @@ public class UIElement {
       throw error
     }
 
-    return (value as! T)
+    return (unpackAXValue(value!) as! T)
+  }
+
+  // MARK: Attribute helpers
+
+  // Checks if the value is an AXValue and if so, unwraps it.
+  // If the value is an AXUIElement, wraps it in UIElement.
+  private func unpackAXValue(value: AnyObject) -> Any {
+    switch CFGetTypeID(value) {
+    case AXUIElementGetTypeID():
+      return UIElement(value as! AXUIElement)
+    case AXValueGetTypeID():
+      let type = AXValueGetType(value as! AXValue)
+      switch type {
+      case .AXError:
+        var result: AXError = .Success
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CFRange:
+        var result: CFRange = CFRange()
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CGPoint:
+        var result: CGPoint = CGPointZero
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CGRect:
+        var result: CGRect = CGRectZero
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .CGSize:
+        var result: CGSize = CGSizeZero
+        let success = AXValueGetValue(value as! AXValue, type, &result)
+        assert(success)
+        return result
+      case .Illegal:
+        return value
+      }
+    default:
+      return value
+    }
+  }
+
+  // Checks if the value is one supported by AXValue and if so, wraps it.
+  // If the value is a UIElement, unwraps it to an AXUIElement.
+  private func packAXValue(value: Any) -> AnyObject {
+    switch value {
+    case let val as UIElement:
+      return val.element
+    case var val as CFRange:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCFRangeType)!, &val)!.takeRetainedValue()
+    case var val as CGPoint:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCGPointType)!, &val)!.takeRetainedValue()
+    case var val as CGRect:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCGRectType)!, &val)!.takeRetainedValue()
+    case var val as CGSize:
+      return AXValueCreate(AXValueType(rawValue: kAXValueCGSizeType)!, &val)!.takeRetainedValue()
+    default:
+      return value as! AnyObject  // must be an object to pass to AX
+    }
   }
 
   // MARK: - Actions
