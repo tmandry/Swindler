@@ -86,8 +86,8 @@ extension Property: PropertyType {
 }
 
 /// Asynchronously fetches all the element attributes.
-func fetchAttributes<UIElement: UIElementType>(attributeNames: [Attribute], forElement axElement: UIElement, fulfill: ([Attribute: Any]) -> (), reject: (ErrorType) -> ()) {
-  Promise<Void>().thenInBackground { () -> () in
+func fetchAttributes<UIElement: UIElementType>(attributeNames: [Attribute], forElement axElement: UIElement, after: Promise<Void>, fulfill: ([Attribute: Any]) -> (), reject: (ErrorType) -> ()) {
+  after.thenInBackground { () -> () in
     // Issue a request in the background.
     let attributes = try axElement.getMultipleAttributes(attributeNames)
     fulfill(attributes)

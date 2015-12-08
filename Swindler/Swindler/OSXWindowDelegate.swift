@@ -60,16 +60,24 @@ class OSXWindowDelegate<
     ]
 
     // Start watching for notifications.
-    for notification in watchedAxProperties.keys {
-      try observer.addNotification(notification, forElement: axElement)
-    }
-    try observer.addNotification(.UIElementDestroyed, forElement: axElement)
+    let notifications = watchedAxProperties.keys + [
+      .UIElementDestroyed
+    ]
+    let watched = watchWindowElement(axElement, observer: observer, notifications: notifications)
 
     // Fetch attribute values.
     let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
-    fetchAttributes(attributes, forElement: axElement, fulfill: fulfill, reject: reject)
+    fetchAttributes(attributes, forElement: axElement, after: watched, fulfill: fulfill, reject: reject)
 
     initialized = initializeProperties(axProperties, ofElement: axElement).then { return self }
+  }
+
+  func watchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) -> Promise<Void> {
+    return Promise<Void>().thenInBackground { () -> () in
+      for notification in notifications {
+        try observer.addNotification(notification, forElement: self.axElement)
+      }
+    }
   }
 
   // Initializes the window and returns it as a Promise once it's ready.

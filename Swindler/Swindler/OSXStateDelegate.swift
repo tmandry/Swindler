@@ -51,6 +51,7 @@ class OSXStateDelegate<
   }
 
   func notify<Event: EventType>(event: Event) {
+    assert(NSThread.currentThread().isMainThread)
     if let handlers = eventHandlers[Event.typeName] {
       for handler in handlers {
         handler(event)

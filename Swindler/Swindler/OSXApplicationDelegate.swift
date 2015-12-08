@@ -29,20 +29,26 @@ class OSXApplicationDelegate<
     return windows.map({ $0 as WindowDelegate })
   }
 
-  private init(axElement: ApplicationElement, notifier: EventNotifier) throws {
+  private init(axElement: ApplicationElement, notifier: EventNotifier) {
     // TODO: filter out applications by activation policy
     self.axElement = axElement.toElement
     self.notifier = notifier
 
-    // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
+    // Watch for notifications on app asynchronously.
+    let appWatched     = watchApplicationElement()
+    // Get the list of windows asynchronously (after notifications are subscribed so we can't miss one).
+    let windowsFetched = fetchWindows(after: appWatched)
+
+    // Create a promise for the attribute dictionary we'll get from fetchAttributes.
     let (attrsFetched, fulfillAttrs, rejectAttrs) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
+
     // Some properties can't initialize until we fetch the windows. (WindowPropertyAdapter)
-    let windowsFetched = fetchWindows()
+    let initProperties =
+      when(attrsFetched, windowsFetched)
+      .then({ (fetchedAttrs, _) in fetchedAttrs })
+      .recover(unwrapWhenErrors)
 
-    let initProperties = when(attrsFetched, windowsFetched).then({ (fetchedAttrs, _) in
-      return fetchedAttrs
-    }).recover(unwrapWhenErrors)
-
+    // Configure properties.
     mainWindow = Property<OfOptionalType<Window>>(
       WindowPropertyAdapter(AXPropertyDelegate(axElement, .MainWindow, initProperties),
         windowFinder: self, windowDelegate: OSXWindow.self),
@@ -59,51 +65,64 @@ class OSXApplicationDelegate<
       .Frontmost
     ]
 
-    // Set up notifications.
-    // TODO: Before fetchWindows()
-    // TODO: these can hang, put them on background thread
-    observer = try Observer(processID: axElement.pid(), callback: handleEvent)
-    try observer.addNotification(.WindowCreated,          forElement: axElement.toElement)
-    try observer.addNotification(.MainWindowChanged,      forElement: axElement.toElement)
-    try observer.addNotification(.ApplicationActivated,   forElement: axElement.toElement)
-    try observer.addNotification(.ApplicationDeactivated, forElement: axElement.toElement)
-
-    // Fetch attribute values.
-    fetchAttributes(attributes, forElement: axElement, fulfill: fulfillAttrs, reject: rejectAttrs)
+    // Fetch attribute values, after subscribing to notifications so there are no gaps.
+    fetchAttributes(attributes, forElement: axElement, after: appWatched, fulfill: fulfillAttrs, reject: rejectAttrs)
 
     initialized = initializeProperties(properties, ofElement: axElement).then { return self }
   }
 
-  private func fetchWindows() -> Promise<Void> {
-    return Promise<Void>().thenInBackground { () -> [UIElement]? in
+  private func watchApplicationElement() -> Promise<Void> {
+    do {
+      observer = try Observer(processID: axElement.pid(), callback: handleEvent)
+    } catch {
+      return Promise(error: error)
+    }
+
+    return Promise<Void>().thenInBackground { () -> () in
+      try self.observer.addNotification(.WindowCreated,          forElement: self.axElement)
+      try self.observer.addNotification(.MainWindowChanged,      forElement: self.axElement)
+      try self.observer.addNotification(.ApplicationActivated,   forElement: self.axElement)
+      try self.observer.addNotification(.ApplicationDeactivated, forElement: self.axElement)
+    }
+  }
+
+  private func fetchWindows(after promise: Promise<Void>) -> Promise<Void> {
+    return promise.thenInBackground { () -> [UIElement]? in
+      // Fetch the list of window elements.
       return try self.axElement.arrayAttribute(.Windows)
     }.then { maybeWindowElements -> Promise<[OSXWindow]> in
       guard let windowElements = maybeWindowElements else {
         throw OSXDriverError.MissingAttribute(attribute: .Windows, onElement: self.axElement)
       }
 
+      // Initialize OSXWindowDelegates from the window elements.
       let windowPromises = windowElements.map({ windowElement in
         OSXWindow.initialize(notifier: self.notifier, axElement: windowElement, observer: self.observer)
       })
+
       return successes(windowPromises, onError: { index, error in
+        // Log any errors we encounter, but don't fail.
         let windowElement = windowElements[index]
         let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
         print("Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)")
       })
     }.then { windowDelegates -> () in
       self.windows = windowDelegates
+
+      // Now we can process any events received during initialization that depended on these windows.
+      for windowDelegate in windowDelegates {
+        self.newWindowHandler.windowCreated(windowDelegate.axElement)
+      }
     }
   }
 
   // Initializes the object and returns it as a Promise that resolves once it's ready.
   static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
-    return firstly {  // capture thrown errors in promise chain
-      let app = try OSXApplicationDelegate(axElement: axElement, notifier: notifier)
-      return app.initialized
-    }
+    return OSXApplicationDelegate(axElement: axElement, notifier: notifier).initialized
   }
 
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
+    assert(NSThread.currentThread().isMainThread)
     switch notification {
     case .WindowCreated:
       onWindowCreated(element)
@@ -257,6 +276,7 @@ private struct NewWindowHandler<UIElement: Equatable> {
     handlers.filter({ $0.windowElement == windowElement }).forEach { entry in
       entry.handler()
     }
+    removeAllForUIElement(windowElement)
   }
 }
 private struct HandlerType<UIElement> {

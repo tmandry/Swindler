@@ -169,43 +169,15 @@ class TestNotifier: EventNotifier {
   }
 }
 
-class OSXApplicationDelegateSpec: QuickSpec {
+class OSXApplicationDelegateInitSpec: QuickSpec {
   override func spec() {
 
-    var app: Swindler.Application!
-    var appDelegate: OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>!
     var appElement: TestApplicationElement!
     var notifier: TestNotifier!
-    var observer: FakeObserver!
-
-    func initializeApp() {
-      waitUntil { done in
-        OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
-          axElement: appElement, notifier: notifier).then { applicationDelegate -> () in
-            appDelegate = applicationDelegate
-            observer = appDelegate.observer
-            app = Swindler.Application(delegate: appDelegate)
-            done()
-        }
-      }
-    }
 
     beforeEach {
       notifier = TestNotifier()
       appElement = TestApplicationElement()
-      initializeApp()
-    }
-
-    func createWindow(emitEvent emitEvent: Bool = true) -> TestWindowElement {
-      let windowElement = TestWindowElement(forApp: appElement)
-      appElement.windows.append(windowElement)
-      if emitEvent { observer.emit(.WindowCreated, forElement: windowElement) }
-      return windowElement
-    }
-
-    func getWindowElement(window: Window?) -> TestUIElement? {
-      typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, FakeObserver>
-      return ((window?.delegate) as! WinDelegate?)?.axElement
     }
 
     describe("initialize") {
@@ -247,6 +219,162 @@ class OSXApplicationDelegateSpec: QuickSpec {
       }
 
     }
+
+    describe("AXUIElement notifications") {
+      /// Allows defining adversarial actions when a property is observed.
+      class AdversaryObserver: FakeObserver {
+        static var onNotification: Notification? = nil
+        static var handler: Optional<(AdversaryObserver) -> ()> = nil
+
+        /// Defines code that runs on the main thread before returning from addNotification.
+        static func onAddNotification(notification: Notification, handler: (AdversaryObserver) -> ()) {
+          onNotification = notification
+          self.handler = handler
+        }
+
+        override func addNotification(
+            notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+          try super.addNotification(notification, forElement: element)
+          if notification == AdversaryObserver.onNotification! {
+            // Assume addNotification gets called in the background (easy to fix if not)
+            assert(!NSThread.currentThread().isMainThread)
+            dispatch_sync(dispatch_get_main_queue()) {
+              AdversaryObserver.handler!(self)
+            }
+          }
+        }
+      }
+      beforeEach { AdversaryObserver.onNotification = nil; AdversaryObserver.handler = nil }
+
+      typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
+      func initializeApp() -> Promise<AppDelegate> {
+        return AppDelegate.initialize(axElement: appElement, notifier: notifier)
+      }
+
+      context("when a property value changes right before observing one") {
+
+        context("for a regular property") {
+          it("is read correctly") { () -> Promise<Void> in
+            appElement.attrs[.Frontmost] = false
+
+            AdversaryObserver.onAddNotification(.ApplicationActivated) { _ in
+              appElement.attrs[.Frontmost] = true
+            }
+
+            return initializeApp().then { appDelegate -> () in
+              let app = Swindler.Application(delegate: appDelegate)
+              expect(app.frontmost.value).toEventually(beTrue())
+            }
+          }
+        }
+
+        context("for an object property") {
+          it("is read correctly") { () -> Promise<Void> in
+            let windowElement = TestWindowElement(forApp: appElement)
+            appElement.windows.append(windowElement)
+            windowElement.attrs[.Main]    = false
+            appElement.attrs[.MainWindow] = nil
+
+            AdversaryObserver.onAddNotification(.MainWindowChanged) { observer in
+              windowElement.attrs[.Main]    = true
+              appElement.attrs[.MainWindow] = windowElement
+            }
+
+            return initializeApp().then { appDelegate -> () in
+              let app = Swindler.Application(delegate: appDelegate)
+              expect(app.mainWindow.value).toEventuallyNot(beNil())
+            }
+          }
+        }
+
+      }
+
+      context("when a property value changes right after observing one") {
+        // The difference between a property changing before or after observing is simply whether
+        // an event is emitted or not.
+
+        context("for a regular property") {
+          it("is updated correctly") { () -> Promise<Void> in
+            appElement.attrs[.Frontmost] = false
+
+            AdversaryObserver.onAddNotification(.ApplicationActivated) { observer in
+              appElement.attrs[.Frontmost] = true
+              observer.emit(.ApplicationActivated, forElement: appElement)
+            }
+
+            return initializeApp().then { appDelegate -> () in
+              let app = Swindler.Application(delegate: appDelegate)
+              expect(app.frontmost.value).toEventually(beTrue())
+            }
+          }
+        }
+
+        context("for an object property") {
+          it("is updated correctly") { () -> Promise<Void> in
+            let windowElement = TestWindowElement(forApp: appElement)
+            appElement.windows.append(windowElement)
+            windowElement.attrs[.Main]    = false
+            appElement.attrs[.MainWindow] = nil
+
+            AdversaryObserver.onAddNotification(.MainWindowChanged) { observer in
+              windowElement.attrs[.Main]    = true
+              appElement.attrs[.MainWindow] = windowElement
+              observer.emit(.MainWindowChanged, forElement: windowElement)
+            }
+
+            return initializeApp().then { appDelegate -> () in
+              let app = Swindler.Application(delegate: appDelegate)
+              expect(app.mainWindow.value).toEventuallyNot(beNil())
+            }
+          }
+        }
+
+      }
+    }
+
+  }
+}
+
+class OSXApplicationDelegateSpec: QuickSpec {
+  override func spec() {
+
+    var app: Swindler.Application!
+    var appDelegate: OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>!
+    var appElement: TestApplicationElement!
+    var notifier: TestNotifier!
+    var observer: FakeObserver!
+
+    func initializeApp() {
+      waitUntil { done in
+        OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
+          axElement: appElement, notifier: notifier).then { applicationDelegate -> () in
+            appDelegate = applicationDelegate
+            observer = appDelegate.observer
+            app = Swindler.Application(delegate: appDelegate)
+            done()
+        }
+      }
+    }
+
+    beforeEach {
+      notifier = TestNotifier()
+      appElement = TestApplicationElement()
+      initializeApp()
+    }
+
+    func createWindow(emitEvent emitEvent: Bool = true) -> TestWindowElement {
+      let windowElement = TestWindowElement(forApp: appElement)
+      appElement.windows.append(windowElement)
+      if emitEvent { observer.emit(.WindowCreated, forElement: windowElement) }
+      return windowElement
+    }
+
+    func getWindowElement(window: Window?) -> TestUIElement? {
+      typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, FakeObserver>
+      return ((window?.delegate) as! WinDelegate?)?.axElement
+    }
+
+
 
     describe("knownWindows") {
       func getWindowElements(windows: [Window]) -> [TestUIElement] {
