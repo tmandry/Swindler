@@ -217,16 +217,28 @@ class OSXApplicationDelegate<
   }
 
   private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) {
-    guard let (index, window) = findWindowAndIndex(windowElement) else {
-      print("Event \(notification) on unknown element \(windowElement)")
-      return
+    func handleEvent(window: OSXWindow) {
+      window.handleEvent(notification, observer: observer)
+
+      if .UIElementDestroyed == notification {
+        // Remove window.
+        windows = windows.filter({ !$0.equalTo(window) })
+        notifier.notify(WindowDestroyedEvent(external: true, window: Window(delegate: window)))
+      }
     }
 
-    window.handleEvent(notification, observer: observer)
-
-    if .UIElementDestroyed == notification {
-      windows.removeAtIndex(index)
-      notifier.notify(WindowDestroyedEvent(external: true, window: Window(delegate: window)))
+    if let window = findWindowDelegateByElement(windowElement) {
+      handleEvent(window)
+    } else {
+      print("debug: Notification \(notification) on unknown element \(windowElement), deferring")
+      newWindowHandler.performAfterWindowCreatedForElement(windowElement) {
+        if let window = self.findWindowDelegateByElement(windowElement) {
+          handleEvent(window)
+        } else {
+          // Window was already destroyed.
+          print("debug: Deferred notification \(notification) on window element \(windowElement) never reached delegate")
+        }
+      }
     }
   }
 
@@ -239,8 +251,8 @@ class OSXApplicationDelegate<
     // TODO
   }
 
-  private func findWindowAndIndex(axElement: UIElement) -> (Int, OSXWindow)? {
-    return windows.enumerate().filter({ $0.1.axElement == axElement }).first
+  private func findWindowDelegateByElement(axElement: UIElement) -> OSXWindow? {
+    return windows.filter({ $0.axElement == axElement }).first
   }
 }
 
@@ -293,7 +305,7 @@ protocol WindowFinder: class {
 }
 extension OSXApplicationDelegate: WindowFinder {
   func findWindowByElement(element: UIElement) -> Window? {
-    if let windowDelegate = windows.filter({ $0.axElement == element }).first {
+    if let windowDelegate = findWindowDelegateByElement(element) {
       return Window(delegate: windowDelegate)
     } else {
       return nil

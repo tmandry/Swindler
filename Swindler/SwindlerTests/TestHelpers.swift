@@ -64,3 +64,10 @@ func expectToFail<T, E: ErrorType>(promise: Promise<T>, with expectedError: E, f
     expect(file, line: line, expression: { throw error }).to(throwError(expectedError))
   }
 }
+
+/// Convenience struct for when errors need to be thrown from tests to abort execution (e.g. during
+/// a promise chain).
+struct TestError: ErrorType {
+  let description: String
+  init(_ description: String) { self.description = description }
+}

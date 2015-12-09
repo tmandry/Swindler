@@ -169,6 +169,36 @@ class TestNotifier: EventNotifier {
   }
 }
 
+/// Allows defining adversarial actions when a property is observed.
+class AdversaryObserver: FakeObserver {
+  static var onNotification: Notification? = nil
+  static var handler: Optional<(AdversaryObserver) -> ()> = nil
+
+  /// Call this in beforeEach for any tests that use this class.
+  static func reset() {
+    onNotification = nil
+    handler = nil
+  }
+
+  /// Defines code that runs on the main thread before returning from addNotification.
+  static func onAddNotification(notification: Notification, handler: (AdversaryObserver) -> ()) {
+    onNotification = notification
+    self.handler = handler
+  }
+
+  override func addNotification(
+    notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+      try super.addNotification(notification, forElement: element)
+      if notification == AdversaryObserver.onNotification {
+        // Assume addNotification gets called in the background (easy to fix if not)
+        assert(!NSThread.currentThread().isMainThread)
+        dispatch_sync(dispatch_get_main_queue()) {
+          AdversaryObserver.handler!(self)
+        }
+      }
+  }
+}
+
 class OSXApplicationDelegateInitSpec: QuickSpec {
   override func spec() {
 
@@ -221,30 +251,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
     }
 
     describe("AXUIElement notifications") {
-      /// Allows defining adversarial actions when a property is observed.
-      class AdversaryObserver: FakeObserver {
-        static var onNotification: Notification? = nil
-        static var handler: Optional<(AdversaryObserver) -> ()> = nil
-
-        /// Defines code that runs on the main thread before returning from addNotification.
-        static func onAddNotification(notification: Notification, handler: (AdversaryObserver) -> ()) {
-          onNotification = notification
-          self.handler = handler
-        }
-
-        override func addNotification(
-            notification: AXSwift.Notification, forElement element: TestUIElement) throws {
-          try super.addNotification(notification, forElement: element)
-          if notification == AdversaryObserver.onNotification! {
-            // Assume addNotification gets called in the background (easy to fix if not)
-            assert(!NSThread.currentThread().isMainThread)
-            dispatch_sync(dispatch_get_main_queue()) {
-              AdversaryObserver.handler!(self)
-            }
-          }
-        }
-      }
-      beforeEach { AdversaryObserver.onNotification = nil; AdversaryObserver.handler = nil }
+      beforeEach { AdversaryObserver.reset() }
 
       typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
       func initializeApp() -> Promise<AppDelegate> {
@@ -611,11 +618,45 @@ class OSXApplicationDelegateSpec: QuickSpec {
   }
 }
 
+/// Allows defining adversarial actions when an attribute is read.
+class AdversaryWindowElement: TestWindowElement {
+  static var onRead: Optional<(AdversaryWindowElement) -> ()> = nil
+  static var watchAttribute: Attribute? = nil
+
+  /// Call this in beforeEach for any tests that use this class.
+  static func reset() {
+    onRead = nil
+    watchAttribute = nil
+  }
+
+  /// Defines code that runs on the main thread before returning the value of the attribute.
+  static func onReadAttribute(attribute: Attribute, handler: (AdversaryWindowElement) -> ()) {
+    AdversaryWindowElement.watchAttribute = attribute
+    AdversaryWindowElement.onRead = handler
+  }
+
+  override func attribute<T>(attribute: Attribute) throws -> T? {
+    let result: T? = try super.attribute(attribute)
+    if attribute == AdversaryWindowElement.watchAttribute {
+      AdversaryWindowElement.onRead?(self)
+    }
+    return result
+  }
+  override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+    let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
+    if let watchAttribute = AdversaryWindowElement.watchAttribute where attributes.contains(watchAttribute) {
+      AdversaryWindowElement.onRead?(self)
+    }
+    return result
+  }
+}
+
 class OSXWindowDelegateSpec: QuickSpec {
   override func spec() {
-    typealias OSXWindow = OSXWindowDelegate<TestUIElement, TestApplicationElement, TestObserver>
-    func initializeWithElement(windowElement: TestUIElement) -> Promise<OSXWindow> {
-      return OSXWindow.initialize(
+
+    typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, TestObserver>
+    func initializeWithElement(windowElement: TestUIElement) -> Promise<WinDelegate> {
+      return WinDelegate.initialize(
         notifier: TestNotifier(), axElement: windowElement, observer: TestObserver())
     }
 
@@ -655,6 +696,91 @@ class OSXWindowDelegateSpec: QuickSpec {
         }
       }
 
+      describe("AXUIElement notifications") {
+        beforeEach { AdversaryObserver.reset() }
+        beforeEach { AdversaryWindowElement.reset() }
+
+        // Because observers only have one callback per application, they are owned by the
+        // application delegate and window notifications are forwarded on, so to fully test this we
+        // have to test the interaction between the two.
+
+        typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
+        typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
+
+        var appElement: TestApplicationElement!
+        var windowElement: AdversaryWindowElement!
+        beforeEach {
+          appElement = TestApplicationElement()
+          windowElement = AdversaryWindowElement(forApp: appElement)
+          appElement.windows.append(windowElement)
+        }
+
+        var observer: AdversaryObserver!
+        func initialize() -> Promise<WinDelegate> {
+          return AppDelegate.initialize(axElement: appElement, notifier: TestNotifier()).then { appDelegate -> WinDelegate in
+            observer = appDelegate.observer
+            guard let winDelegate = appDelegate.knownWindows.first as! WinDelegate? else {
+              throw TestError("Window delegate was not initialized by application delegate")
+            }
+            return winDelegate
+          }
+        }
+
+        context("when a property value changes right before observing it") {
+          it("is read correctly") { () -> Promise<Void> in
+            windowElement.attrs[.Minimized] = false
+
+            AdversaryObserver.onAddNotification(.WindowMiniaturized) { _ in
+              windowElement.attrs[.Minimized] = true
+            }
+
+            return initialize().then { winDelegate -> () in
+              let window = Window(delegate: winDelegate)
+              expect(window.minimized.value).toEventually(beTrue())
+            }
+          }
+        }
+
+        context("when a property value changes right after observing it") {
+          // The difference between a property changing before or after observing is simply whether
+          // an event is emitted or not.
+          it("is updated correctly") { () -> Promise<Void> in
+            windowElement.attrs[.Minimized] = false
+
+            AdversaryObserver.onAddNotification(.WindowMiniaturized) { observer in
+              observer.emit(.WindowMiniaturized, forElement: windowElement)
+              dispatch_async(dispatch_get_main_queue()) {
+                windowElement.attrs[.Minimized] = true
+              }
+            }
+
+            return initialize().then { winDelegate -> () in
+              let window = Window(delegate: winDelegate)
+              expect(window.minimized.value).toEventually(beTrue())
+            }
+          }
+        }
+
+        context("when a property value changes right after reading it") {
+          it("is updated correctly") { () -> Promise<Void> in
+            windowElement.attrs[.Minimized] = false
+
+            AdversaryWindowElement.onReadAttribute(.Minimized) { _ in
+              // After the first read, .Minimized will be true.
+              windowElement.attrs[.Minimized] = true
+            }
+            AdversaryObserver.onAddNotification(.WindowMiniaturized) { observer in
+              observer.emit(.WindowMiniaturized, forElement: windowElement)
+            }
+
+            return initialize().then { winDelegate -> () in
+              let window = Window(delegate: winDelegate)
+              expect(window.minimized.value).toEventually(beTrue())
+            }
+          }
+        }
+
+      }
     }
 
     context("when a window is destroyed") {
@@ -670,12 +796,12 @@ class OSXWindowDelegateSpec: QuickSpec {
     context("when the position changes") {
       var notifier: TestNotifier!
       var windowElement: TestWindowElement!
-      var windowDelegate: OSXWindow!
+      var windowDelegate: WinDelegate!
       beforeEach {
         notifier = TestNotifier()
         windowElement = TestWindowElement(forApp: TestApplicationElement())
         waitUntil { done in
-          return OSXWindow.initialize(
+          return WinDelegate.initialize(
               notifier: notifier, axElement: windowElement, observer: TestObserver()
           ).then { delegate -> () in
             windowDelegate = delegate
@@ -688,7 +814,7 @@ class OSXWindowDelegateSpec: QuickSpec {
       }
 
       func getWindowElement(window: Window?) -> TestUIElement? {
-        return ((window?.delegate) as! OSXWindow?)?.axElement
+        return ((window?.delegate) as! WinDelegate?)?.axElement
       }
 
       it("emits a WindowPosChangedEvent") {
