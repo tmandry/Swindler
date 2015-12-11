@@ -72,7 +72,7 @@ public class Window: Equatable {
   public var title: Property<OfType<String>> { return delegate.title }
 
   /// Whether the window is minimized.
-  public var minimized: WriteableProperty<OfType<Bool>> { return delegate.minimized }
+  public var isMinimized: WriteableProperty<OfType<Bool>> { return delegate.isMinimized }
 
   /// TODO: main, fullScreen, focused, screen, space
 }
@@ -86,7 +86,7 @@ protocol WindowDelegate {
   var pos: WriteableProperty<OfType<CGPoint>>! { get }
   var size: WriteableProperty<OfType<CGSize>>! { get }
   var title: Property<OfType<String>>! { get }
-  var minimized: WriteableProperty<OfType<Bool>>! { get }
+  var isMinimized: WriteableProperty<OfType<Bool>>! { get }
 
   func equalTo(other: WindowDelegate) -> Bool
 }

@@ -18,7 +18,7 @@ class OSXWindowDelegate<
   var pos: WriteableProperty<OfType<CGPoint>>!
   var size: WriteableProperty<OfType<CGSize>>!
   var title: Property<OfType<String>>!
-  var minimized: WriteableProperty<OfType<Bool>>!
+  var isMinimized: WriteableProperty<OfType<Bool>>!
   var main: WriteableProperty<OfType<Bool>>!
 
   private var axProperties: [PropertyType]!
@@ -40,14 +40,14 @@ class OSXWindowDelegate<
       withEvent: WindowSizeChangedEvent.self, receivingObject: Window.self, notifier: self)
     title = Property(AXPropertyDelegate(axElement, .Title, initPromise),
       withEvent: WindowTitleChangedEvent.self, receivingObject: Window.self, notifier: self)
-    minimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
+    isMinimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
       withEvent: WindowMinimizedChangedEvent.self, receivingObject: Window.self, notifier: self)
 
     axProperties = [
       pos,
       size,
       title,
-      minimized,
+      isMinimized,
     ]
 
     // Map notifications on this element to the corresponding property.
@@ -55,8 +55,8 @@ class OSXWindowDelegate<
       .Moved: pos,
       .Resized: size,
       .TitleChanged: title,
-      .WindowMiniaturized: minimized,
-      .WindowDeminiaturized: minimized
+      .WindowMiniaturized: isMinimized,
+      .WindowDeminiaturized: isMinimized
     ]
 
     // Start watching for notifications.

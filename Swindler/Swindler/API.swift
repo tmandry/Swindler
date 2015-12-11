@@ -98,7 +98,6 @@ public protocol Window: Equatable {
   /// The window title.
   public var title: Property<OfType<String>> { get }
 
-  // TODO: name
   /// Whether the window is minimized.
   public var isMinimized: WriteableProperty<OfType<Bool>> { get }
 

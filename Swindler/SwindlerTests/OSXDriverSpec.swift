@@ -910,7 +910,7 @@ class OSXWindowDelegateSpec: QuickSpec {
           expect(windowDelegate.pos.value).to(equal(CGPoint(x: 5, y: 5)))
           expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
           expect(windowDelegate.title.value).to(equal("a window title"))
-          expect(windowDelegate.minimized.value).to(beFalse())
+          expect(windowDelegate.isMinimized.value).to(beFalse())
         }
       }
 
@@ -970,7 +970,7 @@ class OSXWindowDelegateSpec: QuickSpec {
 
             return initialize().then { winDelegate -> () in
               let window = Window(delegate: winDelegate)
-              expect(window.minimized.value).toEventually(beTrue())
+              expect(window.isMinimized.value).toEventually(beTrue())
             }
           }
         }
@@ -990,7 +990,7 @@ class OSXWindowDelegateSpec: QuickSpec {
 
             return initialize().then { winDelegate -> () in
               let window = Window(delegate: winDelegate)
-              expect(window.minimized.value).toEventually(beTrue())
+              expect(window.isMinimized.value).toEventually(beTrue())
             }
           }
         }
@@ -1010,7 +1010,7 @@ class OSXWindowDelegateSpec: QuickSpec {
 
             return initialize().then { winDelegate -> () in
               let window = Window(delegate: winDelegate)
-              expect(window.minimized.value).toEventually(beTrue())
+              expect(window.isMinimized.value).toEventually(beTrue())
             }
           }
         }
@@ -1105,15 +1105,15 @@ class OSXWindowDelegateSpec: QuickSpec {
         }
       }
 
-      describe("minimized") {
+      describe("isMinimized") {
         it("updates when the window is minimized and restored") {
           windowElement.attrs[.Minimized] = true
           windowDelegate.handleEvent(.WindowMiniaturized, observer: TestObserver())
-          expect(window.minimized.value).toEventually(beTrue())
+          expect(window.isMinimized.value).toEventually(beTrue())
 
           windowElement.attrs[.Minimized] = false
           windowDelegate.handleEvent(.WindowDeminiaturized, observer: TestObserver())
-          expect(window.minimized.value).toEventually(beFalse())
+          expect(window.isMinimized.value).toEventually(beFalse())
         }
       }
 
