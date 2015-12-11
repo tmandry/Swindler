@@ -135,26 +135,26 @@ public protocol PropertyEventType: EventType {
 
   var external: Bool { get }
   /// The old value of the property.
-  var oldVal: PropertyType { get }
+  var oldValue: PropertyType { get }
   /// The new value of the property.
-  var newVal: PropertyType { get }
+  var newValue: PropertyType { get }
   // TODO: requestedVal?
 }
 
 protocol PropertyEventTypeInternal: PropertyEventType {
   typealias Object
-  init(external: Bool, object: Object, oldVal: PropertyType, newVal: PropertyType)
+  init(external: Bool, object: Object, oldValue: PropertyType, newValue: PropertyType)
 }
 
 public protocol WindowPropertyEventType: WindowEventType, PropertyEventType {}
 
 protocol WindowPropertyEventTypeInternal: WindowPropertyEventType, PropertyEventTypeInternal {
   typealias Object = Window
-  init(external: Bool, window: Object, oldVal: PropertyType, newVal: PropertyType)
+  init(external: Bool, window: Object, oldValue: PropertyType, newValue: PropertyType)
 }
 extension WindowPropertyEventTypeInternal {
-  init(external: Bool, object: Object, oldVal: PropertyType, newVal: PropertyType) {
-    self.init(external: external, window: object, oldVal: oldVal, newVal: newVal)
+  init(external: Bool, object: Object, oldValue: PropertyType, newValue: PropertyType) {
+    self.init(external: external, window: object, oldValue: oldValue, newValue: newValue)
   }
 }
 
@@ -162,32 +162,32 @@ public struct WindowPosChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGPoint
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct WindowSizeChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGSize
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct WindowTitleChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = String
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct WindowMinimizedChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = Bool
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public protocol ApplicationEventType: EventType {
@@ -198,11 +198,11 @@ public protocol ApplicationPropertyEventType: ApplicationEventType, PropertyEven
 
 protocol ApplicationPropertyEventTypeInternal: ApplicationPropertyEventType, PropertyEventTypeInternal {
   typealias Object = Application
-  init(external: Bool, application: Object, oldVal: PropertyType, newVal: PropertyType)
+  init(external: Bool, application: Object, oldValue: PropertyType, newValue: PropertyType)
 }
 extension ApplicationPropertyEventTypeInternal {
-  init(external: Bool, object: Object, oldVal: PropertyType, newVal: PropertyType) {
-    self.init(external: external, application: object, oldVal: oldVal, newVal: newVal)
+  init(external: Bool, object: Object, oldValue: PropertyType, newValue: PropertyType) {
+    self.init(external: external, application: object, oldValue: oldValue, newValue: newValue)
   }
 }
 
@@ -210,14 +210,14 @@ public struct ApplicationFrontmostChangedEvent: ApplicationPropertyEventTypeInte
   public typealias PropertyType = Bool
   public var external: Bool
   public var application: Application
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Window?
   public var external: Bool
   public var application: Application
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }

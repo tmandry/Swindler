@@ -102,7 +102,7 @@ class OSXWindowDelegate<
   }
 
   func notify<Event: PropertyEventTypeInternal where Event.Object == Window>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier.notify(Event(external: external, object: Window(delegate: self), oldVal: oldValue, newVal: newValue))
+    notifier.notify(Event(external: external, object: Window(delegate: self), oldValue: oldValue, newValue: newValue))
   }
 
   func notifyInvalid() {

@@ -243,7 +243,7 @@ class OSXApplicationDelegate<
   }
 
   func notify<Event: PropertyEventTypeInternal where Event.Object == Application>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier.notify(Event(external: external, object: Application(delegate: self), oldVal: oldValue, newVal: newValue))
+    notifier.notify(Event(external: external, object: Application(delegate: self), oldValue: oldValue, newValue: newValue))
   }
 
   func notifyInvalid() {

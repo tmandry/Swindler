@@ -26,16 +26,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       print("new window: \(window.title.value)")
     }
     swindler.on { (event: WindowPosChangedEvent) in
-      print("Pos changed from \(event.oldVal) to \(event.newVal), external: \(event.external)")
+      print("Pos changed from \(event.oldValue) to \(event.newValue), external: \(event.external)")
     }
     swindler.on { (event: WindowSizeChangedEvent) in
-      print("Size changed from \(event.oldVal) to \(event.newVal), external: \(event.external)")
+      print("Size changed from \(event.oldValue) to \(event.newValue), external: \(event.external)")
     }
     swindler.on { (event: WindowDestroyedEvent) in
       print("window destroyed: \(event.window.title.value)")
     }
     swindler.on { (event: ApplicationMainWindowChangedEvent) in
-      print("new main window: \(event.newVal?.title.value). old: \(event.oldVal?.title.value)")
+      print("new main window: \(event.newValue?.title.value). old: \(event.oldValue?.title.value)")
     }
 
     dispatchAfter(10.0) {

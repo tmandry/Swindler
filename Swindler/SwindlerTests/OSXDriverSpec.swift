@@ -646,8 +646,8 @@ class OSXApplicationDelegateSpec: QuickSpec {
           if let event = notifier.expectEvent(ApplicationMainWindowChangedEvent.self) {
             // expect(event.application).to(equal(app))
             expect(event.external).to(beTrue())
-            expect(event.oldVal).to(beNil())
-            expect(getWindowElement(event.newVal)).to(equal(windowElement))
+            expect(event.oldValue).to(beNil())
+            expect(getWindowElement(event.newValue)).to(equal(windowElement))
           }
         }
 
@@ -738,7 +738,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
           // It should only emit the event for lastingWindowElement.
           expect(notifier.getEventsOfType(ApplicationMainWindowChangedEvent.self)).toEventually(haveCount(1))
           if let event = notifier.getEventOfType(ApplicationMainWindowChangedEvent.self) {
-            expect(getWindowElement(event.newVal)).to(equal(lastingWindowElement))
+            expect(getWindowElement(event.newValue)).to(equal(lastingWindowElement))
           }
         }
       }
@@ -769,7 +769,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
           // It should only emit the event for lastingWindowElement.
           expect(notifier.getEventsOfType(ApplicationMainWindowChangedEvent.self)).toEventually(haveCount(1))
           if let event = notifier.getEventOfType(ApplicationMainWindowChangedEvent.self) {
-            expect(getWindowElement(event.newVal)).to(equal(lastingWindowElement))
+            expect(getWindowElement(event.newValue)).to(equal(lastingWindowElement))
           }
         }
       }

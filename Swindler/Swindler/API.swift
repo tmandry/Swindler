@@ -228,9 +228,9 @@ public protocol PropertyEventType: EventType {
 
   var external: Bool { get }
   /// The old value of the property.
-  var oldVal: PropertyType { get }
+  var oldValue: PropertyType { get }
   /// The new value of the property.
-  var newVal: PropertyType { get }
+  var newValue: PropertyType { get }
   // TODO: requestedVal?
 }
 
@@ -240,32 +240,32 @@ public struct WindowPosChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGPoint
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct WindowSizeChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGSize
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct WindowTitleChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = String
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct WindowMinimizedChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = Bool
   public var external: Bool
   public var window: Window
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public protocol ApplicationEventType: EventType {
@@ -278,14 +278,14 @@ public struct ApplicationFrontmostChangedEvent: ApplicationPropertyEventTypeInte
   public typealias PropertyType = Bool
   public var external: Bool
   public var application: Application
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }
 
 public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Window?
   public var external: Bool
   public var application: Application
-  public var oldVal: PropertyType
-  public var newVal: PropertyType
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
 }

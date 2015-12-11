@@ -135,7 +135,7 @@ class PropertySpec: QuickSpec {
           }
         }
 
-        it("includes the correct oldVal and newVal in the event") {
+        it("includes the correct oldValue and newValue in the event") {
           return property.refresh().then { _ -> () in
             if let event = notifier.events.first {
               expect(event.oldValue as? CGPoint).to(equal(firstPoint))
@@ -295,7 +295,7 @@ class PropertySpec: QuickSpec {
         }
       }
 
-      it("includes the correct oldVal and newVal in the event") {
+      it("includes the correct oldValue and newValue in the event") {
         return property.set(secondPoint).then { _ -> () in
           if let event = notifier.events.first {
             expect(event.oldValue as? CGPoint).to(equal(firstPoint))
