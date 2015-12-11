@@ -169,6 +169,17 @@ class TestNotifier: EventNotifier {
   }
 }
 
+/// Performs the given action on the main thread, synchronously, regardless of the current thread.
+func performOnMainThread(action: () -> ()) {
+  if NSThread.currentThread().isMainThread {
+    action()
+  } else {
+    dispatch_sync(dispatch_get_main_queue()) {
+      action()
+    }
+  }
+}
+
 /// Allows defining adversarial actions when a property is observed.
 class AdversaryObserver: FakeObserver {
   static var onNotification: Notification? = nil
@@ -187,30 +198,69 @@ class AdversaryObserver: FakeObserver {
   }
 
   override func addNotification(
-    notification: AXSwift.Notification, forElement element: TestUIElement) throws {
-      try super.addNotification(notification, forElement: element)
-      if notification == AdversaryObserver.onNotification {
-        // Assume addNotification gets called in the background (easy to fix if not)
-        assert(!NSThread.currentThread().isMainThread)
-        dispatch_sync(dispatch_get_main_queue()) {
-          AdversaryObserver.handler!(self)
+      notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+    try super.addNotification(notification, forElement: element)
+    if notification == AdversaryObserver.onNotification {
+      performOnMainThread { AdversaryObserver.handler!(self) }
+    }
+  }
+}
+
+/// Allows defining adversarial actions when an attribute is read.
+final class AdversaryApplicationElement: TestApplicationElementBase, ApplicationElementType {
+  static var allApps: [AdversaryApplicationElement] = []
+  static func all() -> [AdversaryApplicationElement] { return AdversaryApplicationElement.allApps }
+
+  var onRead: Optional<(AdversaryApplicationElement) -> ()> = nil
+  var watchAttribute: Attribute? = nil
+  var alreadyCalled = false
+
+  /// Defines code that runs on the main thread before returning the value of the attribute.
+  func onFirstAttributeRead(attribute: Attribute, handler: (AdversaryApplicationElement) -> ()) {
+    watchAttribute = attribute
+    onRead = handler
+    alreadyCalled = false
+  }
+
+  override func attribute<T>(attribute: Attribute) throws -> T? {
+    let result: T? = try super.attribute(attribute)
+    if attribute == watchAttribute && !alreadyCalled {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?(self)
+          self.alreadyCalled = true
         }
       }
+    }
+    return result
+  }
+  override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+    let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
+    if let watchAttribute = watchAttribute where attributes.contains(watchAttribute) {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?(self)
+          self.alreadyCalled = true
+        }
+      }
+    }
+    return result
   }
 }
 
 class OSXApplicationDelegateInitSpec: QuickSpec {
   override func spec() {
 
-    var appElement: TestApplicationElement!
     var notifier: TestNotifier!
-
     beforeEach {
       notifier = TestNotifier()
-      appElement = TestApplicationElement()
     }
 
     describe("initialize") {
+      var appElement: TestApplicationElement!
+      beforeEach {
+        appElement = TestApplicationElement()
+      }
 
       context("when the application UIElement is invalid") {
         it("resolves to an error") { () -> Promise<Void> in
@@ -251,14 +301,18 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
     }
 
     describe("AXUIElement notifications") {
+      var appElement: AdversaryApplicationElement!
+      beforeEach {
+        appElement = AdversaryApplicationElement()
+      }
       beforeEach { AdversaryObserver.reset() }
 
-      typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
+      typealias AppDelegate = OSXApplicationDelegate<TestUIElement, AdversaryApplicationElement, AdversaryObserver>
       func initializeApp() -> Promise<AppDelegate> {
         return AppDelegate.initialize(axElement: appElement, notifier: notifier)
       }
 
-      context("when a property value changes right before observing one") {
+      context("when a property value changes right before observing it") {
 
         context("for a regular property") {
           it("is read correctly") { () -> Promise<Void> in
@@ -296,7 +350,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
 
       }
 
-      context("when a property value changes right after observing one") {
+      context("when a property value changes right after observing it") {
         // The difference between a property changing before or after observing is simply whether
         // an event is emitted or not.
 
@@ -327,6 +381,54 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
               windowElement.attrs[.Main]    = true
               appElement.attrs[.MainWindow] = windowElement
               observer.emit(.MainWindowChanged, forElement: windowElement)
+            }
+
+            return initializeApp().then { appDelegate -> () in
+              let app = Swindler.Application(delegate: appDelegate)
+              expect(app.mainWindow.value).toEventuallyNot(beNil())
+            }
+          }
+        }
+
+      }
+
+      context("when a property value changes right after reading it") {
+
+        context("for a regular property") {
+          it("is updated correctly") { () -> Promise<Void> in
+            appElement.attrs[.Frontmost] = false
+
+            var observer: AdversaryObserver?
+            AdversaryObserver.onAddNotification(.ApplicationActivated) { obs in
+              observer = obs
+            }
+            appElement.onFirstAttributeRead(.Frontmost) { _ in
+              appElement.attrs[.Frontmost] = true
+              observer?.emit(.ApplicationActivated, forElement: appElement)
+            }
+
+            return initializeApp().then { appDelegate -> () in
+              let app = Swindler.Application(delegate: appDelegate)
+              expect(app.frontmost.value).toEventually(beTrue())
+            }
+          }
+        }
+
+        context("for an object property") {
+          it("is updated correctly") { () -> Promise<Void> in
+            let windowElement = TestWindowElement(forApp: appElement)
+            appElement.windows.append(windowElement)
+            windowElement.attrs[.Main]    = false
+            appElement.attrs[.MainWindow] = nil
+
+            var observer: AdversaryObserver?
+            AdversaryObserver.onAddNotification(.MainWindowChanged) { obs in
+              observer = obs
+            }
+            appElement.onFirstAttributeRead(.MainWindow) { _ in
+              windowElement.attrs[.Main]    = true
+              appElement.attrs[.MainWindow] = windowElement
+              observer?.emit(.MainWindowChanged, forElement: appElement)
             }
 
             return initializeApp().then { appDelegate -> () in
@@ -620,32 +722,38 @@ class OSXApplicationDelegateSpec: QuickSpec {
 
 /// Allows defining adversarial actions when an attribute is read.
 class AdversaryWindowElement: TestWindowElement {
-  static var onRead: Optional<(AdversaryWindowElement) -> ()> = nil
-  static var watchAttribute: Attribute? = nil
-
-  /// Call this in beforeEach for any tests that use this class.
-  static func reset() {
-    onRead = nil
-    watchAttribute = nil
-  }
+  var onRead: Optional<() -> ()> = nil
+  var watchAttribute: Attribute? = nil
+  var alreadyCalled = false
 
   /// Defines code that runs on the main thread before returning the value of the attribute.
-  static func onReadAttribute(attribute: Attribute, handler: (AdversaryWindowElement) -> ()) {
-    AdversaryWindowElement.watchAttribute = attribute
-    AdversaryWindowElement.onRead = handler
+  func onAttributeFirstRead(attribute: Attribute, handler: () -> ()) {
+    watchAttribute = attribute
+    onRead = handler
+    alreadyCalled = false
   }
 
   override func attribute<T>(attribute: Attribute) throws -> T? {
     let result: T? = try super.attribute(attribute)
-    if attribute == AdversaryWindowElement.watchAttribute {
-      AdversaryWindowElement.onRead?(self)
+    if attribute == watchAttribute {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?()
+          self.alreadyCalled = true
+        }
+      }
     }
     return result
   }
   override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
     let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
-    if let watchAttribute = AdversaryWindowElement.watchAttribute where attributes.contains(watchAttribute) {
-      AdversaryWindowElement.onRead?(self)
+    if let watchAttribute = watchAttribute where attributes.contains(watchAttribute) {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?()
+          self.alreadyCalled = true
+        }
+      }
     }
     return result
   }
@@ -698,7 +806,6 @@ class OSXWindowDelegateSpec: QuickSpec {
 
       describe("AXUIElement notifications") {
         beforeEach { AdversaryObserver.reset() }
-        beforeEach { AdversaryWindowElement.reset() }
 
         // Because observers only have one callback per application, they are owned by the
         // application delegate and window notifications are forwarded on, so to fully test this we
@@ -765,12 +872,13 @@ class OSXWindowDelegateSpec: QuickSpec {
           it("is updated correctly") { () -> Promise<Void> in
             windowElement.attrs[.Minimized] = false
 
-            AdversaryWindowElement.onReadAttribute(.Minimized) { _ in
-              // After the first read, .Minimized will be true.
-              windowElement.attrs[.Minimized] = true
+            var observer: AdversaryObserver?
+            AdversaryObserver.onAddNotification(.WindowMiniaturized) { obs in
+              observer = obs
             }
-            AdversaryObserver.onAddNotification(.WindowMiniaturized) { observer in
-              observer.emit(.WindowMiniaturized, forElement: windowElement)
+            windowElement.onAttributeFirstRead(.Minimized) {
+              windowElement.attrs[.Minimized] = true
+              observer?.emit(.WindowMiniaturized, forElement: windowElement)
             }
 
             return initialize().then { winDelegate -> () in
