@@ -454,21 +454,21 @@ class PropertySpec: QuickSpec {
             expect(notifier.stillValid).to(beFalse())
           }
         }
-        
+
         it("does not update the property value, but still allows reading", failOnError: false) {
           return property.set(secondPoint).always {
             expect(property.value).to(equal(firstPoint))
           }
         }
-        
+
         it("does not emit a ChangedEvent", failOnError: false) {
           return property.set(secondPoint).always {
             expect(notifier.events.count).to(equal(0))
           }
         }
-        
+
       }
     }
-    
+
   }
 }

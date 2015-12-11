@@ -215,7 +215,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
     set {
       // Unwrap the value, if it's an optional.
       guard let value = TypeSpec.toOptionalType(newValue) else {
-        NSLog("A property of type \(Type.self) was set to nil; this has no effect.")
+        NSLog("A property (of type \(Type.self)) was set to nil; this has no effect.")
         return
       }
       set(value)
@@ -263,16 +263,13 @@ private struct PropertyDelegateThunk<TypeSpec: PropertyTypeSpec> {
   init<Impl: PropertyDelegate where Impl.T == Type>(_ impl: Impl) {
     writeValue_ = impl.writeValue
     readValue_ = impl.readValue
-    initialize_ = impl.initialize
   }
 
   let writeValue_: (newValue: Type) throws -> ()
   let readValue_: () throws -> Type?
-  let initialize_: () -> Promise<Type?>
 
   func writeValue(newValue: Type) throws { try writeValue_(newValue: newValue) }
   func readValue() throws -> Type? { return try readValue_() }
-  func initialize() -> Promise<Type?> { return initialize_() }
 }
 
 private struct PropertyNotifierThunk<TypeSpec: PropertyTypeSpec> {
