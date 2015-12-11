@@ -61,7 +61,7 @@ public class Window: Equatable {
   /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
   /// They can also become invalid because they do not have all the required properties, or because
   /// the application that owns them is otherwise not giving a well-behaved response.
-  public var valid: Bool { return delegate.valid }
+  public var isValid: Bool { return delegate.isValid }
 
   /// The position of the top-left corner of the window in screen coordinates.
   public var pos: WriteableProperty<OfType<CGPoint>> { return delegate.pos }
@@ -81,7 +81,7 @@ public func ==(lhs: Window, rhs: Window) -> Bool {
 }
 
 protocol WindowDelegate {
-  var valid: Bool { get }
+  var isValid: Bool { get }
 
   var pos: WriteableProperty<OfType<CGPoint>>! { get }
   var size: WriteableProperty<OfType<CGSize>>! { get }

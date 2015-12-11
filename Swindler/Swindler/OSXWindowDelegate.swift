@@ -13,7 +13,7 @@ class OSXWindowDelegate<
 
   private var initialized: Promise<OSXWindowDelegate>!
 
-  private(set) var valid: Bool = true
+  private(set) var isValid: Bool = true
 
   var pos: WriteableProperty<OfType<CGPoint>>!
   var size: WriteableProperty<OfType<CGSize>>!
@@ -91,7 +91,7 @@ class OSXWindowDelegate<
   func handleEvent(event: AXSwift.Notification, observer: Observer) {
     switch event {
     case .UIElementDestroyed:
-      valid = false
+      isValid = false
     default:
       if let property = watchedAxProperties[event] {
         property.refresh()
@@ -106,7 +106,7 @@ class OSXWindowDelegate<
   }
 
   func notifyInvalid() {
-    valid = false
+    isValid = false
   }
 
   func equalTo(rhs: WindowDelegate) -> Bool {

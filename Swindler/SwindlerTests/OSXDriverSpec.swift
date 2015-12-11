@@ -917,7 +917,7 @@ class OSXWindowDelegateSpec: QuickSpec {
       it("marks the window as valid") { () -> Promise<Void> in
         let windowElement = TestWindowElement(forApp: TestApplicationElement())
         return initializeWithElement(windowElement).then { windowDelegate -> () in
-          expect(windowDelegate.valid).to(beTrue())
+          expect(windowDelegate.isValid).to(beTrue())
         }
       }
 
@@ -1023,7 +1023,7 @@ class OSXWindowDelegateSpec: QuickSpec {
         let windowElement = TestWindowElement(forApp: TestApplicationElement())
         return initializeWithElement(windowElement).then { windowDelegate -> () in
           windowDelegate.handleEvent(.UIElementDestroyed, observer: TestObserver())
-          expect(windowDelegate.valid).toEventually(beFalse())
+          expect(windowDelegate.isValid).toEventually(beFalse())
         }
       }
     }

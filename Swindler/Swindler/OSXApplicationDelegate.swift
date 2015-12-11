@@ -316,7 +316,7 @@ extension OSXApplicationDelegate: WindowFinder {
 protocol OSXDelegateType {
   typealias UIElement: UIElementType
   var axElement: UIElement { get }
-  var valid: Bool { get }
+  var isValid: Bool { get }
 }
 extension OSXWindowDelegate: OSXDelegateType {}
 
@@ -352,7 +352,7 @@ class WindowPropertyAdapter<
     guard let winDelegate = newValue.delegate as? WinDelegate else {
       throw PropertyError.IllegalValue
     }
-    guard winDelegate.valid else {
+    guard winDelegate.isValid else {
       throw PropertyError.IllegalValue
     }
     try delegate.writeValue(winDelegate.axElement)
