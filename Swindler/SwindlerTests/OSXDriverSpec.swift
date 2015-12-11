@@ -907,7 +907,7 @@ class OSXWindowDelegateSpec: QuickSpec {
         windowElement.attrs[.Minimized] = false
 
         return initializeWithElement(windowElement).then { windowDelegate -> () in
-          expect(windowDelegate.pos.value).to(equal(CGPoint(x: 5, y: 5)))
+          expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 5)))
           expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
           expect(windowDelegate.title.value).to(equal("a window title"))
           expect(windowDelegate.isMinimized.value).to(beFalse())
@@ -1089,11 +1089,11 @@ class OSXWindowDelegateSpec: QuickSpec {
         }
       }
 
-      describe("pos") {
+      describe("position") {
         it("updates when the position changes") {
           windowElement.attrs[.Position] = CGPoint(x: 1, y: 1)
           windowDelegate.handleEvent(.Moved, observer: TestObserver())
-          expect(window.pos.value).toEventually(equal(CGPoint(x: 1, y: 1)))
+          expect(window.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
         }
       }
 

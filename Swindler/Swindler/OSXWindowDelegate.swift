@@ -15,7 +15,7 @@ class OSXWindowDelegate<
 
   private(set) var isValid: Bool = true
 
-  var pos: WriteableProperty<OfType<CGPoint>>!
+  var position: WriteableProperty<OfType<CGPoint>>!
   var size: WriteableProperty<OfType<CGSize>>!
   var title: Property<OfType<String>>!
   var isMinimized: WriteableProperty<OfType<Bool>>!
@@ -34,7 +34,7 @@ class OSXWindowDelegate<
     let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
 
     // Initialize all properties.
-    pos = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
+    position = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
       withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: self)
     size = WriteableProperty(AXPropertyDelegate(axElement, .Size, initPromise),
       withEvent: WindowSizeChangedEvent.self, receivingObject: Window.self, notifier: self)
@@ -44,7 +44,7 @@ class OSXWindowDelegate<
       withEvent: WindowMinimizedChangedEvent.self, receivingObject: Window.self, notifier: self)
 
     axProperties = [
-      pos,
+      position,
       size,
       title,
       isMinimized,
@@ -52,7 +52,7 @@ class OSXWindowDelegate<
 
     // Map notifications on this element to the corresponding property.
     watchedAxProperties = [
-      .Moved: pos,
+      .Moved: position,
       .Resized: size,
       .TitleChanged: title,
       .WindowMiniaturized: isMinimized,

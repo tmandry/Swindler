@@ -64,7 +64,7 @@ public class Window: Equatable {
   public var isValid: Bool { return delegate.isValid }
 
   /// The position of the top-left corner of the window in screen coordinates.
-  public var pos: WriteableProperty<OfType<CGPoint>> { return delegate.pos }
+  public var position: WriteableProperty<OfType<CGPoint>> { return delegate.position }
   /// The size of the window in screen coordinates.
   public var size: WriteableProperty<OfType<CGSize>> { return delegate.size }
 
@@ -83,7 +83,7 @@ public func ==(lhs: Window, rhs: Window) -> Bool {
 protocol WindowDelegate {
   var isValid: Bool { get }
 
-  var pos: WriteableProperty<OfType<CGPoint>>! { get }
+  var position: WriteableProperty<OfType<CGPoint>>! { get }
   var size: WriteableProperty<OfType<CGSize>>! { get }
   var title: Property<OfType<String>>! { get }
   var isMinimized: WriteableProperty<OfType<Bool>>! { get }

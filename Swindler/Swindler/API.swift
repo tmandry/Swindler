@@ -91,7 +91,7 @@ public protocol Window: Equatable {
   public var isValid: Bool { get }
 
   /// The position of the top-left corner of the window in screen coordinates.
-  public var pos: WriteableProperty<OfType<CGPoint>> { get }
+  public var position: WriteableProperty<OfType<CGPoint>> { get }
   /// The size of the window in screen coordinates.
   public var size: WriteableProperty<OfType<CGSize>> { get }
 
