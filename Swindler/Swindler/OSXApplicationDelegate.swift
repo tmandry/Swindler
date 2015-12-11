@@ -23,7 +23,7 @@ class OSXApplicationDelegate<
   private var properties: [PropertyType]!
 
   var mainWindow: Property<OfOptionalType<Window>>!
-  var frontmost: WriteableProperty<OfType<Bool>>!
+  var isFrontmost: WriteableProperty<OfType<Bool>>!
 
   var knownWindows: [WindowDelegate] {
     return windows.map({ $0 as WindowDelegate })
@@ -53,12 +53,12 @@ class OSXApplicationDelegate<
       WindowPropertyAdapter(AXPropertyDelegate(axElement, .MainWindow, initProperties),
         windowFinder: self, windowDelegate: OSXWindow.self),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
-    frontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
+    isFrontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
       withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     properties = [
       mainWindow,
-      frontmost
+      isFrontmost
     ]
     let attributes: [Attribute] = [
       .MainWindow,
@@ -213,7 +213,7 @@ class OSXApplicationDelegate<
   }
 
   private func onActivationChanged() {
-    frontmost.refresh() as ()
+    isFrontmost.refresh() as ()
   }
 
   private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) {

@@ -40,14 +40,14 @@ public class Application {
   /// The main window of the application.
   public var mainWindow: Property<OfOptionalType<Window>> { return delegate.mainWindow }
   /// Whether the application is the frontmost application.
-  public var frontmost: WriteableProperty<OfType<Bool>> { return delegate.frontmost }
+  public var isFrontmost: WriteableProperty<OfType<Bool>> { return delegate.isFrontmost }
 }
 
 protocol ApplicationDelegate {
   var knownWindows: [WindowDelegate] { get }
 
   var mainWindow: Property<OfOptionalType<Window>>! { get }
-  var frontmost: WriteableProperty<OfType<Bool>>! { get }
+  var isFrontmost: WriteableProperty<OfType<Bool>>! { get }
 }
 
 /// A window.

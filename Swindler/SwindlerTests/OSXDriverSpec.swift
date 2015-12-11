@@ -362,7 +362,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
 
             return initializeApp().then { appDelegate -> () in
               let app = Swindler.Application(delegate: appDelegate)
-              expect(app.frontmost.value).toEventually(beTrue())
+              expect(app.isFrontmost.value).toEventually(beTrue())
             }
           }
         }
@@ -407,7 +407,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
 
             return initializeApp().then { appDelegate -> () in
               let app = Swindler.Application(delegate: appDelegate)
-              expect(app.frontmost.value).toEventually(beTrue())
+              expect(app.isFrontmost.value).toEventually(beTrue())
             }
           }
         }
@@ -453,7 +453,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
 
             return initializeApp().then { appDelegate -> () in
               let app = Swindler.Application(delegate: appDelegate)
-              expect(app.frontmost.value).toEventually(beTrue())
+              expect(app.isFrontmost.value).toEventually(beTrue())
             }
           }
         }
@@ -776,13 +776,13 @@ class OSXApplicationDelegateSpec: QuickSpec {
 
     }
 
-    describe("frontmost") {
+    describe("isFrontmost") {
 
       context("when an application becomes frontmost") {
         it("updates") {
           appElement.attrs[.Frontmost] = true
           observer.emit(.ApplicationActivated, forElement: appElement)
-          expect(app.frontmost.value).toEventually(beTrue())
+          expect(app.isFrontmost.value).toEventually(beTrue())
         }
       }
 
@@ -791,7 +791,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
           appElement.attrs[.Frontmost] = true
           initializeApp()
           observer.emit(.ApplicationDeactivated, forElement: appElement)
-          expect(app.frontmost.value).toEventually(beTrue())
+          expect(app.isFrontmost.value).toEventually(beTrue())
         }
       }
 
