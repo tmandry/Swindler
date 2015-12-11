@@ -330,7 +330,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
         }
 
         context("for an object property") {
-          it("is read correctly") { () -> Promise<Void> in
+          it("is read correctly") {
             let windowElement = TestWindowElement(forApp: appElement)
             appElement.windows.append(windowElement)
             windowElement.attrs[.Main]    = false
@@ -341,10 +341,14 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
               appElement.attrs[.MainWindow] = windowElement
             }
 
-            return initializeApp().then { appDelegate -> () in
-              let app = Swindler.Application(delegate: appDelegate)
-              expect(app.mainWindow.value).toEventuallyNot(beNil())
-            }
+            // There's a problem with intermittent failures when wrapping an eventually expectation
+            // inside waitUntil, so we have to do this. Currently only affects object properties.
+            var app: Swindler.Application!
+            waitUntil { done in initializeApp().then { appDelegate -> () in
+              app = Swindler.Application(delegate: appDelegate)
+              done()
+            } }
+            expect(app.mainWindow.value).toEventuallyNot(beNil())
           }
         }
 
@@ -371,7 +375,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
         }
 
         context("for an object property") {
-          it("is updated correctly") { () -> Promise<Void> in
+          it("is updated correctly") {
             let windowElement = TestWindowElement(forApp: appElement)
             appElement.windows.append(windowElement)
             windowElement.attrs[.Main]    = false
@@ -383,10 +387,12 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
               observer.emit(.MainWindowChanged, forElement: windowElement)
             }
 
-            return initializeApp().then { appDelegate -> () in
-              let app = Swindler.Application(delegate: appDelegate)
-              expect(app.mainWindow.value).toEventuallyNot(beNil())
-            }
+            var app: Swindler.Application!
+            waitUntil { done in initializeApp().then { appDelegate -> () in
+              app = Swindler.Application(delegate: appDelegate)
+              done()
+            } }
+            expect(app.mainWindow.value).toEventuallyNot(beNil())
           }
         }
 
@@ -415,7 +421,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
         }
 
         context("for an object property") {
-          it("is updated correctly") { () -> Promise<Void> in
+          it("is updated correctly") {
             let windowElement = TestWindowElement(forApp: appElement)
             appElement.windows.append(windowElement)
             windowElement.attrs[.Main]    = false
@@ -431,10 +437,12 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
               observer?.emit(.MainWindowChanged, forElement: appElement)
             }
 
-            return initializeApp().then { appDelegate -> () in
-              let app = Swindler.Application(delegate: appDelegate)
-              expect(app.mainWindow.value).toEventuallyNot(beNil())
-            }
+            var app: Swindler.Application!
+            waitUntil { done in initializeApp().then { appDelegate -> () in
+              app = Swindler.Application(delegate: appDelegate)
+              done()
+            } }
+            expect(app.mainWindow.value).toEventuallyNot(beNil())
           }
         }
 
