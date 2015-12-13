@@ -40,6 +40,12 @@ class OSXStateSpec: QuickSpec {
         // test that it doesn't crash
       }
 
+      it("doesn't leak memory") {
+        TestApplicationElement.allApps = [TestApplicationElement()]
+        weak var state = OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>()
+        expect(state).to(beNil())
+      }
+
     }
 
     context("after initialization") {
@@ -271,11 +277,12 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
         appElement = TestApplicationElement()
       }
 
+      typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>
+
       context("when the application UIElement is invalid") {
         it("resolves to an error") { () -> Promise<Void> in
           appElement.throwInvalid = true
-          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
-            axElement: appElement, notifier: notifier)
+          let promise = AppDelegate.initialize(axElement: appElement, notifier: notifier)
           return expectToFail(promise)
         }
       }
@@ -283,8 +290,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
       context("when the application is missing the Windows attribute") {
         it("resolves to an error") { () -> Promise<Void> in
           appElement.attrs[.Windows] = nil
-          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
-            axElement: appElement, notifier: notifier)
+          let promise = AppDelegate.initialize(axElement: appElement, notifier: notifier)
           return expectToFail(promise)
         }
       }
@@ -292,8 +298,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
       context("when the application is missing a required property attribute") {
         it("resolves to an error") { () -> Promise<Void> in
           appElement.attrs[.Frontmost] = nil
-          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
-            axElement: appElement, notifier: notifier)
+          let promise = AppDelegate.initialize(axElement: appElement, notifier: notifier)
           return expectToFail(promise)
         }
       }
@@ -301,9 +306,36 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
       context("when the application is missing an optional property attribute") {
         it("succeeds") { () -> Promise<Void> in
           appElement.attrs[.MainWindow] = nil
-          let promise = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>.initialize(
-            axElement: appElement, notifier: notifier)
+          let promise = AppDelegate.initialize(axElement: appElement, notifier: notifier)
           return expectToSucceed(promise)
+        }
+      }
+
+      it("doesn't leak memory") {
+        weak var appDelegate: AppDelegate?
+        waitUntil { done in
+          AppDelegate.initialize(axElement: appElement, notifier: notifier).then { delegate -> () in
+            appDelegate = delegate
+            done()
+          }
+        }
+        expect(appDelegate).to(beNil())
+      }
+
+      context("when there is a window") {
+        it("doesn't leak memory") {
+          let windowElement = TestWindowElement(forApp: appElement)
+          appElement.windows.append(windowElement)
+
+          weak var appDelegate: AppDelegate?
+          waitUntil { done in
+            AppDelegate.initialize(axElement: appElement, notifier: notifier).then { delegate -> () in
+              expect(delegate.knownWindows).to(haveCount(1))
+              appDelegate = delegate
+              done()
+            }
+          }
+          expect(appDelegate).to(beNil())
         }
       }
 

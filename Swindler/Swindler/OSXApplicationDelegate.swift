@@ -18,7 +18,7 @@ class OSXApplicationDelegate<
   // UIElement.
   private var newWindowHandler = NewWindowHandler<UIElement>()
 
-  private var initialized: Promise<OSXApplicationDelegate>!
+  private var initialized: Promise<Void>!
 
   private var properties: [PropertyType]!
 
@@ -68,12 +68,15 @@ class OSXApplicationDelegate<
     // Fetch attribute values, after subscribing to notifications so there are no gaps.
     fetchAttributes(attributes, forElement: axElement, after: appWatched, fulfill: fulfillAttrs, reject: rejectAttrs)
 
-    initialized = initializeProperties(properties, ofElement: axElement).then { return self }
+    initialized = initializeProperties(properties, ofElement: axElement).asVoid()
   }
 
   private func watchApplicationElement() -> Promise<Void> {
     do {
-      observer = try Observer(processID: axElement.pid(), callback: handleEvent)
+      weak var weakSelf = self
+      observer = try Observer(processID: axElement.pid(), callback: { o, e, n in
+        weakSelf?.handleEvent(observer: o, element: e, notification: n)
+      })
     } catch {
       return Promise(error: error)
     }
@@ -118,7 +121,8 @@ class OSXApplicationDelegate<
 
   // Initializes the object and returns it as a Promise that resolves once it's ready.
   static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
-    return OSXApplicationDelegate(axElement: axElement, notifier: notifier).initialized
+    let appDelegate = OSXApplicationDelegate(axElement: axElement, notifier: notifier)
+    return appDelegate.initialized.then { return appDelegate }
   }
 
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
@@ -328,7 +332,7 @@ class WindowPropertyAdapter<
   typealias T = Window
 
   let delegate: Delegate
-  let windowFinder: WinFinder
+  weak var windowFinder: WinFinder?
 
   init(_ delegate: Delegate, windowFinder: WinFinder, windowDelegate: WinDelegate.Type) {
     self.delegate = delegate
@@ -371,10 +375,10 @@ class WindowPropertyAdapter<
     // Avoid using locks by forcing calls out to `windowFinder` to happen on the main thead.
     var window: Window? = nil
     if NSThread.currentThread().isMainThread {
-      window = windowFinder.findWindowByElement(element)
+      window = windowFinder?.findWindowByElement(element)
     } else {
       dispatch_sync(dispatch_get_main_queue()) {
-        window = self.windowFinder.findWindowByElement(element)
+        window = self.windowFinder?.findWindowByElement(element)
       }
     }
     return window
