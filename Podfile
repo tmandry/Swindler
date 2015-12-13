@@ -11,6 +11,9 @@ xcodeproj 'Swindler/Swindler'
 target 'SwindlerTests' do
   testing_pods
 end
+target 'SwindlerTestsProfile' do
+  testing_pods
+end
 
 target 'Swindler' do
   pod 'PromiseKit/CorePromise', '~> 3.0.0'
