@@ -47,17 +47,22 @@ class PropertySpec: QuickSpec {
   override func spec() {
 
     // Set up a position property on a test AX window.
-    var property: WriteableProperty<OfType<CGPoint>>!
     var windowElement: TestWindowElement!
     var notifier: TestWindowPropertyNotifier!
-    func setUpWithAttributes(attrs: [AXSwift.Attribute: Any]) {
+    @warn_unused_result
+    func setUpWithAttributes(attrs: [AXSwift.Attribute: Any]) -> WriteableProperty<OfType<CGPoint>> {
       windowElement = TestWindowElement(forApp: TestApplicationElement())
       windowElement.attrs = attrs
       let initPromise = Promise<[AXSwift.Attribute: Any]>(attrs)
       notifier = TestWindowPropertyNotifier()
       let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
-      property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
+      return WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
     }
+
+    let firstPoint  = CGPoint(x: 5, y: 5)
+    let secondPoint = CGPoint(x: 100, y: 100)
+
+    var property: WriteableProperty<OfType<CGPoint>>!
     func finishPropertyInit() {
       waitUntil { done in
         property.initialized.then {
@@ -66,25 +71,35 @@ class PropertySpec: QuickSpec {
       }
     }
 
-    let firstPoint  = CGPoint(x: 5, y: 5)
-    let secondPoint = CGPoint(x: 100, y: 100)
-
     beforeEach {
-      setUpWithAttributes([.Position: firstPoint])
+      property = setUpWithAttributes([.Position: firstPoint])
       finishPropertyInit()
     }
 
     describe("initialization") {
+
+      it("doesn't leak") {
+        weak var property = setUpWithAttributes([.Position: firstPoint])
+        waitUntil { done in
+          if let prop = property {
+            prop.initialized.then { done() }
+          } else {
+            done()
+          }
+        }
+        expect(property).to(beNil())
+      }
+
       context("when a non-optional attribute is missing") {
 
         it("reports an error") { () -> Promise<Void> in
-          setUpWithAttributes([:])
+          property = setUpWithAttributes([:])
           let expectedError = PropertyError.InvalidObject(cause: PropertyError.MissingValue)
           return expectToFail(property.initialized, with: expectedError)
         }
 
         it("marks the object as invalid", failOnError: false) { () -> Promise<Void> in
-          setUpWithAttributes([:])
+          property = setUpWithAttributes([:])
           return property.initialized.always {
             expect(notifier.stillValid).to(beFalse())
           }
