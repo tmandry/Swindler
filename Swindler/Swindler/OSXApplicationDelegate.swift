@@ -9,7 +9,7 @@ class OSXApplicationDelegate<
   typealias Object = Application
   typealias OSXWindow = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
 
-  private let notifier: EventNotifier
+  private weak var notifier: EventNotifier?
   private let axElement: UIElement
   internal var observer: Observer!  // internal for testing only
   private var windows: [OSXWindow] = []
@@ -144,7 +144,7 @@ class OSXApplicationDelegate<
   private func onWindowCreated(windowElement: UIElement) {
     OSXWindow.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
       self.windows.append(window)
-      self.notifier.notify(WindowCreatedEvent(external: true, window: Window(delegate: window)))
+      self.notifier?.notify(WindowCreatedEvent(external: true, window: Window(delegate: window)))
       self.newWindowHandler.windowCreated(windowElement)
     }.error { error in
       print("Error: Could not watch [\(windowElement)]: \(error)")
@@ -227,7 +227,7 @@ class OSXApplicationDelegate<
       if .UIElementDestroyed == notification {
         // Remove window.
         windows = windows.filter({ !$0.equalTo(window) })
-        notifier.notify(WindowDestroyedEvent(external: true, window: Window(delegate: window)))
+        notifier?.notify(WindowDestroyedEvent(external: true, window: Window(delegate: window)))
       }
     }
 
@@ -247,7 +247,7 @@ class OSXApplicationDelegate<
   }
 
   func notify<Event: PropertyEventTypeInternal where Event.Object == Application>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier.notify(Event(external: external, object: Application(delegate: self), oldValue: oldValue, newValue: newValue))
+    notifier?.notify(Event(external: external, object: Application(delegate: self), oldValue: oldValue, newValue: newValue))
   }
 
   func notifyInvalid() {

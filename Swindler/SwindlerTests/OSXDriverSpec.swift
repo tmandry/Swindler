@@ -41,9 +41,22 @@ class OSXStateSpec: QuickSpec {
       }
 
       it("doesn't leak memory") {
-        TestApplicationElement.allApps = [TestApplicationElement()]
         weak var state = OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>()
-        expect(state).to(beNil())
+        expect(state).toEventually(beNil())
+      }
+
+      context("when there is an application") {
+        it("doesn't leak memory") {
+          TestApplicationElement.allApps = [TestApplicationElement()]
+          weak var state = OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>()
+
+          // For some reason when `state` is captured in an autoclosure, it prevents the object from
+          // being freed until the closure is freed. This explicit closure avoids that issue.
+          func isNil() -> Bool {
+            return state == nil
+          }
+          expect(isNil()).toEventually(beTrue())
+        }
       }
 
     }
@@ -311,7 +324,7 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
         }
       }
 
-      it("doesn't leak memory") {
+      it("doesn't leak") {
         weak var appDelegate: AppDelegate?
         waitUntil { done in
           AppDelegate.initialize(axElement: appElement, notifier: notifier).then { delegate -> () in
@@ -320,6 +333,21 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
           }
         }
         expect(appDelegate).to(beNil())
+      }
+
+      it("doesn't leak the notifier") {
+        weak var notifier: TestNotifier?
+        var appDelegate: AppDelegate?
+        waitUntil { done in
+          let n = TestNotifier()
+          notifier = n
+          AppDelegate.initialize(axElement: appElement, notifier: n).then { delegate -> () in
+            appDelegate = delegate
+            done()
+          }
+        }
+        expect(appDelegate).toNot(beNil())
+        expect(notifier).to(beNil())
       }
 
       context("when there is a window") {

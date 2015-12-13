@@ -8,10 +8,11 @@ class OSXWindowDelegate<
 >: WindowDelegate, PropertyNotifier {
   typealias State = OSXStateDelegate<UIElement, ApplicationElement, Observer>
   typealias Object = Window
-  let notifier: EventNotifier
-  let axElement: UIElement
 
+  private weak var notifier: EventNotifier?
   private var initialized: Promise<Void>!
+
+  let axElement: UIElement
 
   private(set) var isValid: Bool = true
 
@@ -24,7 +25,7 @@ class OSXWindowDelegate<
   private var axProperties: [PropertyType]!
   private var watchedAxProperties: [AXSwift.Notification: PropertyType]!
 
-  private init(notifier: EventNotifier, axElement: UIElement, observer: Observer) throws {
+  private init(notifier: EventNotifier?, axElement: UIElement, observer: Observer) throws {
     // TODO: reject invalid roles (Chrome ghost windows)
 
     self.notifier = notifier
@@ -81,7 +82,7 @@ class OSXWindowDelegate<
   }
 
   // Initializes the window and returns it as a Promise once it's ready.
-  static func initialize(notifier notifier: EventNotifier, axElement: UIElement, observer: Observer) -> Promise<OSXWindowDelegate> {
+  static func initialize(notifier notifier: EventNotifier?, axElement: UIElement, observer: Observer) -> Promise<OSXWindowDelegate> {
     return firstly {  // capture thrown errors in promise
       let window = try OSXWindowDelegate(notifier: notifier, axElement: axElement, observer: observer)
       return window.initialized.then { return window }
@@ -102,7 +103,7 @@ class OSXWindowDelegate<
   }
 
   func notify<Event: PropertyEventTypeInternal where Event.Object == Window>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier.notify(Event(external: external, object: Window(delegate: self), oldValue: oldValue, newValue: newValue))
+    notifier?.notify(Event(external: external, object: Window(delegate: self), oldValue: oldValue, newValue: newValue))
   }
 
   func notifyInvalid() {
