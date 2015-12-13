@@ -14,11 +14,11 @@ class OSXStateDelegate<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: StateDelegate, EventNotifier {
-  typealias Window = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
-  typealias Application = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
+  typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
+  typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
   private typealias EventHandler = (EventType) -> ()
 
-  private var applications: [Application] = []
+  private var applications: [AppDelegate] = []
   private var eventHandlers: [String: [EventHandler]] = [:]
 
   var runningApplications: [ApplicationDelegate] { return applications.map({ $0 as ApplicationDelegate }) }
@@ -30,7 +30,7 @@ class OSXStateDelegate<
   init() {
     print("Initializing Swindler")
     for appElement in ApplicationElement.all() {
-      Application.initialize(axElement: appElement, notifier: self).then { application in
+      AppDelegate.initialize(axElement: appElement, notifier: self).then { application in
         self.applications.append(application)
       }.error { error in
         let runningApplication = try? NSRunningApplication(processIdentifier: appElement.pid())

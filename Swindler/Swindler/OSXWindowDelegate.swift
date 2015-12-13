@@ -6,7 +6,6 @@ class OSXWindowDelegate<
   UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
   where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: WindowDelegate, PropertyNotifier {
-  typealias State = OSXStateDelegate<UIElement, ApplicationElement, Observer>
   typealias Object = Window
 
   private weak var notifier: EventNotifier?

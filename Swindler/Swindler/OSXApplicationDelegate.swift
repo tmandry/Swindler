@@ -7,12 +7,12 @@ class OSXApplicationDelegate<
   where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: ApplicationDelegate, PropertyNotifier {
   typealias Object = Application
-  typealias OSXWindow = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
+  typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
 
   private weak var notifier: EventNotifier?
   private let axElement: UIElement
   internal var observer: Observer!  // internal for testing only
-  private var windows: [OSXWindow] = []
+  private var windows: [WinDelegate] = []
 
   // Used internally for deferring code until an OSXWindowDelegate has been initialized for a given
   // UIElement.
@@ -51,7 +51,7 @@ class OSXApplicationDelegate<
     // Configure properties.
     mainWindow = Property<OfOptionalType<Window>>(
       WindowPropertyAdapter(AXPropertyDelegate(axElement, .MainWindow, initProperties),
-        windowFinder: self, windowDelegate: OSXWindow.self),
+        windowFinder: self, windowDelegate: WinDelegate.self),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
     isFrontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
       withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
@@ -93,14 +93,14 @@ class OSXApplicationDelegate<
     return promise.thenInBackground { () -> [UIElement]? in
       // Fetch the list of window elements.
       return try self.axElement.arrayAttribute(.Windows)
-    }.then { maybeWindowElements -> Promise<[OSXWindow]> in
+    }.then { maybeWindowElements -> Promise<[WinDelegate]> in
       guard let windowElements = maybeWindowElements else {
         throw OSXDriverError.MissingAttribute(attribute: .Windows, onElement: self.axElement)
       }
 
       // Initialize OSXWindowDelegates from the window elements.
       let windowPromises = windowElements.map({ windowElement in
-        OSXWindow.initialize(notifier: self.notifier, axElement: windowElement, observer: self.observer)
+        WinDelegate.initialize(notifier: self.notifier, axElement: windowElement, observer: self.observer)
       })
 
       return successes(windowPromises, onError: { index, error in
@@ -142,7 +142,7 @@ class OSXApplicationDelegate<
   }
 
   private func onWindowCreated(windowElement: UIElement) {
-    OSXWindow.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
+    WinDelegate.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
       self.windows.append(window)
       self.notifier?.notify(WindowCreatedEvent(external: true, window: Window(delegate: window)))
       self.newWindowHandler.windowCreated(windowElement)
@@ -221,7 +221,7 @@ class OSXApplicationDelegate<
   }
 
   private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) {
-    func handleEvent(window: OSXWindow) {
+    func handleEvent(window: WinDelegate) {
       window.handleEvent(notification, observer: observer)
 
       if .UIElementDestroyed == notification {
@@ -255,7 +255,7 @@ class OSXApplicationDelegate<
     // TODO
   }
 
-  private func findWindowDelegateByElement(axElement: UIElement) -> OSXWindow? {
+  private func findWindowDelegateByElement(axElement: UIElement) -> WinDelegate? {
     return windows.filter({ $0.axElement == axElement }).first
   }
 }
