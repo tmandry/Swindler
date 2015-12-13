@@ -279,15 +279,17 @@ private struct PropertyNotifierThunk<TypeSpec: PropertyTypeSpec> {
   let notify: Optional<(external: Bool, oldValue: PropertyType, newValue: PropertyType) -> ()>
   let notifyInvalid: () -> ()
 
-  init<Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Event.PropertyType == PropertyType, Notifier.Object == Object, Event.Object == Object>(_ wrappedNotifier: Notifier, withEvent: Event.Type, receivingObject: Object.Type) {
-    self.notifyInvalid = { wrappedNotifier.notifyInvalid() }
+  init<Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Event.PropertyType == PropertyType, Notifier.Object == Object, Event.Object == Object>(_ wrapped: Notifier, withEvent: Event.Type, receivingObject: Object.Type) {
+    weak var wrappedNotifier = wrapped
+    self.notifyInvalid = { wrappedNotifier?.notifyInvalid() }
     self.notify = { (external: Bool, oldValue: PropertyType, newValue: PropertyType) in
-      wrappedNotifier.notify(Event.self, external: external, oldValue: oldValue, newValue: newValue)
+      wrappedNotifier?.notify(Event.self, external: external, oldValue: oldValue, newValue: newValue)
     }
   }
 
-  init<Notifier: PropertyNotifier>(_ wrappedNotifier: Notifier) {
-    self.notifyInvalid = { wrappedNotifier.notifyInvalid() }
+  init<Notifier: PropertyNotifier>(_ wrapped: Notifier) {
+    weak var wrappedNotifier = wrapped
+    self.notifyInvalid = { wrappedNotifier?.notifyInvalid() }
     self.notify = nil
   }
 }

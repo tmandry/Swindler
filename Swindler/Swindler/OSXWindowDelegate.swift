@@ -11,7 +11,7 @@ class OSXWindowDelegate<
   let notifier: EventNotifier
   let axElement: UIElement
 
-  private var initialized: Promise<OSXWindowDelegate>!
+  private var initialized: Promise<Void>!
 
   private(set) var isValid: Bool = true
 
@@ -69,7 +69,7 @@ class OSXWindowDelegate<
     let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
     fetchAttributes(attributes, forElement: axElement, after: watched, fulfill: fulfill, reject: reject)
 
-    initialized = initializeProperties(axProperties, ofElement: axElement).then { return self }
+    initialized = initializeProperties(axProperties, ofElement: axElement).asVoid()
   }
 
   func watchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) -> Promise<Void> {
@@ -84,7 +84,7 @@ class OSXWindowDelegate<
   static func initialize(notifier notifier: EventNotifier, axElement: UIElement, observer: Observer) -> Promise<OSXWindowDelegate> {
     return firstly {  // capture thrown errors in promise
       let window = try OSXWindowDelegate(notifier: notifier, axElement: axElement, observer: observer)
-      return window.initialized
+      return window.initialized.then { return window }
     }
   }
 

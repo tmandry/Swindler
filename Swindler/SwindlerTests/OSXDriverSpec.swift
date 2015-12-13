@@ -897,6 +897,17 @@ class OSXWindowDelegateSpec: QuickSpec {
 
     beforeEach { TestApplicationElement.allApps = [] }
 
+    it("doesn't leak memory") {
+      weak var windowDelegate: WinDelegate?
+      waitUntil { done in
+        initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { delegate -> () in
+          windowDelegate = delegate
+          done()
+        }
+      }
+      expect(windowDelegate).to(beNil())
+    }
+
     describe("initialize") {
 
       it("initializes window properties") { () -> Promise<Void> in
