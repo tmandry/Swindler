@@ -83,7 +83,6 @@ public protocol Window: Equatable {
   /// The application the window belongs to.
   public var application: Application { get }
 
-  // TODO: name
   /// Whether or not the window referred to by this type remains valid. Windows usually become
   /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
   /// They can also become invalid because they do not have all the required properties, or because
