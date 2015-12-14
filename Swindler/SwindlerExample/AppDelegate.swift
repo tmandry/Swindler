@@ -38,17 +38,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       print("new main window: \(event.newValue?.title.value). old: \(event.oldValue?.title.value)")
     }
 
-    dispatchAfter(10.0) {
-      for window in self.swindler.knownWindows {
-        let title = window.title.value
-        print("resizing \(title)")
-        window.size.set(CGSize(width: 200, height: 200)).then { newValue in
-          print("done with \(title), valid: \(window.isValid), newValue: \(newValue)")
-        }.error { error in
-          print("failed to resize \(title), valid: \(window.isValid), error: \(error)")
-        }
-      }
-    }
+//    dispatchAfter(10.0) {
+//      for window in self.swindler.knownWindows {
+//        let title = window.title.value
+//        print("resizing \(title)")
+//        window.size.set(CGSize(width: 200, height: 200)).then { newValue in
+//          print("done with \(title), valid: \(window.isValid), newValue: \(newValue)")
+//        }.error { error in
+//          print("failed to resize \(title), valid: \(window.isValid), error: \(error)")
+//        }
+//      }
+//    }
   }
 
   func applicationWillTerminate(aNotification: NSNotification) {
