@@ -33,8 +33,10 @@ class OSXStateDelegate<
       AppDelegate.initialize(axElement: appElement, notifier: self).then { application in
         self.applications.append(application)
       }.error { error in
-        let runningApplication = try? NSRunningApplication(processIdentifier: appElement.pid())
-        log.notice("Could not watch application \(runningApplication): \(error)")
+        let pid = try? appElement.pid()
+        let bundleID = pid.flatMap{NSRunningApplication(processIdentifier: $0)}.flatMap{$0.bundleIdentifier}
+        let pidString = (pid == nil) ? "??" : String(pid!)
+        log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): \(error)")
       }
     }
     log.debug("Done initializing")
