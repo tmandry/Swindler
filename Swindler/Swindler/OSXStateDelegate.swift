@@ -28,16 +28,16 @@ class OSXStateDelegate<
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
 
   init() {
-    print("Initializing Swindler")
+    log.debug("Initializing Swindler")
     for appElement in ApplicationElement.all() {
       AppDelegate.initialize(axElement: appElement, notifier: self).then { application in
         self.applications.append(application)
       }.error { error in
         let runningApplication = try? NSRunningApplication(processIdentifier: appElement.pid())
-        print("Could not watch application \(runningApplication): \(error)")
+        log.notice("Could not watch application \(runningApplication): \(error)")
       }
     }
-    print("Done initializing")
+    log.debug("Done initializing")
   }
 
   func on<Event: EventType>(handler: (Event) -> ()) {

@@ -107,7 +107,7 @@ class OSXApplicationDelegate<
         // Log any errors we encounter, but don't fail.
         let windowElement = windowElements[index]
         let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
-        print("Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)")
+        log.debug("Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)")
       })
     }.then { windowDelegates -> () in
       self.windows = windowDelegates
@@ -147,7 +147,7 @@ class OSXApplicationDelegate<
       self.notifier?.notify(WindowCreatedEvent(external: true, window: Window(delegate: window)))
       self.newWindowHandler.windowCreated(windowElement)
     }.error { error in
-      print("Error: Could not watch [\(windowElement)]: \(error)")
+      log.debug("Could not watch [\(windowElement)]: \(error)")
     }
   }
 
@@ -192,8 +192,8 @@ class OSXApplicationDelegate<
         // TODO: Retry on timeout
         // Just refresh and hope for the best. Leave the handler in case the element does show up again.
         self.mainWindow.refresh() as ()
-        print("Warning: Received MainWindowChanged on unknown element \(element), then \(error) when",
-              "trying to read its role")
+        log.warn("Received MainWindowChanged on unknown element \(element), then \(error) when " +
+                 "trying to read its role")
       }
     }
 
@@ -234,13 +234,13 @@ class OSXApplicationDelegate<
     if let window = findWindowDelegateByElement(windowElement) {
       handleEvent(window)
     } else {
-      print("debug: Notification \(notification) on unknown element \(windowElement), deferring")
+      log.debug("Notification \(notification) on unknown element \(windowElement), deferring")
       newWindowHandler.performAfterWindowCreatedForElement(windowElement) {
         if let window = self.findWindowDelegateByElement(windowElement) {
           handleEvent(window)
         } else {
           // Window was already destroyed.
-          print("debug: Deferred notification \(notification) on window element \(windowElement) never reached delegate")
+          log.debug("Deferred notification \(notification) on window element \(windowElement) never reached delegate")
         }
       }
     }
@@ -251,7 +251,7 @@ class OSXApplicationDelegate<
   }
 
   func notifyInvalid() {
-    print("Application invalidated: \(self)")
+    log.debug("Application invalidated: \(self)")
     // TODO
   }
 
@@ -345,8 +345,8 @@ class WindowPropertyAdapter<
     }
     let window = findWindowByElement(element)
     if window == nil {
-      // This can happen sometimes, but worth logging at a debug level.
-      print("while updating property value, could not find window matching element: \(element)")
+      // This can happen if, for instance, the window was destroyed since the refresh was requested.
+      log.debug("While updating property value, could not find window matching element: \(element)")
     }
     return window
   }

@@ -215,7 +215,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
     set {
       // Unwrap the value, if it's an optional.
       guard let value = TypeSpec.toOptionalType(newValue) else {
-        NSLog("A property (of type \(Type.self)) was set to nil; this has no effect.")
+        log.warn("A property (of type \(Type.self)) was set to nil; this has no effect.")
         return
       }
       set(value)
@@ -236,9 +236,9 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
         let oldValue = self.updateBackingStore(actual)
         return (oldValue, actual)
       } catch PropertyError.Timeout(let time) {
-        NSLog("A readback timed out (in \(time) seconds) after successfully writing a property (of " +
-              "type \(Type.self)). This can result in an inconsistent property state in Swindler " +
-              "where ChangedEvents are marked as external that are actually internal.")
+        log.warn("A readback timed out (in \(time) seconds) after successfully writing a property (of " +
+                 "type \(Type.self)). This can result in an inconsistent property state in Swindler " +
+                 "where ChangedEvents are marked as external that are actually internal.")
         throw PropertyError.Timeout(time: time)
       }
     }.then { (oldValue: Type, actual: Type) -> Type in

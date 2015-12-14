@@ -96,7 +96,7 @@ class OSXWindowDelegate<
       if let property = watchedAxProperties[event] {
         property.refresh()
       } else {
-        print("Unknown event on \(self): \(event)")
+        log.debug("Unknown event on \(self): \(event)")
       }
     }
   }

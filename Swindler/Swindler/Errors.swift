@@ -17,14 +17,14 @@ func unwrapWhenErrors<T>(error: ErrorType) throws -> Promise<T> {
 
 // Handle unexpected errors with detailed logging, and abort when in debug mode.
 func unexpectedError(error: String, file: String = __FILE__, line: Int = __LINE__) {
-  print("unexpected error: \(error) at \(file):\(line)")
+  log.error("unexpected error: \(error) at \(file):\(line)")
   assertionFailure()
 }
 
 func unexpectedError<UIElement: UIElementType>(
   error: String, onElement element: UIElement, file: String = __FILE__, line: Int = __LINE__) {
     let application = try? NSRunningApplication(processIdentifier: element.pid())
-    print("unexpected error: \(error) on element: \(element) of application: \(application) at \(file):\(line)")
+    log.error("unexpected error: \(error) on element: \(element) of application: \(application) at \(file):\(line)")
     assertionFailure()
 }
 
