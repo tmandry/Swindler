@@ -1,0 +1,5 @@
+module ASLLog {
+  header "/usr/include/asl.h"
+  header "ASLLog.h"
+  export *
+}

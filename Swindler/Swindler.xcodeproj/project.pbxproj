@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */; };
+		2F3961B81C1E76CA000C28AE /* ASLLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F3961B71C1E76CA000C28AE /* ASLLog.h */; };
 		2F55343D1C0AC86500B87C42 /* Successes+PromiseKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */; };
 		2F7F00FC1C1152F600C97949 /* OSXApplicationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */; };
 		2F7F00FE1C1152FF00C97949 /* OSXWindowDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */; };
@@ -33,6 +34,8 @@
 		2FEEA2CC1C1E0BF400CD515E /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */; };
 		2FEEA2CD1C1E0BF400CD515E /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */; };
 		2FEEA2D11C1E1AC000CD515E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FEEA2D01C1E1AC000CD515E /* main.swift */; };
+		2FEEA2E01C1E6E0800CD515E /* ASLLog in Resources */ = {isa = PBXBuildFile; fileRef = 2FEEA2DF1C1E6E0800CD515E /* ASLLog */; };
+		2FEEA2E31C1E6E9200CD515E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FEEA2E21C1E6E9200CD515E /* Log.swift */; };
 		76726C939037D76F6C084B6D /* Pods_Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F13BD50BDE9B564868B4B295 /* Pods_Swindler.framework */; };
 		83E91AD8E20936CBBF5D1146 /* Pods_SwindlerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91C56A787A4B2F4B5CD73FE8 /* Pods_SwindlerTests.framework */; };
 		D296BFE9E52E7882F563ABCE /* Pods_SwindlerTestsProfile.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D7F726CFEE5E5CFE20585592 /* Pods_SwindlerTestsProfile.framework */; };
@@ -57,6 +60,8 @@
 
 /* Begin PBXFileReference section */
 		2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
+		2F3961B71C1E76CA000C28AE /* ASLLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ASLLog.h; path = ASLLog/ASLLog.h; sourceTree = "<group>"; };
+		2F3961B91C1E76CD000C28AE /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; name = module.modulemap; path = ASLLog/module.modulemap; sourceTree = "<group>"; };
 		2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Successes+PromiseKit.swift"; sourceTree = "<group>"; };
 		2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXApplicationDelegate.swift; sourceTree = "<group>"; };
 		2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXWindowDelegate.swift; sourceTree = "<group>"; };
@@ -86,6 +91,8 @@
 		2FEEA2C01C1E096E00CD515E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2FEEA2C41C1E09A300CD515E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		2FEEA2D01C1E1AC000CD515E /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		2FEEA2DF1C1E6E0800CD515E /* ASLLog */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ASLLog; path = /Users/tyler/code/Swindler/Swindler/Swindler/ASLLog; sourceTree = "<absolute>"; };
+		2FEEA2E21C1E6E9200CD515E /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		46A97C406A93369DE19A575B /* Pods-SwindlerTestsProfiler.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTestsProfiler.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTestsProfiler/Pods-SwindlerTestsProfiler.debug.xcconfig"; sourceTree = "<group>"; };
 		489FD317ABE214AB073954E5 /* Pods-SwindlerTestsProfile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTestsProfile.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTestsProfile/Pods-SwindlerTestsProfile.debug.xcconfig"; sourceTree = "<group>"; };
 		6A29792523ECDFFDDBD156D2 /* Pods-SwindlerTestsProfiler.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTestsProfiler.release.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTestsProfiler/Pods-SwindlerTestsProfiler.release.xcconfig"; sourceTree = "<group>"; };
@@ -154,6 +161,15 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		2F3961B61C1E76BD000C28AE /* ASLLog */ = {
+			isa = PBXGroup;
+			children = (
+				2F3961B71C1E76CA000C28AE /* ASLLog.h */,
+				2F3961B91C1E76CD000C28AE /* module.modulemap */,
+			);
+			name = ASLLog;
+			sourceTree = "<group>";
+		};
 		2F86CEBC1BD60117007E8C29 = {
 			isa = PBXGroup;
 			children = (
@@ -193,6 +209,8 @@
 				2F86CECB1BD60117007E8C29 /* Info.plist */,
 				2F9E31A81BF050AF00EAD248 /* Property.swift */,
 				2FEEA29A1C1AB70E00CD515E /* API.swift */,
+				2FEEA2E21C1E6E9200CD515E /* Log.swift */,
+				2F3961B61C1E76BD000C28AE /* ASLLog */,
 			);
 			path = Swindler;
 			sourceTree = "<group>";
@@ -250,6 +268,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F3961B81C1E76CA000C28AE /* ASLLog.h in Headers */,
 				2F86CECA1BD60117007E8C29 /* Swindler.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -386,6 +405,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2FEEA2E01C1E6E0800CD515E /* ASLLog in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -543,6 +563,7 @@
 			files = (
 				2F7F01001C1155DC00C97949 /* AXPropertyDelegate.swift in Sources */,
 				2F7F00FE1C1152FF00C97949 /* OSXWindowDelegate.swift in Sources */,
+				2FEEA2E31C1E6E9200CD515E /* Log.swift in Sources */,
 				2F7F01041C11578800C97949 /* AXSwiftProtocols.swift in Sources */,
 				2F9E31A91BF050AF00EAD248 /* Property.swift in Sources */,
 				2F55343D1C0AC86500B87C42 /* Successes+PromiseKit.swift in Sources */,
@@ -703,6 +724,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.Swindler;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Swindler";
 			};
 			name = Debug;
 		};
@@ -722,6 +744,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.Swindler;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Swindler";
 			};
 			name = Release;
 		};
@@ -786,6 +809,7 @@
 				INFOPLIST_FILE = SwindlerTestsProfile/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks $(DEVELOPER_DIR)/Platforms/MacOSX.platform/Developer/Library/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MODULEMAP_PRIVATE_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.SwindlerTestsProfile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -804,6 +828,7 @@
 				INFOPLIST_FILE = SwindlerTestsProfile/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks $(DEVELOPER_DIR)/Platforms/MacOSX.platform/Developer/Library/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MODULEMAP_PRIVATE_FILE = "";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.SwindlerTestsProfile;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
