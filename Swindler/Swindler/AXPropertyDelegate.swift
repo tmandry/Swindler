@@ -16,7 +16,9 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
 
   func readValue() throws -> T? {
     do {
-      return try axElement.attribute(attribute)
+      return try traceRequest(axElement, "attribute", attribute) {
+        try axElement.attribute(attribute)
+      }
     } catch AXSwift.Error.CannotComplete {
       // If messaging timeout unspecified, we'll pass -1.
       let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
@@ -31,7 +33,9 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
 
   func writeValue(newValue: T) throws {
     do {
-      try axElement.setAttribute(attribute, value: newValue)
+      return try traceRequest(axElement, "setAttribute", attribute, newValue) {
+        try axElement.setAttribute(attribute, value: newValue)
+      }
     } catch AXSwift.Error.IllegalArgument {
       throw PropertyError.IllegalValue
     } catch AXSwift.Error.CannotComplete {
@@ -87,9 +91,11 @@ extension Property: PropertyType {
 
 /// Asynchronously fetches all the element attributes.
 func fetchAttributes<UIElement: UIElementType>(attributeNames: [Attribute], forElement axElement: UIElement, after: Promise<Void>, fulfill: ([Attribute: Any]) -> (), reject: (ErrorType) -> ()) {
+  // Issue a request in the background.
   after.thenInBackground { () -> () in
-    // Issue a request in the background.
-    let attributes = try axElement.getMultipleAttributes(attributeNames)
+    let attributes = try traceRequest(axElement, "getMultipleAttributes", attributeNames) {
+      try axElement.getMultipleAttributes(attributeNames)
+    }
     fulfill(attributes)
   }.error { error in
     reject(error)
@@ -118,4 +124,40 @@ func initializeProperties<UIElement: UIElementType>(properties: [PropertyType], 
       throw error
     }
   }
+}
+
+/// Tracks how long `requestFunc` takes, and logs it if needed.
+/// - Parameter object: The object the request is being made on (usually, a UIElement).
+func traceRequest<T>(
+    object: Any,
+  _ request: String,
+  _ arg1: Any,
+  _ arg2: Any? = nil,
+  @noescape requestFunc: () throws -> T
+) throws -> T {
+  var result: T?
+  var error: ErrorType?
+
+  let start = NSDate()
+  do {
+    result = try requestFunc()
+  } catch let err {
+    error = err
+  }
+  let end = NSDate()
+
+  let elapsed = end.timeIntervalSinceDate(start)
+  log.trace({ () -> String in
+    // This closure won't be evaluated if tracing is disabled.
+    let formatElapsed = String(format: "%.1f", elapsed * 1000)
+    let formatArgs    = (arg2 == nil) ? "\(arg1)" : "\(arg1), \(arg2!)"
+    let formatResult  = (error == nil) ? "took" : "failed with \(error!) in"
+    return "\(request)(\(formatArgs)) on \(object) \(formatResult) \(formatElapsed)ms"
+  }())
+  // TODO: if more than some threshold, log as info
+
+  if let error = error {
+    throw error
+  }
+  return result!
 }

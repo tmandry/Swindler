@@ -75,7 +75,9 @@ class OSXWindowDelegate<
   func watchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) -> Promise<Void> {
     return Promise<Void>().thenInBackground { () -> () in
       for notification in notifications {
-        try observer.addNotification(notification, forElement: self.axElement)
+        try traceRequest(self.axElement, "addNotification", notification) {
+          try observer.addNotification(notification, forElement: self.axElement)
+        }
       }
     }
   }

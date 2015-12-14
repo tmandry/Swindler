@@ -82,10 +82,17 @@ class OSXApplicationDelegate<
     }
 
     return Promise<Void>().thenInBackground { () -> () in
-      try self.observer.addNotification(.WindowCreated,          forElement: self.axElement)
-      try self.observer.addNotification(.MainWindowChanged,      forElement: self.axElement)
-      try self.observer.addNotification(.ApplicationActivated,   forElement: self.axElement)
-      try self.observer.addNotification(.ApplicationDeactivated, forElement: self.axElement)
+      let notifications: [Notification] = [
+        .WindowCreated,
+        .MainWindowChanged,
+        .ApplicationActivated,
+        .ApplicationDeactivated
+      ]
+      for notification in notifications {
+        try traceRequest(self.axElement, "addNotification", notification) {
+          try self.observer.addNotification(notification, forElement: self.axElement)
+        }
+      }
     }
   }
 
