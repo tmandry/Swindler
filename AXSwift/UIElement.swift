@@ -577,15 +577,29 @@ public class UIElement {
 
 extension UIElement: CustomStringConvertible {
   public var description: String {
-    var role: String
+    var roleString: String
+    var description: String?
+    let pid = try? self.pid()
     do {
-      try role = self.role()?.rawValue ?? "UIElementNoRole"
+      let role = try self.role()
+      roleString = role?.rawValue ?? "UIElementNoRole"
+
+      switch role {
+      case .Some(.Application):
+        description = pid.flatMap{NSRunningApplication(processIdentifier: $0)}.flatMap{$0.bundleIdentifier} ?? ""
+      case .Some(.Window):
+        description = (try? self.attribute(.Title) ?? "") ?? ""
+      default:
+        break
+      }
     } catch AXError.InvalidUIElement {
-      role = "InvalidUIElement"
+      roleString = "InvalidUIElement"
     } catch {
-      role = "UnknownUIElement"
+      roleString = "UnknownUIElement"
     }
-    return "\(role): \(element)"
+
+    let pidString = (pid == nil) ? "??" : String(pid!)
+    return "<\(roleString) \"\(description ?? String(element))\" (pid=\(pidString))>"
   }
 
   public var inspect: String {
