@@ -4,62 +4,71 @@ _A Swift window management framework for OS X_
 In the past few years, many developers formerly on Linux and Windows have migrated to Mac for their
 excellent hardware and UNIX-based OS that "just works".
 
-But along the way we gave up something dear to us: **control over our desktop environment**. The
-goal of Swindler is to help us take back that control and give us the best of both worlds.
+But along the way we gave up something dear to us: **control over our desktop environment**.
+
+The goal of Swindler is to help us take back that control, and give us the best of both worlds.
 
 ## What Swindler Does
 
 **Writing window managers for OS X is hard.** There are a lot of systemic challenges, including limited
-and poorly-documented APIs. As a result, the selection of window managers is pretty limited. Swindler's
-job is to make it easy to write powerful window managers using Swift.
+and poorly-documented APIs. All window managers on OS X must use the C-based accessibility APIs, which
+are difficult to use and are surprisingly buggy themselves.
 
-All window managers on OS X must use the C-based accessibility APIs. The difficulty is that this
-relies on IPC: you _ask_ an application for a window's position, _request_ that it be moved or
-focused, then _wait_ for the application to comply. Most of the time this works fine, but it works
-at the mercy of the remote application's event loop, which can sometimes lead to *long, multi-second
-delays*.
+As a result, the selection of window managers is pretty limited, and many of the ones out there have
+annoying bugs, like freezes, race conditions, "phantom windows", and not "seeing" windows that are
+actually there. The more sophisticated the window manager is, the more it relies on these APIs and
+the more these bugs start to show up.
 
-Swindler addresses the problems of the accessibility API with these features:
+Swindler's job is to make it easy to write powerful window managers using a well-documented Swift
+API and abstraction layer. It addresses the problems of the accessibility API with these features:
 
 #### In-memory model
 
+Window managers on OS X rely on IPC: you _ask_ an application for a window's position, _wait_ for it
+to respond, _request_ that it be moved or focused, then _wait_ for the application to comply (or
+not). Most of the time this works okay, but it works at the mercy of the remote application's event
+loop, which can often lead to long, multi-second delays.
+
 Swindler maintains a model of all applications and window states, so your code knows everything
-about the windows on the screen. Reading the state is always fast because all state is kept within
-your application's process. The framework subscribes to changes on every window to stay up to date.
-It's extensively tested to ensure it stays consistent with the system in any situation.
+about the windows on the screen. Reading the state is always fast, because all state is kept within
+your application's process and stays up to date. Swindler is extensively tested to ensure it stays
+consistent with the system in any situation.
 
 #### Asynchronous writes and refreshes
 
 If you need to resize a lot of windows simultaneously, for example, you can do so without fear of
-one unresponsive application holding things up. Write requests are dispatched asynchronously and
-concurrently, and Swindler's promise-based API makes it easy to keep up with the state of
-operations.
+one unresponsive application holding everything else up. Write requests are dispatched
+asynchronously and concurrently, and Swindler's promise-based API makes it easy to keep up with the
+state of operations.
 
-#### Type-safety
+#### Type safety
 
 [Swindler's API](https://github.com/tmandry/Swindler/blob/master/Swindler/Swindler/API.swift) is
 fully documented and type-safe thanks to Swift. It's much easier and safer to use than the C-based
-accessibility APIs.
+accessibility APIs. (See the example below.)
 
-#### Well-ordered events
-The following situation is common in accessibility API notifications:
+#### Friendly events
+
+More sophisticated window managers have to observe events on windows, but the observer API is
+not well documented and often leaves out events you might expect, or delivers them in the wrong order.
+For example, the following situation is common when a new window pops up:
 
 ```
-MainWindowChanged on com.google.chrome: <window1>
-WindowCreated on com.google.chrome: <window1>
+1. MainWindowChanged on com.google.chrome to <window1>
+2. WindowCreated on com.google.chrome: <window1>
 ```
 
-See the problem? You won't receive updates about a window you don't know exists: you'll always
-receive "window created" events first, followed by the others. Swindler's in-memory state will
-always be consistent with itself and with the events you receive, avoiding many bugs that are
-difficult to diagnose.
+See the problem? With Swindler, all events are emitted in the expected order, and missing ones are
+filled in. Swindler's in-memory state will always be consistent with itself and with the events you
+receive, avoiding many bugs that are difficult to diagnose.
 
 As a bonus, events caused by your code are marked, so you don't respond to them as user actions.
+This feature alone makes a whole new level of sophistication possible.
 
 ## Example
 
-The following code assigns all windows on the first screen to a grid. Note the simplicity and power
-of the promise-based API. Requests are dispatched concurrently, not serially.
+The following code assigns all windows on the screen to a grid. Note the simplicity and power of the
+promise-based API. Requests are dispatched concurrently and in the background, not serially.
 
 ```swift
 let screen = Swindler.state.screens.first!
