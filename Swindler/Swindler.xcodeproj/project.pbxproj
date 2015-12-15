@@ -17,7 +17,6 @@
 		2F7F01041C11578800C97949 /* AXSwiftProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01031C11578800C97949 /* AXSwiftProtocols.swift */; };
 		2F7F01061C115CC700C97949 /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */; };
 		2F7F01081C115D4B00C97949 /* PropertySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01071C115D4B00C97949 /* PropertySpec.swift */; };
-		2F7F010A1C1A608C00C97949 /* AXSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F7F01091C1A608C00C97949 /* AXSwift.framework */; };
 		2F86CECA1BD60117007E8C29 /* Swindler.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F86CEC91BD60117007E8C29 /* Swindler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2F86CED11BD60117007E8C29 /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
 		2F86CED61BD60117007E8C29 /* OSXDriverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CED51BD60117007E8C29 /* OSXDriverSpec.swift */; };
@@ -36,6 +35,7 @@
 		2FEEA2D11C1E1AC000CD515E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FEEA2D01C1E1AC000CD515E /* main.swift */; };
 		2FEEA2E01C1E6E0800CD515E /* ASLLog in Resources */ = {isa = PBXBuildFile; fileRef = 2FEEA2DF1C1E6E0800CD515E /* ASLLog */; };
 		2FEEA2E31C1E6E9200CD515E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FEEA2E21C1E6E9200CD515E /* Log.swift */; };
+		2FEF3F181C20017300C89067 /* AXSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FEF3F171C20017300C89067 /* AXSwift.framework */; };
 		76726C939037D76F6C084B6D /* Pods_Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F13BD50BDE9B564868B4B295 /* Pods_Swindler.framework */; };
 		83E91AD8E20936CBBF5D1146 /* Pods_SwindlerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91C56A787A4B2F4B5CD73FE8 /* Pods_SwindlerTests.framework */; };
 		D296BFE9E52E7882F563ABCE /* Pods_SwindlerTestsProfile.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D7F726CFEE5E5CFE20585592 /* Pods_SwindlerTestsProfile.framework */; };
@@ -93,6 +93,7 @@
 		2FEEA2D01C1E1AC000CD515E /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		2FEEA2DF1C1E6E0800CD515E /* ASLLog */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ASLLog; path = /Users/tyler/code/Swindler/Swindler/Swindler/ASLLog; sourceTree = "<absolute>"; };
 		2FEEA2E21C1E6E9200CD515E /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		2FEF3F171C20017300C89067 /* AXSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AXSwift.framework; path = "../../Library/Developer/Xcode/DerivedData/Swindler-azuobwjvfcuxujafcskujfxfoylf/Build/Products/Debug/AXSwift.framework"; sourceTree = "<group>"; };
 		46A97C406A93369DE19A575B /* Pods-SwindlerTestsProfiler.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTestsProfiler.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTestsProfiler/Pods-SwindlerTestsProfiler.debug.xcconfig"; sourceTree = "<group>"; };
 		489FD317ABE214AB073954E5 /* Pods-SwindlerTestsProfile.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTestsProfile.debug.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTestsProfile/Pods-SwindlerTestsProfile.debug.xcconfig"; sourceTree = "<group>"; };
 		6A29792523ECDFFDDBD156D2 /* Pods-SwindlerTestsProfiler.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTestsProfiler.release.xcconfig"; path = "../Pods/Target Support Files/Pods-SwindlerTestsProfiler/Pods-SwindlerTestsProfiler.release.xcconfig"; sourceTree = "<group>"; };
@@ -112,7 +113,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F7F010A1C1A608C00C97949 /* AXSwift.framework in Frameworks */,
+				2FEF3F181C20017300C89067 /* AXSwift.framework in Frameworks */,
 				76726C939037D76F6C084B6D /* Pods_Swindler.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -250,6 +251,7 @@
 		9E4447A2F5E7EB6E92464F87 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2FEF3F171C20017300C89067 /* AXSwift.framework */,
 				2FEEA2C41C1E09A300CD515E /* AppKit.framework */,
 				2FEEA2AC1C1E041200CD515E /* XCTest.framework */,
 				2F7F01091C1A608C00C97949 /* AXSwift.framework */,

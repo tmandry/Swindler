@@ -8,7 +8,7 @@
       location = "group:Swindler/Swindler.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:AXSwift.xcodeproj">
+      location = "group:AXSwift/AXSwift.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:Pods/Pods.xcodeproj">
