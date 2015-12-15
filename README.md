@@ -89,12 +89,16 @@ func gridRect(screen: Swindler.Screen, index: Int) -> CGRect {
 }
 ```
 
-Watching for events is simple:
+Watching for events is simple. Here's how you would implement snap-to-grid:
 
 ```swift
-swindler.on { (event: MainWindowChangedEvent) in
-  let window = event.newValue
-  print("new main window: \(window?.title.value)")
+swindler.on { (event: WindowMovedEvent) in
+  guard event.external == true else {
+    // Ignore events that were caused by us.
+    return
+  }
+  let snapped = closestGridPosition(event.window.position.value)
+  event.window.position.set(snapped)
 }
 ```
 
