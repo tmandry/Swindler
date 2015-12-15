@@ -7,7 +7,7 @@ def testing_pods
   pod 'Nimble', '~> 3.0.0'
 end
 
-xcodeproj 'Swindler/Swindler'
+xcodeproj 'Swindler'
 target 'SwindlerTests' do
   testing_pods
 end

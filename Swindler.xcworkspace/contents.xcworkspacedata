@@ -5,7 +5,7 @@
       location = "group:Podfile">
    </FileRef>
    <FileRef
-      location = "group:Swindler/Swindler.xcodeproj">
+      location = "group:Swindler.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:AXSwift/AXSwift.xcodeproj">
