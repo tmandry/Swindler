@@ -4,13 +4,13 @@ _A Swift window management framework for OS X_
 In the past few years, many developers formerly on Linux and Windows have migrated to Mac for their
 excellent hardware and UNIX-based OS that "just works".
 
-But along the way we gave up something dear to us: **control over our desktop environment**.
+But along the way we gave up something dear to us: control over our desktop environment.
 
-The goal of Swindler is to help us take back that control, and give us the best of both worlds.
+The goal of Swindler is to help us **take back that control**, and give us the best of both worlds.
 
 ## What Swindler Does
 
-**Writing window managers for OS X is hard.** There are a lot of systemic challenges, including limited
+Writing window managers for OS X is hard. There are a lot of systemic challenges, including limited
 and poorly-documented APIs. All window managers on OS X must use the C-based accessibility APIs, which
 are difficult to use and are surprisingly buggy themselves.
 
@@ -22,6 +22,12 @@ the more these bugs start to show up.
 Swindler's job is to make it easy to write powerful window managers using a well-documented Swift
 API and abstraction layer. It addresses the problems of the accessibility API with these features:
 
+#### Type safety
+
+[Swindler's API](https://github.com/tmandry/Swindler/blob/master/Swindler/Swindler/API.swift) is
+fully documented and type-safe thanks to Swift. It's much easier and safer to use than the C-based
+accessibility APIs. (See the example below.)
+
 #### In-memory model
 
 Window managers on OS X rely on IPC: you _ask_ an application for a window's position, _wait_ for it
@@ -30,8 +36,8 @@ not). Most of the time this works okay, but it works at the mercy of the remote 
 loop, which can often lead to long, multi-second delays.
 
 Swindler maintains a model of all applications and window states, so your code knows everything
-about the windows on the screen. Reading the state is always fast, because all state is kept within
-your application's process and stays up to date. Swindler is extensively tested to ensure it stays
+about the windows on the screen. **Reads are instantaneous**, because all state is kept within your
+application's process and stays up to date. Swindler is extensively tested to ensure it stays
 consistent with the system in any situation.
 
 #### Asynchronous writes and refreshes
@@ -40,12 +46,6 @@ If you need to resize a lot of windows simultaneously, for example, you can do s
 one unresponsive application holding everything else up. Write requests are dispatched
 asynchronously and concurrently, and Swindler's promise-based API makes it easy to keep up with the
 state of operations.
-
-#### Type safety
-
-[Swindler's API](https://github.com/tmandry/Swindler/blob/master/Swindler/Swindler/API.swift) is
-fully documented and type-safe thanks to Swift. It's much easier and safer to use than the C-based
-accessibility APIs. (See the example below.)
 
 #### Friendly events
 
@@ -62,8 +62,8 @@ See the problem? With Swindler, all events are emitted in the expected order, an
 filled in. Swindler's in-memory state will always be consistent with itself and with the events you
 receive, avoiding many bugs that are difficult to diagnose.
 
-As a bonus, events caused by your code are marked, so you don't respond to them as user actions.
-This feature alone makes a whole new level of sophistication possible.
+As a bonus, **events caused by your code are marked** as such, so you don't respond to them as user
+actions. This feature alone makes a whole new level of sophistication possible.
 
 ## Example
 
@@ -106,7 +106,7 @@ swindler.on { (event: WindowMovedEvent) in
 
 Swindler is in development and is in **alpha**. Here is the state of its major features:
 
-- Asynchronous property updates: **100% complete**
+- Asynchronous property system: **100% complete**
 - Event system: **100% complete**
 - Window API: **80% complete**
 - Application API: **80% complete**
