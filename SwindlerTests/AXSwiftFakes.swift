@@ -139,3 +139,123 @@ class FakeObserver: TestObserver {
     }
   }
 }
+
+// MARK: - Adversaries
+
+/// Allows defining adversarial actions when a property is observed.
+class AdversaryObserver: FakeObserver {
+  static var onNotification: Notification? = nil
+  static var handler: Optional<(AdversaryObserver) -> ()> = nil
+
+  /// Call this in beforeEach for any tests that use this class.
+  static func reset() {
+    onNotification = nil
+    handler = nil
+  }
+
+  /// Defines code that runs on the main thread before returning from addNotification.
+  static func onAddNotification(notification: Notification, handler: (AdversaryObserver) -> ()) {
+    onNotification = notification
+    self.handler = handler
+  }
+
+  override func addNotification(
+      notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+    try super.addNotification(notification, forElement: element)
+    if notification == AdversaryObserver.onNotification {
+      performOnMainThread { AdversaryObserver.handler!(self) }
+    }
+  }
+}
+
+/// Allows defining adversarial actions when an attribute is read.
+final class AdversaryApplicationElement: TestApplicationElementBase, ApplicationElementType {
+  static var allApps: [AdversaryApplicationElement] = []
+  static func all() -> [AdversaryApplicationElement] { return AdversaryApplicationElement.allApps }
+
+  var onRead: Optional<(AdversaryApplicationElement) -> ()> = nil
+  var watchAttribute: Attribute? = nil
+  var alreadyCalled = false
+
+  /// Defines code that runs on the main thread before returning the value of the attribute.
+  func onFirstAttributeRead(attribute: Attribute, handler: (AdversaryApplicationElement) -> ()) {
+    watchAttribute = attribute
+    onRead = handler
+    alreadyCalled = false
+  }
+
+  override func attribute<T>(attribute: Attribute) throws -> T? {
+    let result: T? = try super.attribute(attribute)
+    if attribute == watchAttribute && !alreadyCalled {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?(self)
+          self.alreadyCalled = true
+        }
+      }
+    }
+    return result
+  }
+  override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+    let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
+    if let watchAttribute = watchAttribute where attributes.contains(watchAttribute) {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?(self)
+          self.alreadyCalled = true
+        }
+      }
+    }
+    return result
+  }
+}
+
+/// Allows defining adversarial actions when an attribute is read.
+class AdversaryWindowElement: TestWindowElement {
+  var onRead: Optional<() -> ()> = nil
+  var watchAttribute: Attribute? = nil
+  var alreadyCalled = false
+
+  /// Defines code that runs on the main thread before returning the value of the attribute.
+  func onAttributeFirstRead(attribute: Attribute, handler: () -> ()) {
+    watchAttribute = attribute
+    onRead = handler
+    alreadyCalled = false
+  }
+
+  override func attribute<T>(attribute: Attribute) throws -> T? {
+    let result: T? = try super.attribute(attribute)
+    if attribute == watchAttribute {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?()
+          self.alreadyCalled = true
+        }
+      }
+    }
+    return result
+  }
+  override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+    let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
+    if let watchAttribute = watchAttribute where attributes.contains(watchAttribute) {
+      performOnMainThread {
+        if !self.alreadyCalled {
+          self.onRead?()
+          self.alreadyCalled = true
+        }
+      }
+    }
+    return result
+  }
+}
+
+/// Performs the given action on the main thread, synchronously, regardless of the current thread.
+func performOnMainThread(action: () -> ()) {
+  if NSThread.currentThread().isMainThread {
+    action()
+  } else {
+    dispatch_sync(dispatch_get_main_queue()) {
+      action()
+    }
+  }
+}
