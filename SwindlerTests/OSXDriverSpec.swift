@@ -857,6 +857,20 @@ class OSXApplicationDelegateSpec: QuickSpec {
 
     }
 
+    describe("Application equality") {
+      it("returns true for identical app delegates") {
+        expect(app).to(equal(Application(delegate: appDelegate)))
+      }
+
+      it("returns false for different app delegates") { () -> Promise<Void> in
+        let otherAppElement = AdversaryApplicationElement()
+        return OSXApplicationDelegate<TestUIElement, AdversaryApplicationElement, FakeObserver>.initialize(
+          axElement: otherAppElement, notifier: notifier).then { otherAppDelegate -> () in
+            expect(app).toNot(equal(Application(delegate: otherAppDelegate)))
+        }
+      }
+    }
+
     context("when a window is created") {
       var windowElement: TestWindowElement!
       beforeEach {
@@ -1197,6 +1211,26 @@ class OSXWindowDelegateSpec: QuickSpec {
           windowElement.attrs[.Minimized] = false
           windowDelegate.handleEvent(.WindowDeminiaturized, observer: TestObserver())
           expect(window.isMinimized.value).toEventually(beFalse())
+        }
+      }
+
+    }
+
+    describe("Window equality") {
+
+      it("returns true for identical WindowDelegates") { () -> Promise<Void> in
+        return initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { windowDelegate in
+          expect(Window(delegate: windowDelegate)).to(equal(Window(delegate: windowDelegate)))
+        }
+      }
+
+      it("returns false for different WindowDelegates") { () -> Promise<Void> in
+        return initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { windowDelegate1 in
+          let appDelegate1 = windowDelegate1.appDelegate!  // must retain
+          return initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { windowDelegate2 -> () in
+            expect(appDelegate1).toNot(beNil())  // avoid optimizing away the retain. TODO refactor
+            expect(Window(delegate: windowDelegate1)).toNot(equal(Window(delegate: windowDelegate2)))
+          }
         }
       }
 

@@ -28,7 +28,7 @@ protocol StateDelegate {
 }
 
 /// A running application.
-public class Application {
+public class Application: Equatable {
   let delegate: ApplicationDelegate
   init(delegate: ApplicationDelegate) {
     self.delegate = delegate
@@ -42,12 +42,17 @@ public class Application {
   /// Whether the application is the frontmost application.
   public var isFrontmost: WriteableProperty<OfType<Bool>> { return delegate.isFrontmost }
 }
+public func ==(lhs: Application, rhs: Application) -> Bool {
+  return lhs.delegate.equalTo(rhs.delegate)
+}
 
 protocol ApplicationDelegate: class {
   var knownWindows: [WindowDelegate] { get }
 
   var mainWindow: Property<OfOptionalType<Window>>! { get }
   var isFrontmost: WriteableProperty<OfType<Bool>>! { get }
+
+  func equalTo(other: ApplicationDelegate) -> Bool
 }
 
 /// A window.

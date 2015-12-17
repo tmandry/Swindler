@@ -269,6 +269,14 @@ class OSXApplicationDelegate<
   private func findWindowDelegateByElement(axElement: UIElement) -> WinDelegate? {
     return windows.filter({ $0.axElement == axElement }).first
   }
+
+  func equalTo(rhs: ApplicationDelegate) -> Bool {
+    if let other = rhs as? OSXApplicationDelegate {
+      return self.axElement == other.axElement
+    } else {
+      return false
+    }
+  }
 }
 
 extension OSXApplicationDelegate: CustomStringConvertible {
