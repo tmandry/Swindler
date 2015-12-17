@@ -5,7 +5,7 @@ import Nimble
 import AXSwift
 import PromiseKit
 
-class OSXApplicationDelegateInitSpec: QuickSpec {
+class OSXApplicationDelegateInitializeSpec: QuickSpec {
   override func spec() {
 
     var notifier: TestNotifier!
@@ -127,10 +127,18 @@ class OSXApplicationDelegateInitSpec: QuickSpec {
 
     }
 
+  }
+}
+
+class OSXApplicationDelegateNotificationSpec: QuickSpec {
+  override func spec() {
+
     describe("AXUIElement notifications") {
       var appElement: AdversaryApplicationElement!
+      var notifier: TestNotifier!
       beforeEach {
         appElement = AdversaryApplicationElement()
+        notifier = TestNotifier()
       }
       beforeEach { AdversaryObserver.reset() }
 
