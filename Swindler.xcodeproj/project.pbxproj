@@ -7,19 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */; };
 		2F3961B81C1E76CA000C28AE /* ASLLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F3961B71C1E76CA000C28AE /* ASLLog.h */; };
 		2F55343D1C0AC86500B87C42 /* Successes+PromiseKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */; };
 		2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */; };
 		2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898C1C22718E00C422C0 /* StateSpec.swift */; };
-		2F6189911C22718E00C422C0 /* TestNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898D1C22718E00C422C0 /* TestNotifier.swift */; };
 		2F6189921C22718E00C422C0 /* WindowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898E1C22718E00C422C0 /* WindowSpec.swift */; };
+		2F6189941C2272BD00C422C0 /* support in Resources */ = {isa = PBXBuildFile; fileRef = 2F6189931C2272BD00C422C0 /* support */; };
+		2F61899A1C22737600C422C0 /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189971C22737600C422C0 /* AXSwiftFakes.swift */; };
+		2F61899B1C22737600C422C0 /* ExpectationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189981C22737600C422C0 /* ExpectationHelpers.swift */; };
+		2F61899C1C22737600C422C0 /* TestNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189991C22737600C422C0 /* TestNotifier.swift */; };
 		2F7F00FC1C1152F600C97949 /* OSXApplicationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */; };
 		2F7F00FE1C1152FF00C97949 /* OSXWindowDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */; };
 		2F7F01001C1155DC00C97949 /* AXPropertyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FF1C1155DC00C97949 /* AXPropertyDelegate.swift */; };
 		2F7F01021C11570D00C97949 /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01011C11570D00C97949 /* Errors.swift */; };
 		2F7F01041C11578800C97949 /* AXSwiftProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01031C11578800C97949 /* AXSwiftProtocols.swift */; };
-		2F7F01061C115CC700C97949 /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */; };
 		2F7F01081C115D4B00C97949 /* PropertySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01071C115D4B00C97949 /* PropertySpec.swift */; };
 		2F86CECA1BD60117007E8C29 /* Swindler.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F86CEC91BD60117007E8C29 /* Swindler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2F86CED11BD60117007E8C29 /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
@@ -32,8 +33,6 @@
 		2FEEA29C1C1D36B000CD515E /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
 		2FEEA2C81C1E0AB600CD515E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FEEA2AC1C1E041200CD515E /* XCTest.framework */; };
 		2FEEA2CB1C1E0BF400CD515E /* PropertySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01071C115D4B00C97949 /* PropertySpec.swift */; };
-		2FEEA2CC1C1E0BF400CD515E /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */; };
-		2FEEA2CD1C1E0BF400CD515E /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */; };
 		2FEEA2D11C1E1AC000CD515E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FEEA2D01C1E1AC000CD515E /* main.swift */; };
 		2FEEA2E31C1E6E9200CD515E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FEEA2E21C1E6E9200CD515E /* Log.swift */; };
 		2FEF3F181C20017300C89067 /* AXSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2FEF3F171C20017300C89067 /* AXSwift.framework */; };
@@ -60,20 +59,21 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
 		2F3961B71C1E76CA000C28AE /* ASLLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ASLLog.h; path = ASLLog/ASLLog.h; sourceTree = "<group>"; };
 		2F3961B91C1E76CD000C28AE /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; name = module.modulemap; path = ASLLog/module.modulemap; sourceTree = "<group>"; };
 		2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Successes+PromiseKit.swift"; sourceTree = "<group>"; };
 		2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationSpec.swift; sourceTree = "<group>"; };
 		2F61898C1C22718E00C422C0 /* StateSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateSpec.swift; sourceTree = "<group>"; };
-		2F61898D1C22718E00C422C0 /* TestNotifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestNotifier.swift; sourceTree = "<group>"; };
 		2F61898E1C22718E00C422C0 /* WindowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowSpec.swift; sourceTree = "<group>"; };
+		2F6189931C2272BD00C422C0 /* support */ = {isa = PBXFileReference; lastKnownFileType = folder; name = support; path = /Users/tyler/code/Swindler/SwindlerTests/support; sourceTree = "<absolute>"; };
+		2F6189971C22737600C422C0 /* AXSwiftFakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AXSwiftFakes.swift; path = support/AXSwiftFakes.swift; sourceTree = "<group>"; };
+		2F6189981C22737600C422C0 /* ExpectationHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ExpectationHelpers.swift; path = support/ExpectationHelpers.swift; sourceTree = "<group>"; };
+		2F6189991C22737600C422C0 /* TestNotifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestNotifier.swift; path = support/TestNotifier.swift; sourceTree = "<group>"; };
 		2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXApplicationDelegate.swift; sourceTree = "<group>"; };
 		2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXWindowDelegate.swift; sourceTree = "<group>"; };
 		2F7F00FF1C1155DC00C97949 /* AXPropertyDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AXPropertyDelegate.swift; sourceTree = "<group>"; };
 		2F7F01011C11570D00C97949 /* Errors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
 		2F7F01031C11578800C97949 /* AXSwiftProtocols.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AXSwiftProtocols.swift; sourceTree = "<group>"; };
-		2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AXSwiftFakes.swift; sourceTree = "<group>"; };
 		2F7F01071C115D4B00C97949 /* PropertySpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertySpec.swift; sourceTree = "<group>"; };
 		2F7F01091C1A608C00C97949 /* AXSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AXSwift.framework; path = "../../../Library/Developer/Xcode/DerivedData/Swindler-azuobwjvfcuxujafcskujfxfoylf/Build/Products/Debug/AXSwift.framework"; sourceTree = "<group>"; };
 		2F86CEC61BD60117007E8C29 /* Swindler.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Swindler.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -174,6 +174,16 @@
 			name = ASLLog;
 			sourceTree = "<group>";
 		};
+		2F6189961C22736800C422C0 /* support */ = {
+			isa = PBXGroup;
+			children = (
+				2F6189971C22737600C422C0 /* AXSwiftFakes.swift */,
+				2F6189981C22737600C422C0 /* ExpectationHelpers.swift */,
+				2F6189991C22737600C422C0 /* TestNotifier.swift */,
+			);
+			name = support;
+			sourceTree = "<group>";
+		};
 		2F86CEBC1BD60117007E8C29 = {
 			isa = PBXGroup;
 			children = (
@@ -222,13 +232,11 @@
 		2F86CED41BD60117007E8C29 /* SwindlerTests */ = {
 			isa = PBXGroup;
 			children = (
-				2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */,
+				2F6189961C22736800C422C0 /* support */,
 				2F61898C1C22718E00C422C0 /* StateSpec.swift */,
-				2F61898D1C22718E00C422C0 /* TestNotifier.swift */,
+				2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */,
 				2F61898E1C22718E00C422C0 /* WindowSpec.swift */,
 				2F7F01071C115D4B00C97949 /* PropertySpec.swift */,
-				2F34DB6E1BFB16B5009D4C03 /* TestHelpers.swift */,
-				2F7F01051C115CC700C97949 /* AXSwiftFakes.swift */,
 				2F86CED71BD60117007E8C29 /* Info.plist */,
 			);
 			path = SwindlerTests;
@@ -420,6 +428,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F6189941C2272BD00C422C0 /* support in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -587,11 +596,11 @@
 			files = (
 				2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */,
 				2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */,
-				2F6189911C22718E00C422C0 /* TestNotifier.swift in Sources */,
 				2F7F01081C115D4B00C97949 /* PropertySpec.swift in Sources */,
-				2F34DB6F1BFB16B5009D4C03 /* TestHelpers.swift in Sources */,
+				2F61899C1C22737600C422C0 /* TestNotifier.swift in Sources */,
+				2F61899A1C22737600C422C0 /* AXSwiftFakes.swift in Sources */,
+				2F61899B1C22737600C422C0 /* ExpectationHelpers.swift in Sources */,
 				2F6189921C22718E00C422C0 /* WindowSpec.swift in Sources */,
-				2F7F01061C115CC700C97949 /* AXSwiftFakes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -610,8 +619,6 @@
 			files = (
 				2FEEA2D11C1E1AC000CD515E /* main.swift in Sources */,
 				2FEEA2CB1C1E0BF400CD515E /* PropertySpec.swift in Sources */,
-				2FEEA2CC1C1E0BF400CD515E /* TestHelpers.swift in Sources */,
-				2FEEA2CD1C1E0BF400CD515E /* AXSwiftFakes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
