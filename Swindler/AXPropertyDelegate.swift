@@ -151,8 +151,8 @@ func traceRequest<T>(
     // This closure won't be evaluated if tracing is disabled.
     let formatElapsed = String(format: "%.1f", elapsed * 1000)
     let formatArgs    = (arg2 == nil) ? "\(arg1)" : "\(arg1), \(arg2!)"
-    let formatResult  = (error == nil) ? "took" : "failed with \(error!) in"
-    return "\(request)(\(formatArgs)) on \(object) \(formatResult) \(formatElapsed)ms"
+    let formatResult  = (error == nil) ? "responded with \(result!)" : "failed with \(error!)"
+    return "\(request)(\(formatArgs)) on \(object) \(formatResult) in \(formatElapsed)ms"
   }())
   // TODO: if more than some threshold, log as info
 
