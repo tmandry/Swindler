@@ -108,9 +108,8 @@ public protocol Window: Equatable {
   /// accepting keyboard input.
   public var isFocused: Property<OfType<Bool>> { get }
 
-  // TODO
   /// Whether the window is full screen or not.
-  public var isFullScreen: WriteableProperty<OfType<Bool>> { get }
+  public var isFullscreen: WriteableProperty<OfType<Bool>> { get }
 
   // TODO
   /// The screen that (most of) the window is on.

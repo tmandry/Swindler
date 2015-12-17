@@ -16,7 +16,7 @@ class OSXWindowDelegate<
   private(set) var isValid: Bool = true
 
   private var axProperties: [PropertyType]!
-  private var watchedAxProperties: [AXSwift.Notification: PropertyType]!
+  private var watchedAxProperties: [AXSwift.Notification: [PropertyType]]!
 
   weak var appDelegate: ApplicationDelegate?
 
@@ -24,7 +24,7 @@ class OSXWindowDelegate<
   var size: WriteableProperty<OfType<CGSize>>!
   var title: Property<OfType<String>>!
   var isMinimized: WriteableProperty<OfType<Bool>>!
-  var main: WriteableProperty<OfType<Bool>>!
+  var isFullscreen: WriteableProperty<OfType<Bool>>!
 
   private init(appDelegate: ApplicationDelegate, notifier: EventNotifier?, axElement: UIElement, observer: Observer) throws {
     self.appDelegate = appDelegate
@@ -43,21 +43,24 @@ class OSXWindowDelegate<
       withEvent: WindowTitleChangedEvent.self, receivingObject: Window.self, notifier: self)
     isMinimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
       withEvent: WindowMinimizedChangedEvent.self, receivingObject: Window.self, notifier: self)
+    isFullscreen = WriteableProperty(AXPropertyDelegate(axElement, .FullScreen, initPromise),
+      notifier: self)
 
     axProperties = [
       position,
       size,
       title,
       isMinimized,
+      isFullscreen
     ]
 
     // Map notifications on this element to the corresponding property.
     watchedAxProperties = [
-      .Moved: position,
-      .Resized: size,
-      .TitleChanged: title,
-      .WindowMiniaturized: isMinimized,
-      .WindowDeminiaturized: isMinimized
+      .Moved:                 [position],
+      .Resized:               [size, isFullscreen],
+      .TitleChanged:          [title],
+      .WindowMiniaturized:    [isMinimized],
+      .WindowDeminiaturized:  [isMinimized]
     ]
 
     // Start watching for notifications.
@@ -126,8 +129,8 @@ class OSXWindowDelegate<
     case .UIElementDestroyed:
       isValid = false
     default:
-      if let property = watchedAxProperties[event] {
-        property.refresh()
+      if let properties = watchedAxProperties[event] {
+        properties.forEach{ $0.refresh() }
       } else {
         log.debug("Unknown event on \(self): \(event)")
       }

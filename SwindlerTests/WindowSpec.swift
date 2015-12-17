@@ -54,16 +54,18 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
     describe("initialize") {
 
       it("initializes window properties") { () -> Promise<Void> in
-        windowElement.attrs[.Position]  = CGPoint(x: 5, y: 5)
-        windowElement.attrs[.Size]      = CGSize(width: 100, height: 100)
-        windowElement.attrs[.Title]     = "a window title"
-        windowElement.attrs[.Minimized] = false
+        windowElement.attrs[.Position]   = CGPoint(x: 5, y: 5)
+        windowElement.attrs[.Size]       = CGSize(width: 100, height: 100)
+        windowElement.attrs[.Title]      = "a window title"
+        windowElement.attrs[.Minimized]  = false
+        windowElement.attrs[.FullScreen] = false
 
         return initialize().then { windowDelegate -> () in
           expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 5)))
           expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
           expect(windowDelegate.title.value).to(equal("a window title"))
           expect(windowDelegate.isMinimized.value).to(beFalse())
+          expect(windowDelegate.isFullscreen.value).to(beFalse())
         }
       }
 
@@ -277,7 +279,7 @@ class OSXWindowDelegateSpec: QuickSpec {
       }
 
       describe("position") {
-        it("updates when the position changes") {
+        it("updates when the window is moved") {
           windowElement.attrs[.Position] = CGPoint(x: 1, y: 1)
           windowDelegate.handleEvent(.Moved, observer: TestObserver())
           expect(window.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
@@ -285,10 +287,18 @@ class OSXWindowDelegateSpec: QuickSpec {
       }
 
       describe("size") {
-        it("updates when the size changes") {
+        it("updates when the window is resized") {
           windowElement.attrs[.Size] = CGSize(width: 123, height: 123)
           windowDelegate.handleEvent(.Resized, observer: TestObserver())
           expect(window.size.value).toEventually(equal(CGSize(width: 123, height: 123)))
+        }
+      }
+
+      describe("isFullscreen") {
+        it("updates when the window is resized") {
+          windowElement.attrs[.FullScreen] = true
+          windowDelegate.handleEvent(.Resized, observer: TestObserver())
+          expect(window.isFullscreen.value).toEventually(beTrue())
         }
       }
 
