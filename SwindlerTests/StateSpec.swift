@@ -86,13 +86,22 @@ class OSXStateSpec: QuickSpec {
 
       // Some of these are higher level versions of unit tests on their respective objects.
 
+      it("creates an application object in runningApplications") {
+        expect(state.runningApplications).toEventually(haveCount(1))
+      }
+
       context("when a window is created") {
         beforeEach {
-          expect(state.knownWindows).toEventually(haveCount(1))
+          waitUntil(state.knownWindows.count == 1)
         }
 
         it("adds the window to knownWindows") {
           expect(state.knownWindows).to(haveCount(1))
+        }
+
+        it("has an application property equal to the application of the window") {
+          waitUntil(state.runningApplications.count == 1)
+          expect(state.knownWindows.first!.application).to(equal(state.runningApplications.first!))
         }
 
         it("emits WindowCreatedEvent") {
