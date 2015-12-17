@@ -573,10 +573,10 @@ public class UIElement {
   // TODO: promoters
 }
 
-// MARK: - CustomStringConvertible
+// MARK: - CustomDebugStringConvertible
 
-extension UIElement: CustomStringConvertible {
-  public var description: String {
+extension UIElement: CustomDebugStringConvertible {
+  public var debugDescription: String {
     var roleString: String
     var description: String?
     let pid = try? self.pid()
@@ -599,7 +599,12 @@ extension UIElement: CustomStringConvertible {
     }
 
     let pidString = (pid == nil) ? "??" : String(pid!)
-    return "<\(roleString) \"\(description ?? String(element))\" (pid=\(pidString))>"
+
+    // Get the address, stripping the leading 0's to make it easier to read.
+    let addr = unsafeAddressOf(element).debugDescription.characters
+    let addrString = String(addr.suffixFrom(addr.indexOf{x in (x != "0" && x != "x")} ?? addr.startIndex))
+
+    return "<\(roleString) \"\(description ?? String(element))\" (addr=0x\(addrString)) (pid=\(pidString))>"
   }
 
   public var inspect: String {
