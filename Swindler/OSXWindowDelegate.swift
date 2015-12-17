@@ -15,18 +15,21 @@ class OSXWindowDelegate<
 
   private(set) var isValid: Bool = true
 
+  private var axProperties: [PropertyType]!
+  private var watchedAxProperties: [AXSwift.Notification: PropertyType]!
+
+  weak var appDelegate: ApplicationDelegate?
+
   var position: WriteableProperty<OfType<CGPoint>>!
   var size: WriteableProperty<OfType<CGSize>>!
   var title: Property<OfType<String>>!
   var isMinimized: WriteableProperty<OfType<Bool>>!
   var main: WriteableProperty<OfType<Bool>>!
 
-  private var axProperties: [PropertyType]!
-  private var watchedAxProperties: [AXSwift.Notification: PropertyType]!
-
-  private init(notifier: EventNotifier?, axElement: UIElement, observer: Observer) throws {
+  private init(appDelegate: ApplicationDelegate, notifier: EventNotifier?, axElement: UIElement, observer: Observer) throws {
     // TODO: reject invalid roles (Chrome ghost windows)
 
+    self.appDelegate = appDelegate
     self.notifier = notifier
     self.axElement = axElement
 
@@ -83,9 +86,15 @@ class OSXWindowDelegate<
   }
 
   // Initializes the window and returns it as a Promise once it's ready.
-  static func initialize(notifier notifier: EventNotifier?, axElement: UIElement, observer: Observer) -> Promise<OSXWindowDelegate> {
+  static func initialize(
+      appDelegate appDelegate: ApplicationDelegate,
+      notifier: EventNotifier?,
+      axElement: UIElement,
+      observer: Observer
+  ) -> Promise<OSXWindowDelegate> {
     return firstly {  // capture thrown errors in promise
-      let window = try OSXWindowDelegate(notifier: notifier, axElement: axElement, observer: observer)
+      let window = try OSXWindowDelegate(
+          appDelegate: appDelegate, notifier: notifier, axElement: axElement, observer: observer)
       return window.initialized.then { return window }
     }
   }
@@ -104,7 +113,11 @@ class OSXWindowDelegate<
   }
 
   func notify<Event: PropertyEventTypeInternal where Event.Object == Window>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier?.notify(Event(external: external, object: Window(delegate: self), oldValue: oldValue, newValue: newValue))
+    guard let window = Window(delegate: self) else {
+      // Application terminated already; shouldn't send events.
+      return
+    }
+    notifier?.notify(Event(external: external, object: window, oldValue: oldValue, newValue: newValue))
   }
 
   func notifyInvalid() {

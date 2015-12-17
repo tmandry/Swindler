@@ -10,7 +10,7 @@ public class State {
   public var runningApplications: [Application] { return delegate.runningApplications.map({ Application(delegate: $0) }) }
 
   /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
-  public var knownWindows: [Window] { return delegate.knownWindows.map({ Window(delegate: $0) }) }
+  public var knownWindows: [Window] { return delegate.knownWindows.flatMap({ Window(delegate: $0) }) }
 
   /// Calls `handler` when the specified `Event` occurs.
   public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
@@ -35,7 +35,7 @@ public class Application {
   }
 
   /// The known windows of the application. Windows on spaces that we haven't seen yet aren't included.
-  public var knownWindows: [Window] { return delegate.knownWindows.map({ Window(delegate: $0) }) }
+  public var knownWindows: [Window] { return delegate.knownWindows.flatMap({ Window(delegate: $0) }) }
 
   /// The main window of the application.
   public var mainWindow: Property<OfOptionalType<Window>> { return delegate.mainWindow }
@@ -43,7 +43,7 @@ public class Application {
   public var isFrontmost: WriteableProperty<OfType<Bool>> { return delegate.isFrontmost }
 }
 
-protocol ApplicationDelegate {
+protocol ApplicationDelegate: class {
   var knownWindows: [WindowDelegate] { get }
 
   var mainWindow: Property<OfOptionalType<Window>>! { get }
@@ -52,10 +52,30 @@ protocol ApplicationDelegate {
 
 /// A window.
 public class Window: Equatable {
-  let delegate: WindowDelegate
-  init(delegate: WindowDelegate) {
+  internal let delegate: WindowDelegate
+
+  // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.
+  // It should not be held internally by delegates, or it could create a reference cycle.
+  private var application_: Application!
+
+  internal init(delegate: WindowDelegate, appDelegate: ApplicationDelegate) {
     self.delegate = delegate
+    self.application_ = Application(delegate: appDelegate)
   }
+
+  /// This initializer fails only if the ApplicationDelegate is no longer reachable (because the
+  /// application terminated, which means this window no longer exists).
+  internal convenience init?(delegate: WindowDelegate) {
+    guard let appDelegate = delegate.appDelegate else {
+      // The application terminated.
+      log.debug("Window for delegate \(delegate) failed to initialize because of unreachable ApplicationDelegate")
+      return nil
+    }
+    self.init(delegate: delegate, appDelegate: appDelegate)
+  }
+
+  /// The application the window belongs to.
+  public var application: Application { return application_ }
 
   /// Whether or not the window referred to by this type remains valid. Windows usually become
   /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
@@ -80,8 +100,11 @@ public func ==(lhs: Window, rhs: Window) -> Bool {
   return lhs.delegate.equalTo(rhs.delegate)
 }
 
-protocol WindowDelegate {
+protocol WindowDelegate: class {
   var isValid: Bool { get }
+
+  // Optional because a WindowDelegate shouldn't hold a strong reference to its parent ApplicationDelegate.
+  var appDelegate: ApplicationDelegate? { get }
 
   var position: WriteableProperty<OfType<CGPoint>>! { get }
   var size: WriteableProperty<OfType<CGSize>>! { get }

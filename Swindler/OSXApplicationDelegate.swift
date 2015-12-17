@@ -107,7 +107,8 @@ class OSXApplicationDelegate<
 
       // Initialize OSXWindowDelegates from the window elements.
       let windowPromises = windowElements.map({ windowElement in
-        WinDelegate.initialize(notifier: self.notifier, axElement: windowElement, observer: self.observer)
+        WinDelegate.initialize(
+            appDelegate: self, notifier: self.notifier, axElement: windowElement, observer: self.observer)
       })
 
       return successes(windowPromises, onError: { index, error in
@@ -149,9 +150,10 @@ class OSXApplicationDelegate<
   }
 
   private func onWindowCreated(windowElement: UIElement) {
-    WinDelegate.initialize(notifier: notifier, axElement: windowElement, observer: observer).then { window -> () in
-      self.windows.append(window)
-      self.notifier?.notify(WindowCreatedEvent(external: true, window: Window(delegate: window)))
+    WinDelegate.initialize(appDelegate: self, notifier: notifier, axElement: windowElement, observer: observer).then { windowDelegate -> () in
+      let window = Window(delegate: windowDelegate, appDelegate: self)
+      self.windows.append(windowDelegate)
+      self.notifier?.notify(WindowCreatedEvent(external: true, window: window))
       self.newWindowHandler.windowCreated(windowElement)
     }.error { error in
       log.debug("Could not watch \(windowElement): \(error)")
@@ -228,23 +230,25 @@ class OSXApplicationDelegate<
   }
 
   private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) {
-    func handleEvent(window: WinDelegate) {
-      window.handleEvent(notification, observer: observer)
+    func handleEvent(windowDelegate: WinDelegate) {
+      windowDelegate.handleEvent(notification, observer: observer)
 
       if .UIElementDestroyed == notification {
         // Remove window.
-        windows = windows.filter({ !$0.equalTo(window) })
-        notifier?.notify(WindowDestroyedEvent(external: true, window: Window(delegate: window)))
+        windows = windows.filter({ !$0.equalTo(windowDelegate) })
+
+        let window = Window(delegate: windowDelegate, appDelegate: self)
+        notifier?.notify(WindowDestroyedEvent(external: true, window: window))
       }
     }
 
-    if let window = findWindowDelegateByElement(windowElement) {
-      handleEvent(window)
+    if let windowDelegate = findWindowDelegateByElement(windowElement) {
+      handleEvent(windowDelegate)
     } else {
       log.debug("Notification \(notification) on unknown element \(windowElement), deferring")
       newWindowHandler.performAfterWindowCreatedForElement(windowElement) {
-        if let window = self.findWindowDelegateByElement(windowElement) {
-          handleEvent(window)
+        if let windowDelegate = self.findWindowDelegateByElement(windowElement) {
+          handleEvent(windowDelegate)
         } else {
           // Window was already destroyed.
           log.debug("Deferred notification \(notification) on window element \(windowElement) never reached delegate")

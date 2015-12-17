@@ -79,7 +79,6 @@ public protocol Application {
 
 /// A window.
 public protocol Window: Equatable {
-  // TODO
   /// The application the window belongs to.
   public var application: Application { get }
 

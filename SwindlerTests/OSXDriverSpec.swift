@@ -949,10 +949,16 @@ class AdversaryWindowElement: TestWindowElement {
 class OSXWindowDelegateSpec: QuickSpec {
   override func spec() {
 
+    typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, TestObserver>
     typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, TestObserver>
-    func initializeWithElement(windowElement: TestUIElement) -> Promise<WinDelegate> {
-      return WinDelegate.initialize(
-        notifier: TestNotifier(), axElement: windowElement, observer: TestObserver())
+
+    var appDelegate: AppDelegate?  // must be retained to receive events
+    func initializeWithElement(windowElement: TestWindowElement, notifier: EventNotifier = TestNotifier()) -> Promise<WinDelegate> {
+      return AppDelegate.initialize(axElement: windowElement.app as! TestApplicationElement, notifier: notifier).then { appDelegate_ in
+        appDelegate = appDelegate_
+        return WinDelegate.initialize(
+          appDelegate: appDelegate_, notifier: notifier, axElement: windowElement, observer: TestObserver())
+      }
     }
 
     beforeEach { TestApplicationElement.allApps = [] }
@@ -982,6 +988,17 @@ class OSXWindowDelegateSpec: QuickSpec {
           expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
           expect(windowDelegate.title.value).to(equal("a window title"))
           expect(windowDelegate.isMinimized.value).to(beFalse())
+        }
+      }
+
+      it("stores the ApplicationDelegate in appDelegate") { () -> Promise<Void> in
+        let appElement = TestApplicationElement()
+        let windowElement = TestWindowElement(forApp: appElement)
+        return AppDelegate.initialize(axElement: TestApplicationElement(), notifier: TestNotifier()).then { appDelegate in
+          return WinDelegate.initialize(
+            appDelegate: appDelegate, notifier: TestNotifier(), axElement: windowElement, observer: TestObserver()).then { winDelegate in
+              expect(winDelegate.appDelegate === appDelegate).to(beTrue())
+          }
         }
       }
 
@@ -1040,8 +1057,7 @@ class OSXWindowDelegateSpec: QuickSpec {
             }
 
             return initialize().then { winDelegate -> () in
-              let window = Window(delegate: winDelegate)
-              expect(window.isMinimized.value).toEventually(beTrue())
+              expect(winDelegate.isMinimized.value).toEventually(beTrue())
             }
           }
         }
@@ -1060,8 +1076,7 @@ class OSXWindowDelegateSpec: QuickSpec {
             }
 
             return initialize().then { winDelegate -> () in
-              let window = Window(delegate: winDelegate)
-              expect(window.isMinimized.value).toEventually(beTrue())
+              expect(winDelegate.isMinimized.value).toEventually(beTrue())
             }
           }
         }
@@ -1080,8 +1095,7 @@ class OSXWindowDelegateSpec: QuickSpec {
             }
 
             return initialize().then { winDelegate -> () in
-              let window = Window(delegate: winDelegate)
-              expect(window.isMinimized.value).toEventually(beTrue())
+              expect(winDelegate.isMinimized.value).toEventually(beTrue())
             }
           }
         }
@@ -1107,9 +1121,7 @@ class OSXWindowDelegateSpec: QuickSpec {
         notifier = TestNotifier()
         windowElement = TestWindowElement(forApp: TestApplicationElement())
         waitUntil { done in
-          return WinDelegate.initialize(
-              notifier: notifier, axElement: windowElement, observer: TestObserver()
-          ).then { delegate -> () in
+          return initializeWithElement(windowElement, notifier: notifier).then { delegate -> () in
             windowDelegate = delegate
             done()
           }
