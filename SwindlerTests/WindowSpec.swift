@@ -5,27 +5,45 @@ import Nimble
 import AXSwift
 import PromiseKit
 
-class OSXWindowDelegateSpec: QuickSpec {
+// The window delegate needs an application delegate for building Window objects to pass in events.
+// (Windows have an application property). The delegate isn't actually used so this class does nothing.
+private class StubApplicationDelegate: ApplicationDelegate {
+  var knownWindows: [WindowDelegate] { return [] }
+
+  var mainWindow: Property<OfOptionalType<Window>>!
+  var isFrontmost: WriteableProperty<OfType<Bool>>!
+
+  func equalTo(other: ApplicationDelegate) -> Bool { return false }
+}
+
+// The window delegate holds a weak reference to the app delegate, so we use this singleton to ensure
+// it doesn't get destroyed.
+private let stubApplicationDelegate = StubApplicationDelegate()
+
+class OSXWindowDelegateInitializeSpec: QuickSpec {
   override func spec() {
 
-    typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, TestObserver>
     typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, TestObserver>
 
-    var appDelegate: AppDelegate?  // must be retained to receive events
-    func initializeWithElement(windowElement: TestWindowElement, notifier: EventNotifier = TestNotifier()) -> Promise<WinDelegate> {
-      return AppDelegate.initialize(axElement: windowElement.app as! TestApplicationElement, notifier: notifier).then { appDelegate_ in
-        appDelegate = appDelegate_
-        return WinDelegate.initialize(
-          appDelegate: appDelegate_, notifier: notifier, axElement: windowElement, observer: TestObserver())
-      }
+    var windowElement: TestWindowElement!
+    beforeEach {
+      TestApplicationElement.allApps = []
+      windowElement = TestWindowElement(forApp: TestApplicationElement())
     }
 
-    beforeEach { TestApplicationElement.allApps = [] }
+    func initializeWithElement(winElement: TestWindowElement) -> Promise<WinDelegate> {
+      return WinDelegate.initialize(
+        appDelegate: stubApplicationDelegate, notifier: TestNotifier(), axElement: winElement, observer: TestObserver())
+    }
+
+    func initialize() -> Promise<WinDelegate> {
+      return initializeWithElement(windowElement)
+    }
 
     it("doesn't leak memory") {
       weak var windowDelegate: WinDelegate?
       waitUntil { done in
-        initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { delegate -> () in
+        initialize().then { delegate -> () in
           windowDelegate = delegate
           done()
         }
@@ -36,13 +54,12 @@ class OSXWindowDelegateSpec: QuickSpec {
     describe("initialize") {
 
       it("initializes window properties") { () -> Promise<Void> in
-        let windowElement = TestWindowElement(forApp: TestApplicationElement())
         windowElement.attrs[.Position]  = CGPoint(x: 5, y: 5)
         windowElement.attrs[.Size]      = CGSize(width: 100, height: 100)
         windowElement.attrs[.Title]     = "a window title"
         windowElement.attrs[.Minimized] = false
 
-        return initializeWithElement(windowElement).then { windowDelegate -> () in
+        return initialize().then { windowDelegate -> () in
           expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 5)))
           expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
           expect(windowDelegate.title.value).to(equal("a window title"))
@@ -51,141 +68,171 @@ class OSXWindowDelegateSpec: QuickSpec {
       }
 
       it("stores the ApplicationDelegate in appDelegate") { () -> Promise<Void> in
-        let appElement = TestApplicationElement()
-        let windowElement = TestWindowElement(forApp: appElement)
-        return AppDelegate.initialize(axElement: TestApplicationElement(), notifier: TestNotifier()).then { appDelegate in
-          return WinDelegate.initialize(
-            appDelegate: appDelegate, notifier: TestNotifier(), axElement: windowElement, observer: TestObserver()).then { winDelegate in
-              expect(winDelegate.appDelegate === appDelegate).to(beTrue())
-          }
+        return initialize().then { winDelegate in
+          expect(winDelegate.appDelegate === stubApplicationDelegate).to(beTrue())
         }
       }
 
       it("marks the window as valid") { () -> Promise<Void> in
-        let windowElement = TestWindowElement(forApp: TestApplicationElement())
-        return initializeWithElement(windowElement).then { windowDelegate -> () in
+        return initialize().then { windowDelegate -> () in
           expect(windowDelegate.isValid).to(beTrue())
         }
       }
 
       context("when called with a window that is missing attributes") {
         it("returns an error") { () -> Promise<Void> in
-          let windowElement = TestWindowElement(forApp: TestApplicationElement())
           windowElement.attrs.removeValueForKey(.Position)
 
           let expectedError = OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement)
-          return expectToFail(initializeWithElement(windowElement), with: expectedError)
+          return expectToFail(initialize(), with: expectedError)
         }
       }
 
-      describe("AXUIElement notifications") {
-        beforeEach { AdversaryObserver.reset() }
+    }
 
-        // Because observers only have one callback per application, they are owned by the
-        // application delegate and window notifications are forwarded on, so to fully test this we
-        // have to test the interaction between the two.
+    describe("Window equality") {
 
-        typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
-        typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
-
-        var appElement: TestApplicationElement!
-        var windowElement: AdversaryWindowElement!
-        beforeEach {
-          appElement = TestApplicationElement()
-          windowElement = AdversaryWindowElement(forApp: appElement)
-          appElement.windows.append(windowElement)
+      it("returns true for identical WindowDelegates") { () -> Promise<Void> in
+        return initialize().then { windowDelegate in
+          expect(Window(delegate: windowDelegate)).to(equal(Window(delegate: windowDelegate)))
         }
+      }
 
-        var observer: AdversaryObserver!
-        func initialize() -> Promise<WinDelegate> {
-          return AppDelegate.initialize(axElement: appElement, notifier: TestNotifier()).then { appDelegate -> WinDelegate in
-            observer = appDelegate.observer
-            guard let winDelegate = appDelegate.knownWindows.first as! WinDelegate? else {
-              throw TestError("Window delegate was not initialized by application delegate")
-            }
-            return winDelegate
+      it("returns false for different WindowDelegates") { () -> Promise<Void> in
+        return initialize().then { windowDelegate1 in
+          let windowElement2 = TestWindowElement(forApp: TestApplicationElement())
+          return initializeWithElement(windowElement2).then { windowDelegate2 -> () in
+            expect(Window(delegate: windowDelegate1)).toNot(equal(Window(delegate: windowDelegate2)))
           }
         }
+      }
 
-        context("when a property value changes right before observing it") {
-          it("is read correctly") { () -> Promise<Void> in
-            windowElement.attrs[.Minimized] = false
+    }
 
-            AdversaryObserver.onAddNotification(.WindowMiniaturized) { _ in
+  }
+}
+
+class OSXWindowDelegateNotificationSpec: QuickSpec {
+  override func spec() {
+
+    describe("AXUIElement notifications") {
+      beforeEach { AdversaryObserver.reset() }
+
+      // Because observers only have one callback per application, they are owned by the
+      // application delegate and window notifications are forwarded on, so to fully test this we
+      // have to test the interaction between the two.
+
+      typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
+      typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, AdversaryObserver>
+
+      var appElement: TestApplicationElement!
+      var windowElement: AdversaryWindowElement!
+      beforeEach {
+        appElement = TestApplicationElement()
+        windowElement = AdversaryWindowElement(forApp: appElement)
+        appElement.windows.append(windowElement)
+      }
+
+      var observer: AdversaryObserver!
+      func initialize() -> Promise<WinDelegate> {
+        return AppDelegate.initialize(axElement: appElement, notifier: TestNotifier()).then { appDelegate -> WinDelegate in
+          observer = appDelegate.observer
+          guard let winDelegate = appDelegate.knownWindows.first as! WinDelegate? else {
+            throw TestError("Window delegate was not initialized by application delegate")
+          }
+          return winDelegate
+        }
+      }
+
+      context("when a property value changes right before observing it") {
+        it("is read correctly") { () -> Promise<Void> in
+          windowElement.attrs[.Minimized] = false
+
+          AdversaryObserver.onAddNotification(.WindowMiniaturized) { _ in
+            windowElement.attrs[.Minimized] = true
+          }
+
+          return initialize().then { winDelegate -> () in
+            expect(winDelegate.isMinimized.value).toEventually(beTrue())
+          }
+        }
+      }
+
+      context("when a property value changes right after observing it") {
+        // The difference between a property changing before or after observing is simply whether
+        // an event is emitted or not.
+        it("is updated correctly") { () -> Promise<Void> in
+          windowElement.attrs[.Minimized] = false
+
+          AdversaryObserver.onAddNotification(.WindowMiniaturized) { observer in
+            observer.emit(.WindowMiniaturized, forElement: windowElement)
+            dispatch_async(dispatch_get_main_queue()) {
               windowElement.attrs[.Minimized] = true
             }
+          }
 
-            return initialize().then { winDelegate -> () in
-              expect(winDelegate.isMinimized.value).toEventually(beTrue())
-            }
+          return initialize().then { winDelegate -> () in
+            expect(winDelegate.isMinimized.value).toEventually(beTrue())
           }
         }
+      }
 
-        context("when a property value changes right after observing it") {
-          // The difference between a property changing before or after observing is simply whether
-          // an event is emitted or not.
-          it("is updated correctly") { () -> Promise<Void> in
-            windowElement.attrs[.Minimized] = false
+      context("when a property value changes right after reading it") {
+        it("is updated correctly") { () -> Promise<Void> in
+          windowElement.attrs[.Minimized] = false
 
-            AdversaryObserver.onAddNotification(.WindowMiniaturized) { observer in
-              observer.emit(.WindowMiniaturized, forElement: windowElement)
-              dispatch_async(dispatch_get_main_queue()) {
-                windowElement.attrs[.Minimized] = true
-              }
-            }
+          var observer: AdversaryObserver?
+          AdversaryObserver.onAddNotification(.WindowMiniaturized) { obs in
+            observer = obs
+          }
+          windowElement.onAttributeFirstRead(.Minimized) {
+            windowElement.attrs[.Minimized] = true
+            observer?.emit(.WindowMiniaturized, forElement: windowElement)
+          }
 
-            return initialize().then { winDelegate -> () in
-              expect(winDelegate.isMinimized.value).toEventually(beTrue())
-            }
+          return initialize().then { winDelegate -> () in
+            expect(winDelegate.isMinimized.value).toEventually(beTrue())
           }
         }
+      }
 
-        context("when a property value changes right after reading it") {
-          it("is updated correctly") { () -> Promise<Void> in
-            windowElement.attrs[.Minimized] = false
+    }
 
-            var observer: AdversaryObserver?
-            AdversaryObserver.onAddNotification(.WindowMiniaturized) { obs in
-              observer = obs
-            }
-            windowElement.onAttributeFirstRead(.Minimized) {
-              windowElement.attrs[.Minimized] = true
-              observer?.emit(.WindowMiniaturized, forElement: windowElement)
-            }
+  }
+}
 
-            return initialize().then { winDelegate -> () in
-              expect(winDelegate.isMinimized.value).toEventually(beTrue())
-            }
-          }
+class OSXWindowDelegateSpec: QuickSpec {
+  override func spec() {
+
+    typealias WinDelegate = OSXWindowDelegate<TestUIElement, TestApplicationElement, TestObserver>
+
+    var windowElement: TestWindowElement!
+    var windowDelegate: WinDelegate!
+    var notifier: TestNotifier!
+    beforeEach {
+      windowElement = TestWindowElement(forApp: TestApplicationElement())
+      notifier = TestNotifier()
+      waitUntil { done in
+        WinDelegate.initialize(
+            appDelegate: stubApplicationDelegate,
+            notifier: notifier,
+            axElement: windowElement,
+            observer: TestObserver()).then { winDelegate -> () in
+          windowDelegate = winDelegate
+          done()
         }
-
       }
     }
 
     context("when a window is destroyed") {
-      it("marks the window as invalid") { () -> Promise<Void> in
-        let windowElement = TestWindowElement(forApp: TestApplicationElement())
-        return initializeWithElement(windowElement).then { windowDelegate -> () in
-          windowDelegate.handleEvent(.UIElementDestroyed, observer: TestObserver())
-          expect(windowDelegate.isValid).toEventually(beFalse())
-        }
+      it("marks the window as invalid") {
+        windowDelegate.handleEvent(.UIElementDestroyed, observer: TestObserver())
+        expect(windowDelegate.isValid).toEventually(beFalse())
       }
     }
 
     context("when the position changes") {
-      var notifier: TestNotifier!
-      var windowElement: TestWindowElement!
-      var windowDelegate: WinDelegate!
       beforeEach {
-        notifier = TestNotifier()
-        windowElement = TestWindowElement(forApp: TestApplicationElement())
-        waitUntil { done in
-          return initializeWithElement(windowElement, notifier: notifier).then { delegate -> () in
-            windowDelegate = delegate
-            done()
-          }
-        }
-
         windowElement.attrs[.Position] = CGPoint(x: 500, y: 500)
         windowDelegate.handleEvent(.Moved, observer: TestObserver())
       }
@@ -210,17 +257,8 @@ class OSXWindowDelegateSpec: QuickSpec {
 
     describe("property updates") {
       var window: Window!
-      var windowDelegate: WinDelegate!
-      var windowElement: TestWindowElement!
       beforeEach {
-        waitUntil { done in
-          windowElement = TestWindowElement(forApp: TestApplicationElement())
-          initializeWithElement(windowElement).then { winDelegate -> () in
-            windowDelegate = winDelegate
-            window = Window(delegate: windowDelegate)
-            done()
-          }
-        }
+        window = Window(delegate: windowDelegate, appDelegate: stubApplicationDelegate)
       }
 
       describe("title") {
@@ -256,26 +294,6 @@ class OSXWindowDelegateSpec: QuickSpec {
           windowElement.attrs[.Minimized] = false
           windowDelegate.handleEvent(.WindowDeminiaturized, observer: TestObserver())
           expect(window.isMinimized.value).toEventually(beFalse())
-        }
-      }
-
-    }
-
-    describe("Window equality") {
-
-      it("returns true for identical WindowDelegates") { () -> Promise<Void> in
-        return initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { windowDelegate in
-          expect(Window(delegate: windowDelegate)).to(equal(Window(delegate: windowDelegate)))
-        }
-      }
-
-      it("returns false for different WindowDelegates") { () -> Promise<Void> in
-        return initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { windowDelegate1 in
-          let appDelegate1 = windowDelegate1.appDelegate!  // must retain
-          return initializeWithElement(TestWindowElement(forApp: TestApplicationElement())).then { windowDelegate2 -> () in
-            expect(appDelegate1).toNot(beNil())  // avoid optimizing away the retain. TODO refactor
-            expect(Window(delegate: windowDelegate1)).toNot(equal(Window(delegate: windowDelegate2)))
-          }
         }
       }
 
