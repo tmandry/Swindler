@@ -64,7 +64,20 @@ class TestApplicationElementBase: TestUIElement {
     attrs[.Frontmost] = false
   }
 
-  var windows: [TestUIElement] {
+  override func setAttribute(attribute: Attribute, value: Any) throws {
+    // Synchronize .MainWindow with .Main on the window.
+    if attribute == .MainWindow {
+      if let oldWindowElement = attrs[.MainWindow] as! TestWindowElement? {
+        oldWindowElement.attrs[.Main] = false
+      }
+      let newWindowElement = value as! TestWindowElement
+      newWindowElement.attrs[.Main] = true
+    }
+
+    try super.setAttribute(attribute, value: value)
+  }
+
+  internal var windows: [TestUIElement] {
     get { return attrs[.Windows]! as! [TestUIElement] }
     set { attrs[.Windows] = newValue }
   }
@@ -87,6 +100,18 @@ class TestWindowElement: TestUIElement {
     attrs[.Minimized]  = false
     attrs[.Main]       = true
     attrs[.FullScreen] = false
+  }
+
+  override func setAttribute(attribute: Attribute, value: Any) throws {
+    // Synchronize .Main with .MainWindow on the application.
+    if attribute == .Main {
+      // Setting .Main to false does nothing.
+      guard value as! Bool == true else { return }
+
+      app.attrs[.MainWindow] = self
+    }
+
+    try super.setAttribute(attribute, value: value)
   }
 }
 

@@ -22,7 +22,7 @@ class OSXApplicationDelegate<
 
   private var properties: [PropertyType]!
 
-  var mainWindow: Property<OfOptionalType<Window>>!
+  var mainWindow: WriteableProperty<OfOptionalType<Window>>!
   var isFrontmost: WriteableProperty<OfType<Bool>>!
 
   var knownWindows: [WindowDelegate] {
@@ -49,9 +49,8 @@ class OSXApplicationDelegate<
       .recover(unwrapWhenErrors)
 
     // Configure properties.
-    mainWindow = Property<OfOptionalType<Window>>(
-      WindowPropertyAdapter(AXPropertyDelegate(axElement, .MainWindow, initProperties),
-        windowFinder: self, windowDelegate: WinDelegate.self),
+    mainWindow = WriteableProperty<OfOptionalType<Window>>(
+        MainWindowPropertyDelegate(axElement, windowFinder: self, windowDelegate: WinDelegate.self, initProperties),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
     isFrontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
       withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
@@ -345,7 +344,50 @@ protocol OSXDelegateType {
 }
 extension OSXWindowDelegate: OSXDelegateType {}
 
-/// Converts a UIElement attribute into a Window property.
+/// Custom PropertyDelegate for the mainWindow property.
+class MainWindowPropertyDelegate<
+  AppElement: ApplicationElementType, WinFinder: WindowFinder, WinDelegate: OSXDelegateType
+  where WinFinder.UIElement == WinDelegate.UIElement
+>: PropertyDelegate {
+  typealias T = Window
+  typealias UIElement = WinFinder.UIElement
+
+  let readDelegate: WindowPropertyAdapter<AXPropertyDelegate<UIElement, AppElement>, WinFinder, WinDelegate>
+
+  init(_ appElement: AppElement, windowFinder: WinFinder, windowDelegate: WinDelegate.Type, _ initPromise: Promise<[Attribute: Any]>) {
+    readDelegate = WindowPropertyAdapter(AXPropertyDelegate(appElement, .MainWindow, initPromise), windowFinder: windowFinder, windowDelegate: windowDelegate)
+  }
+
+  func initialize() -> Promise<Window?> {
+    return readDelegate.initialize()
+  }
+
+  func readValue() throws -> Window? {
+    return try readDelegate.readValue()
+  }
+
+  func writeValue(newValue: Window) throws {
+    // Extract the element from the window delegate.
+    guard let winDelegate = newValue.delegate as? WinDelegate else {
+      throw PropertyError.IllegalValue
+    }
+    // Check early to see if the element is still valid. If it becomes invalid after this check, the
+    // same error will get thrown, it will just take longer.
+    guard winDelegate.isValid else {
+      throw PropertyError.IllegalValue
+    }
+
+    // Note: This is happening on a background thread, so only properties that don't change should be
+    // accessed (the axElement).
+
+    // To set the main window, we have to access the .Main attribute of the window element and set
+    // it to true.
+    let writeDelegate = AXPropertyDelegate<Bool, UIElement>(winDelegate.axElement, .Main, Promise([:]))
+    try writeDelegate.writeValue(true)
+  }
+}
+
+/// Converts a UIElement attribute into a readable Window property.
 class WindowPropertyAdapter<
     Delegate: PropertyDelegate, WinFinder: WindowFinder, WinDelegate: OSXDelegateType
     where Delegate.T == WinFinder.UIElement, WinFinder.UIElement == WinDelegate.UIElement
@@ -373,14 +415,8 @@ class WindowPropertyAdapter<
   }
 
   func writeValue(newValue: Window) throws {
-    // Extract the element from the window delegate.
-    guard let winDelegate = newValue.delegate as? WinDelegate else {
-      throw PropertyError.IllegalValue
-    }
-    guard winDelegate.isValid else {
-      throw PropertyError.IllegalValue
-    }
-    try delegate.writeValue(winDelegate.axElement)
+    // If we got here, a property is wrongly configured.
+    fatalError("Writing directly to an \"object\" property is not supported by the AXUIElement API")
   }
 
   func initialize() -> Promise<Window?> {

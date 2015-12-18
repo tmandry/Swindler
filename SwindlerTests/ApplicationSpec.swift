@@ -314,8 +314,11 @@ class OSXApplicationDelegateSpec: QuickSpec {
       initializeApp()
     }
 
-    func createWindow(emitEvent emitEvent: Bool = true) -> TestWindowElement {
-      let windowElement = TestWindowElement(forApp: appElement)
+    func createWindow(
+      emitEvent emitEvent: Bool = true,
+      windowElement element: TestWindowElement? = nil
+    ) -> TestWindowElement {
+      let windowElement = element ?? TestWindowElement(forApp: appElement)
       appElement.windows.append(windowElement)
       if emitEvent { observer.emit(.WindowCreated, forElement: windowElement) }
       return windowElement
@@ -510,6 +513,57 @@ class OSXApplicationDelegateSpec: QuickSpec {
         }
 
         // TODO: timeout on reading .Role
+      }
+
+      context("when a window is assigned") {
+
+        var windowElement: TestWindowElement!
+        var window: Window!
+        var setPromise: Promise<Window?>!
+        func createAndSetMainWindow(element: TestWindowElement) {
+          windowElement = element
+          createWindow(windowElement: element)
+          waitUntil(app.knownWindows.count == 1)
+          window = app.knownWindows.first!
+          setPromise = app.mainWindow.set(window)
+        }
+
+        context("when the app complies") {
+          beforeEach {
+            createAndSetMainWindow(TestWindowElement(forApp: appElement))
+          }
+
+          it("changes the main window") {
+            expect(windowElement.attrs[.Main] as! Bool?).toEventually(beTrue())
+          }
+
+          it("returns the new main window in the promise") { () -> Promise<Void> in
+            return setPromise.then { newMainWindow in
+              expect(newMainWindow).to(equal(window))
+            }
+          }
+
+        }
+
+        context("when the app refuses to make the window main") {
+          class MyWindowElement: TestWindowElement {
+            override func setAttribute(attribute: Attribute, value: Any) throws {
+              if attribute == .Main { return }
+              else { try super.setAttribute(attribute, value: value) }
+            }
+          }
+          beforeEach {
+            createAndSetMainWindow(MyWindowElement(forApp: appElement))
+          }
+
+          it("returns the old value in the promise") { () -> Promise<Void> in
+            return setPromise.then { newMainWindow in
+              expect(newMainWindow).to(beNil())
+            }
+          }
+
+        }
+
       }
 
       context("when a new window becomes main then closes before reading the attribute") {

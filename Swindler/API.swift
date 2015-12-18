@@ -56,8 +56,9 @@ public protocol Application {
   /// by other windows). This does not include windows that are minimized, hidden, or on another space.
   public var visibleWindows: [Window] { get }
 
-  // TODO: writeable
   /// The main window of the application.
+  /// -Note: Setting this will bring the window forward to just below the main window of the frontmost
+  ///        application.
   public var mainWindow: WriteableProperty<OfOptionalType<Window>> { get }
 
   /// The focused (key) window of the application, the one currently accepting keyboardinput.

@@ -10,7 +10,7 @@ import PromiseKit
 private class StubApplicationDelegate: ApplicationDelegate {
   var knownWindows: [WindowDelegate] { return [] }
 
-  var mainWindow: Property<OfOptionalType<Window>>!
+  var mainWindow: WriteableProperty<OfOptionalType<Window>>!
   var isFrontmost: WriteableProperty<OfType<Bool>>!
 
   func equalTo(other: ApplicationDelegate) -> Bool { return false }

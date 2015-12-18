@@ -38,7 +38,9 @@ public class Application: Equatable {
   public var knownWindows: [Window] { return delegate.knownWindows.flatMap({ Window(delegate: $0) }) }
 
   /// The main window of the application.
-  public var mainWindow: Property<OfOptionalType<Window>> { return delegate.mainWindow }
+  /// -Note: Setting this will bring the window forward to just below the main window of the frontmost
+  ///        application.
+  public var mainWindow: WriteableProperty<OfOptionalType<Window>> { return delegate.mainWindow }
   /// Whether the application is the frontmost application.
   public var isFrontmost: WriteableProperty<OfType<Bool>> { return delegate.isFrontmost }
 }
@@ -49,7 +51,7 @@ public func ==(lhs: Application, rhs: Application) -> Bool {
 protocol ApplicationDelegate: class {
   var knownWindows: [WindowDelegate] { get }
 
-  var mainWindow: Property<OfOptionalType<Window>>! { get }
+  var mainWindow: WriteableProperty<OfOptionalType<Window>>! { get }
   var isFrontmost: WriteableProperty<OfType<Bool>>! { get }
 
   func equalTo(other: ApplicationDelegate) -> Bool
