@@ -135,6 +135,8 @@ class OSXApplicationDelegate<
 
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {
     assert(NSThread.currentThread().isMainThread)
+    log.trace("Received \(notification) on \(element)")
+
     switch notification {
     case .WindowCreated:
       onWindowCreated(element)
