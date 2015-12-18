@@ -4,6 +4,7 @@ import PromiseKit
 enum OSXDriverError: ErrorType {
   case MissingAttribute(attribute: AXSwift.Attribute, onElement: UIElementType)
   case UnknownWindow(element: UIElementType)
+  case WindowIgnored(element: UIElementType)
 }
 
 func unwrapWhenErrors<T>(error: ErrorType) throws -> Promise<T> {

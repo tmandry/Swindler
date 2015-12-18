@@ -88,6 +88,13 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
         }
       }
 
+      context("when called with a window whose subrole is AXUnknown") {
+        it("returns an error") { () -> Promise<Void> in
+          windowElement.attrs[.Subrole] = "AXUnknown"  // undocumented as a subrole, but very important
+          return expectToFail(initialize())
+        }
+      }
+
     }
 
     describe("Window equality") {

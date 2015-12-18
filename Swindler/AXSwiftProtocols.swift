@@ -23,6 +23,7 @@ protocol ObserverType {
 
   init(processID: pid_t, callback: (observer: Self, element: UIElement, notification: AXSwift.Notification) -> ()) throws
   func addNotification(notification: AXSwift.Notification, forElement: UIElement) throws
+  func removeNotification(notification: AXSwift.Notification, forElement: UIElement) throws
 }
 extension AXSwift.Observer: ObserverType {
   typealias UIElement = AXSwift.UIElement

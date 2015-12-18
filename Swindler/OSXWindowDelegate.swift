@@ -27,8 +27,6 @@ class OSXWindowDelegate<
   var main: WriteableProperty<OfType<Bool>>!
 
   private init(appDelegate: ApplicationDelegate, notifier: EventNotifier?, axElement: UIElement, observer: Observer) throws {
-    // TODO: reject invalid roles (Chrome ghost windows)
-
     self.appDelegate = appDelegate
     self.notifier = notifier
     self.axElement = axElement
@@ -69,17 +67,41 @@ class OSXWindowDelegate<
     let watched = watchWindowElement(axElement, observer: observer, notifications: notifications)
 
     // Fetch attribute values.
-    let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute })
+    let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute }) + [
+      .Subrole
+    ]
     fetchAttributes(attributes, forElement: axElement, after: watched, fulfill: fulfill, reject: reject)
 
-    initialized = initializeProperties(axProperties, ofElement: axElement).asVoid()
+    // Ignore windows with the "AXUnknown" role. This (undocumented) role shows up in several places,
+    // including Chrome tooltips and OS X fullscreen transitions.
+    let subroleChecked = initPromise.then { attributeValues -> () in
+      if attributeValues[.Subrole] as! String? == "AXUnknown" {
+        log.debug("Window \(axElement) has subrole AXUnknown, unwatching")
+        self.unwatchWindowElement(axElement, observer: observer, notifications: notifications)
+        throw OSXDriverError.WindowIgnored(element: axElement)
+      }
+    }
+
+    initialized =
+      when(initializeProperties(axProperties, ofElement: axElement).asVoid(), subroleChecked)
+      .recover(unwrapWhenErrors)
   }
 
-  func watchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) -> Promise<Void> {
+  private func watchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) -> Promise<Void> {
     return Promise<Void>().thenInBackground { () -> () in
       for notification in notifications {
         try traceRequest(self.axElement, "addNotification", notification) {
           try observer.addNotification(notification, forElement: self.axElement)
+        }
+      }
+    }
+  }
+
+  private func unwatchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) {
+    Promise<Void>().thenInBackground { () -> () in
+      for notification in notifications {
+        try traceRequest(self.axElement, "removeNotification", notification) {
+          try observer.removeNotification(notification, forElement: self.axElement)
         }
       }
     }

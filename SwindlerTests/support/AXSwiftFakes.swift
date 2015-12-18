@@ -96,6 +96,7 @@ class TestObserver: ObserverType {
   init() { }
 
   func addNotification(notification: AXSwift.Notification, forElement: TestUIElement) throws {}
+  func removeNotification(notification: AXSwift.Notification, forElement: TestUIElement) throws {}
 }
 
 // A more elaborate TestObserver that actually tracks which elements and notifications are being
@@ -117,6 +118,12 @@ class FakeObserver: TestObserver {
       watchedElements[element] = []
     }
     watchedElements[element]!.append(notification)
+  }
+
+  override func removeNotification(notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+    if let watchedNotifications = watchedElements[element] {
+      watchedElements[element] = watchedNotifications.filter{ $0 != notification }
+    }
   }
 
   func emit(notification: AXSwift.Notification, forElement element: TestUIElement) {
