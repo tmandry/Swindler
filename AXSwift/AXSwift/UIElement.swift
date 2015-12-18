@@ -600,11 +600,7 @@ extension UIElement: CustomDebugStringConvertible {
 
     let pidString = (pid == nil) ? "??" : String(pid!)
 
-    // Get the address, stripping the leading 0's to make it easier to read.
-    let addr = unsafeAddressOf(element).debugDescription.characters
-    let addrString = String(addr.suffixFrom(addr.indexOf{x in (x != "0" && x != "x")} ?? addr.startIndex))
-
-    return "<\(roleString) \"\(description ?? String(element))\" (addr=0x\(addrString)) (pid=\(pidString))>"
+    return "<\(roleString) \"\(description ?? String(element))\" (pid=\(pidString))>"
   }
 
   public var inspect: String {
