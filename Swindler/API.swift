@@ -12,6 +12,10 @@ public protocol State {
   /// The currently running applications.
   public var runningApplications: [Application] { get }
 
+  // TODO
+  /// The frontmost application.
+  public var frontmostApplication: Property<OfOptionalType<Application>> { get }
+
   /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
   public var knownWindows: [Window] { get }
 
@@ -33,6 +37,10 @@ public protocol State {
   /// Calls `handler` when the specified `Event` occurs.
   public func on<Event: EventType>(handler: (Event) -> ())
 }
+
+// Events
+
+// FrontmostApplicationChanged
 
 /// A running application.
 public protocol Application {
