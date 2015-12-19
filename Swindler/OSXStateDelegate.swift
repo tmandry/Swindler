@@ -12,16 +12,25 @@ protocol EventNotifier: class {
 /// Wraps behavior needed to track the frontmost applications.
 protocol ApplicationObserverType {
   var frontmostApplicationPID: pid_t? { get }
+  func onFrontmostApplicationChanged(handler: () -> ())
 }
 
 struct ApplicationObserver: ApplicationObserverType {
   var frontmostApplicationPID: pid_t? {
     return NSWorkspace.sharedWorkspace().frontmostApplication?.processIdentifier
   }
-//    let notificationCenter = NSWorkspace.sharedWorkspace().notificationCenter
-//    notificationCenter.addObserverForName(NSWorkspaceDidActivateApplicationNotification, object: nil, queue: nil) {
-//
-//    }
+
+  func onFrontmostApplicationChanged(handler: () -> ()) {
+    let notificationCenter = NSWorkspace.sharedWorkspace().notificationCenter
+
+    // Err on the side of updating too often.
+    notificationCenter.addObserverForName(NSWorkspaceDidActivateApplicationNotification, object: nil, queue: nil) { _ in
+      handler()
+    }
+    notificationCenter.addObserverForName(NSWorkspaceDidDeactivateApplicationNotification, object: nil, queue: nil) { _ in
+      handler()
+    }
+  }
 }
 
 /// Implements StateDelegate using the AXUIElement API.
@@ -59,10 +68,18 @@ class OSXStateDelegate<
       }
     }
 
-    let propertyInit = when(appPromises).asVoid()
+    let (propertyInit, fulfill, _) = Promise<Void>.pendingPromise()
     frontmostApplication = Property(
       FrontmostApplicationPropertyDelegate(appFinder: self, appObserver: appObserver, initPromise: propertyInit),
       notifier: self)
+
+    // Must add the observer after configuring frontmostApplication.
+    appObserver.onFrontmostApplicationChanged {
+      self.frontmostApplication.refresh()
+    }
+
+    // Must not allow frontmostApplication to initialize until the observer is in place.
+    when(appPromises).asVoid().then(fulfill)
 
     frontmostApplication.initialized.then {
       log.debug("Done initializing")

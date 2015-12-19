@@ -7,6 +7,22 @@ import PromiseKit
 
 class StubApplicationObserver: ApplicationObserverType {
   var frontmostApplicationPID: pid_t? { return nil }
+  func onFrontmostApplicationChanged(handler: () -> ()) {}
+}
+
+class FakeApplicationObserver: ApplicationObserverType {
+  private var frontmost_: pid_t? = nil
+  var frontmostApplicationPID: pid_t? { return frontmost_ }
+
+  var handlers: [() -> ()] = []
+  func onFrontmostApplicationChanged(handler: () -> ()) {
+    handlers.append(handler)
+  }
+
+  func setFrontmost(pid: pid_t?) {
+    frontmost_ = pid
+    handlers.forEach{ handler in handler() }
+  }
 }
 
 class OSXStateSpec: QuickSpec {
@@ -116,6 +132,7 @@ class OSXStateSpec: QuickSpec {
       var appElement: TestApplicationElement!
       var windowElement: TestWindowElement!
       var observer: FakeObserver!
+      var appObserver: FakeApplicationObserver!
       var state: State!
       beforeEach {
         appElement = TestApplicationElement()
@@ -125,8 +142,9 @@ class OSXStateSpec: QuickSpec {
         appElement.attrs[.MainWindow] = windowElement
         TestApplicationElement.allApps = [appElement]
 
+        appObserver = FakeApplicationObserver()
         state = State(delegate: OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>(
-          appObserver: StubApplicationObserver()))
+          appObserver: appObserver))
         observer = FakeObserver.observers.first!
         observer.emit(.WindowCreated, forElement: windowElement)
         expect(state.knownWindows.count).toEventually(equal(1))
@@ -136,6 +154,7 @@ class OSXStateSpec: QuickSpec {
       }
 
       // Some of these are higher level versions of unit tests on their respective objects.
+      // TODO: put higher-level tests in their own spec.
 
       it("creates an application object in runningApplications") {
         expect(state.runningApplications).toEventually(haveCount(1))
@@ -220,6 +239,23 @@ class OSXStateSpec: QuickSpec {
           it("contains the running applications") {
             expect(state.runningApplications).toEventually(haveCount(1))
           }
+        }
+      }
+
+      describe("frontmostApplication") {
+        context("when the frontmost application changes") {
+
+          func getElement(app: Swindler.Application?) -> TestUIElement? {
+            typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>
+            return (app?.delegate as! AppDelegate?)?.axElement
+          }
+
+          it("updates") {
+            expect(state.delegate.frontmostApplication.value).to(beNil())
+            appObserver.setFrontmost(appElement.processID)
+            expect(getElement(state.delegate.frontmostApplication.value)).toEventually(equal(appElement))
+          }
+
         }
       }
 

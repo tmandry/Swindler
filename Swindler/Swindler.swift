@@ -23,6 +23,7 @@ public class State {
 // the functioning of the class, so they are not held with weak references.
 protocol StateDelegate {
   var runningApplications: [ApplicationDelegate] { get }
+  var frontmostApplication: Property<OfOptionalType<Application>>! { get }
   var knownWindows: [WindowDelegate] { get }
   func on<Event: EventType>(handler: (Event) -> ())
 }
