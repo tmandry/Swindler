@@ -112,9 +112,11 @@ class OSXApplicationDelegate<
 
       return successes(windowPromises, onError: { index, error in
         // Log any errors we encounter, but don't fail.
-        let windowElement = windowElements[index]
-        let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
-        log.debug("Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)")
+        log.debug({
+          let windowElement = windowElements[index]
+          let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
+          return "Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)"
+        }())
       })
     }.then { windowDelegates -> () in
       self.windows = windowDelegates
