@@ -5,6 +5,10 @@ import Nimble
 import AXSwift
 import PromiseKit
 
+class StubApplicationObserver: ApplicationObserverType {
+  var frontmostApplicationPID: pid_t? { return nil }
+}
+
 class OSXStateSpec: QuickSpec {
   override func spec() {
 
@@ -12,6 +16,17 @@ class OSXStateSpec: QuickSpec {
     beforeEach { FakeObserver.observers = [] }
 
     context("during initialization") {
+
+      func initialize(
+        appObserver: ApplicationObserverType = StubApplicationObserver()
+      ) -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver> {
+        return OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>(appObserver: appObserver)
+      }
+
+      func initializeWithObserver<Obs: ObserverType>(elementObserver: Obs.Type)
+          -> OSXStateDelegate<TestUIElement, TestApplicationElement, Obs> {
+        return OSXStateDelegate<TestUIElement, TestApplicationElement, Obs>(appObserver: StubApplicationObserver())
+      }
 
       it("observes all applications") {
         class MyTestObserver: TestObserver {
@@ -23,7 +38,7 @@ class OSXStateSpec: QuickSpec {
         }
 
         TestApplicationElement.allApps = [TestApplicationElement(), TestApplicationElement()]
-        let _ = OSXStateDelegate<TestUIElement, TestApplicationElement, MyTestObserver>()
+        let _ = initializeWithObserver(MyTestObserver.self)
 
         expect(MyTestObserver.numObservers).to(equal(2), description: "should be 2 observers")
       }
@@ -36,19 +51,19 @@ class OSXStateSpec: QuickSpec {
         }
 
         TestApplicationElement.allApps = [TestApplicationElement()]
-        let _ = OSXStateDelegate<TestUIElement, TestApplicationElement, MyTestObserver>()
+        let _ = initializeWithObserver(MyTestObserver.self)
         // test that it doesn't crash
       }
 
       it("doesn't leak memory") {
-        weak var state = OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>()
+        weak var state = initialize()
         expect(state).toEventually(beNil())
       }
 
       context("when there is an application") {
         it("doesn't leak memory") {
           TestApplicationElement.allApps = [TestApplicationElement()]
-          weak var state = OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>()
+          weak var state = initialize()
 
           // For some reason when `state` is captured in an autoclosure, it prevents the object from
           // being freed until the closure is freed. This explicit closure avoids that issue.
@@ -56,6 +71,41 @@ class OSXStateSpec: QuickSpec {
             return state == nil
           }
           expect(isNil()).toEventually(beTrue())
+        }
+      }
+
+      describe("frontmostApplication") {
+
+        context("when there is no frontmost application") {
+          it("is nil") { () -> Promise<Void> in
+            let state = initialize()
+            return state.frontmostApplication.initialized.then {
+              expect(state.frontmostApplication.value).to(beNil())
+            }
+          }
+        }
+
+        context("when there is a frontmost application") {
+          class MyApplicationObserver: StubApplicationObserver {
+            override var frontmostApplicationPID: pid_t? { return 1234 as pid_t }
+          }
+
+          func getElement(app: Swindler.Application?) -> TestUIElement? {
+            typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, TestObserver>
+            return (app?.delegate as! AppDelegate?)?.axElement
+          }
+
+          it("contains the frontmost application") { () -> Promise<Void> in
+            let appElement = TestApplicationElement()
+            appElement.processID = 1234
+            TestApplicationElement.allApps = [appElement]
+
+            let state = initialize(MyApplicationObserver())
+            return state.frontmostApplication.initialized.then {
+              expect(getElement(state.frontmostApplication.value)).to(equal(appElement))
+            }
+          }
+
         }
       }
 
@@ -75,7 +125,8 @@ class OSXStateSpec: QuickSpec {
         appElement.attrs[.MainWindow] = windowElement
         TestApplicationElement.allApps = [appElement]
 
-        state = State(delegate: OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>())
+        state = State(delegate: OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>(
+          appObserver: StubApplicationObserver()))
         observer = FakeObserver.observers.first!
         observer.emit(.WindowCreated, forElement: windowElement)
         expect(state.knownWindows.count).toEventually(equal(1))

@@ -2,11 +2,26 @@ import AXSwift
 import PromiseKit
 
 /// The global Swindler state, lazily initialized.
-public var state = State(delegate: OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>())
+public var state = State(delegate: OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>(appObserver: ApplicationObserver()))
 
 /// An object responsible for propagating the given event. Used internally by the OSX delegates.
 protocol EventNotifier: class {
   func notify<Event: EventType>(event: Event)
+}
+
+/// Wraps behavior needed to track the frontmost applications.
+protocol ApplicationObserverType {
+  var frontmostApplicationPID: pid_t? { get }
+}
+
+struct ApplicationObserver: ApplicationObserverType {
+  var frontmostApplicationPID: pid_t? {
+    return NSWorkspace.sharedWorkspace().frontmostApplication?.processIdentifier
+  }
+//    let notificationCenter = NSWorkspace.sharedWorkspace().notificationCenter
+//    notificationCenter.addObserverForName(NSWorkspaceDidActivateApplicationNotification, object: nil, queue: nil) {
+//
+//    }
 }
 
 /// Implements StateDelegate using the AXUIElement API.
@@ -18,28 +33,40 @@ class OSXStateDelegate<
   typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
   private typealias EventHandler = (EventType) -> ()
 
-  private var applications: [AppDelegate] = []
+  private var applicationsByPID: [pid_t: AppDelegate] = [:]
   private var eventHandlers: [String: [EventHandler]] = [:]
 
+  // For convenience/readability.
+  private var applications: LazyMapCollection<[pid_t: AppDelegate], AppDelegate> { return applicationsByPID.values }
+
   var runningApplications: [ApplicationDelegate] { return applications.map({ $0 as ApplicationDelegate }) }
+  var frontmostApplication: Property<OfOptionalType<Application>>!
   var knownWindows: [WindowDelegate] { return applications.flatMap({ $0.knownWindows }) }
 
-  // TODO: fix strong ref cycle
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
 
-  init() {
+  init(appObserver: ApplicationObserverType) {
     log.debug("Initializing Swindler")
-    for appElement in ApplicationElement.all() {
-      AppDelegate.initialize(axElement: appElement, notifier: self).then { application in
-        self.applications.append(application)
-      }.error { error in
+
+    let appPromises = ApplicationElement.all().map { appElement in
+      return AppDelegate.initialize(axElement: appElement, notifier: self).then { application in
+        self.applicationsByPID[try application.axElement.pid()] = application
+      }.asVoid().recover { error -> () in
         let pid = try? appElement.pid()
         let bundleID = pid.flatMap{NSRunningApplication(processIdentifier: $0)}.flatMap{$0.bundleIdentifier}
         let pidString = (pid == nil) ? "??" : String(pid!)
         log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): \(error)")
       }
     }
-    log.debug("Done initializing")
+
+    let propertyInit = when(appPromises).asVoid()
+    frontmostApplication = Property(
+      FrontmostApplicationPropertyDelegate(appFinder: self, appObserver: appObserver, initPromise: propertyInit),
+      notifier: self)
+
+    frontmostApplication.initialized.then {
+      log.debug("Done initializing")
+    }
   }
 
   func on<Event: EventType>(handler: (Event) -> ()) {
@@ -52,6 +79,7 @@ class OSXStateDelegate<
     eventHandlers[notification]!.append({ handler($0 as! Event) })
   }
 
+  // TODO: extract this behavior to a self-contained Notifier struct
   func notify<Event: EventType>(event: Event) {
     assert(NSThread.currentThread().isMainThread)
     if let handlers = eventHandlers[Event.typeName] {
@@ -59,5 +87,71 @@ class OSXStateDelegate<
         handler(event)
       }
     }
+  }
+}
+
+extension OSXStateDelegate: PropertyNotifier {
+  typealias Object = State
+
+  // TODO... can we get rid of this or simplify it?
+  func notify<Event: PropertyEventTypeInternal where Event.Object == State>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+    notify(Event(external: external, object: State(delegate: self), oldValue: oldValue, newValue: newValue))
+  }
+
+  /// Called when the underlying object has become invalid.
+  func notifyInvalid() {
+    assertionFailure("State can't become invalid")
+  }
+}
+
+protocol AppFinder: class {
+  func findAppByPID(pid: pid_t) -> Application?
+}
+extension OSXStateDelegate: AppFinder {
+  func findAppByPID(pid: pid_t) -> Application? {
+    guard let appDelegate = applicationsByPID[pid] else { return nil }
+    return Application(delegate: appDelegate)
+  }
+}
+
+class FrontmostApplicationPropertyDelegate: PropertyDelegate {
+  typealias T = Application
+
+  weak var appFinder: AppFinder?
+  let appObserver: ApplicationObserverType
+  let initPromise: Promise<Void>
+  init(appFinder: AppFinder, appObserver: ApplicationObserverType, initPromise: Promise<Void>) {
+    self.appFinder = appFinder
+    self.appObserver = appObserver
+    self.initPromise = initPromise
+  }
+
+  func readValue() -> Application? {
+    guard let pid = appObserver.frontmostApplicationPID else { return nil }
+    guard let app = findAppByPID(pid) else { return nil }
+    return app
+  }
+
+  func writeValue(newValue: T) throws {
+    fatalError("Not implemented")
+  }
+
+  func initialize() -> Promise<Application?> {
+    // No need to run in background, the call happens instantly.
+    return initPromise.then { return self.readValue() }
+  }
+
+  private func findAppByPID(pid: pid_t) -> Application? {
+    // TODO extract into runOnMainThread util
+    // Avoid using locks by forcing calls out to `windowFinder` to happen on the main thead.
+    var app: Application? = nil
+    if NSThread.currentThread().isMainThread {
+      app = appFinder?.findAppByPID(pid)
+    } else {
+      dispatch_sync(dispatch_get_main_queue()) {
+        app = self.appFinder?.findAppByPID(pid)
+      }
+    }
+    return app
   }
 }

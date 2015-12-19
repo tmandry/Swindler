@@ -10,7 +10,7 @@ class OSXApplicationDelegate<
   typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
 
   private weak var notifier: EventNotifier?
-  private let axElement: UIElement
+  internal let axElement: UIElement  // internal for testing only
   internal var observer: Observer!  // internal for testing only
   private var windows: [WinDelegate] = []
 
