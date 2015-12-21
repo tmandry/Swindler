@@ -12,9 +12,8 @@ public protocol State {
   /// The currently running applications.
   public var runningApplications: [Application] { get }
 
-  // TODO
   /// The frontmost application.
-  public var frontmostApplication: Property<OfOptionalType<Application>> { get }
+  public var frontmostApplication: WriteableProperty<OfOptionalType<Application>> { get }
 
   /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
   public var knownWindows: [Window] { get }

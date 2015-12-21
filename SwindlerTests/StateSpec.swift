@@ -160,18 +160,16 @@ class OSXStateDelegateSpec: QuickSpec {
 
         it("makes that application frontmost") {
           let appObserver = FakeApplicationObserver()
-          let stateDelegate = initializeWithApp(appObserver: appObserver)
-          let state = State(delegate: stateDelegate)
-          expect(stateDelegate.frontmostApplication.value).to(beNil())
-          stateDelegate.frontmostApplication.set(state.runningApplications.first!)
+          let state = State(delegate: initializeWithApp(appObserver: appObserver))
+          expect(state.frontmostApplication.value).to(beNil())
+          state.frontmostApplication.set(state.runningApplications.first!)
           expect(appObserver.frontmostApplicationPID).toEventually(equal(1234))
         }
 
         context("when the system complies") {
           it("returns the app in the promise") { () -> Promise<Void> in
-            let stateDelegate = initializeWithApp()
-            let state = State(delegate: stateDelegate)
-            return stateDelegate.frontmostApplication.set(state.runningApplications.first!).then { app in
+            let state = State(delegate: initializeWithApp())
+            return state.frontmostApplication.set(state.runningApplications.first!).then { app in
               expect(app).to(equal(state.runningApplications.first!))
             }
           }
@@ -179,9 +177,8 @@ class OSXStateDelegateSpec: QuickSpec {
 
         context("when the system does not change the frontmost application") {
           it("returns the old value in the promise") { () -> Promise<Void> in
-            let stateDelegate = initializeWithApp(appObserver: StubApplicationObserver())
-            let state = State(delegate: stateDelegate)
-            return stateDelegate.frontmostApplication.set(state.runningApplications.first!).then { app in
+            let state = State(delegate: initializeWithApp(appObserver: StubApplicationObserver()))
+            return state.frontmostApplication.set(state.runningApplications.first!).then { app in
               expect(app).to(beNil())
             }
           }

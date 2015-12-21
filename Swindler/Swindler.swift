@@ -9,6 +9,9 @@ public class State {
   /// The currently running applications.
   public var runningApplications: [Application] { return delegate.runningApplications.map({ Application(delegate: $0) }) }
 
+  /// The frontmost application.
+  public var frontmostApplication: WriteableProperty<OfOptionalType<Application>> { return delegate.frontmostApplication }
+
   /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
   public var knownWindows: [Window] { return delegate.knownWindows.flatMap({ Window(delegate: $0) }) }
 
