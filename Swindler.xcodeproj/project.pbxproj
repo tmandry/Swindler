@@ -16,6 +16,7 @@
 		2F61899A1C22737600C422C0 /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189971C22737600C422C0 /* AXSwiftFakes.swift */; };
 		2F61899B1C22737600C422C0 /* ExpectationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189981C22737600C422C0 /* ExpectationHelpers.swift */; };
 		2F61899C1C22737600C422C0 /* TestNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189991C22737600C422C0 /* TestNotifier.swift */; };
+		2F61899E1C27A8DD00C422C0 /* DriverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61899D1C27A8DC00C422C0 /* DriverSpec.swift */; };
 		2F7F00FC1C1152F600C97949 /* OSXApplicationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */; };
 		2F7F00FE1C1152FF00C97949 /* OSXWindowDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */; };
 		2F7F01001C1155DC00C97949 /* AXPropertyDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7F00FF1C1155DC00C97949 /* AXPropertyDelegate.swift */; };
@@ -69,6 +70,7 @@
 		2F6189971C22737600C422C0 /* AXSwiftFakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AXSwiftFakes.swift; path = support/AXSwiftFakes.swift; sourceTree = "<group>"; };
 		2F6189981C22737600C422C0 /* ExpectationHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ExpectationHelpers.swift; path = support/ExpectationHelpers.swift; sourceTree = "<group>"; };
 		2F6189991C22737600C422C0 /* TestNotifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestNotifier.swift; path = support/TestNotifier.swift; sourceTree = "<group>"; };
+		2F61899D1C27A8DC00C422C0 /* DriverSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DriverSpec.swift; sourceTree = "<group>"; };
 		2F7F00FB1C1152F600C97949 /* OSXApplicationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXApplicationDelegate.swift; sourceTree = "<group>"; };
 		2F7F00FD1C1152FF00C97949 /* OSXWindowDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OSXWindowDelegate.swift; sourceTree = "<group>"; };
 		2F7F00FF1C1155DC00C97949 /* AXPropertyDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AXPropertyDelegate.swift; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 				2F6189961C22736800C422C0 /* support */,
 				2F61898C1C22718E00C422C0 /* StateSpec.swift */,
 				2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */,
+				2F61899D1C27A8DC00C422C0 /* DriverSpec.swift */,
 				2F61898E1C22718E00C422C0 /* WindowSpec.swift */,
 				2F7F01071C115D4B00C97949 /* PropertySpec.swift */,
 				2F86CED71BD60117007E8C29 /* Info.plist */,
@@ -596,6 +599,7 @@
 			files = (
 				2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */,
 				2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */,
+				2F61899E1C27A8DD00C422C0 /* DriverSpec.swift in Sources */,
 				2F7F01081C115D4B00C97949 /* PropertySpec.swift in Sources */,
 				2F61899C1C22737600C422C0 /* TestNotifier.swift in Sources */,
 				2F61899A1C22737600C422C0 /* AXSwiftFakes.swift in Sources */,
