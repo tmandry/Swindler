@@ -14,6 +14,7 @@ private class StubApplicationDelegate: ApplicationDelegate {
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
   var isFrontmost: WriteableProperty<OfType<Bool>>!
+  var isHidden: WriteableProperty<OfType<Bool>>!
 
   func equalTo(other: ApplicationDelegate) -> Bool { return false }
 }

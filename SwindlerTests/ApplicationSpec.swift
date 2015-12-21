@@ -641,8 +641,31 @@ class OSXApplicationDelegateSpec: QuickSpec {
         it("updates") {
           appElement.attrs[.Frontmost] = true
           initializeApp()
+          appElement.attrs[.Frontmost] = false
           observer.emit(.ApplicationDeactivated, forElement: appElement)
           expect(app.isFrontmost.value).toEventually(beTrue())
+        }
+      }
+
+    }
+
+    describe("isHidden") {
+
+      context("when an application hides") {
+        it("updates") {
+          appElement.attrs[.Hidden] = true
+          observer.emit(.ApplicationHidden, forElement: appElement)
+          expect(app.isHidden.value).toEventually(beTrue())
+        }
+      }
+
+      context("when an application unhides") {
+        it("updates") {
+          appElement.attrs[.Hidden] = true
+          initializeApp()
+          appElement.attrs[.Hidden] = false
+          observer.emit(.ApplicationShown, forElement: appElement)
+          expect(app.isHidden.value).toEventually(beFalse())
         }
       }
 

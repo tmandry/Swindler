@@ -24,6 +24,7 @@ class OSXApplicationDelegate<
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
   var isFrontmost: WriteableProperty<OfType<Bool>>!
+  var isHidden: WriteableProperty<OfType<Bool>>!
 
   var processID: pid_t!
   var knownWindows: [WindowDelegate] {
@@ -36,8 +37,17 @@ class OSXApplicationDelegate<
     self.notifier = notifier
     self.processID = try axElement.pid()
 
+    let notifications: [Notification] = [
+      .WindowCreated,
+      .MainWindowChanged,
+      .ApplicationActivated,
+      .ApplicationDeactivated,
+      .ApplicationHidden,
+      .ApplicationShown
+    ]
+
     // Watch for notifications on app asynchronously.
-    let appWatched     = watchApplicationElement()
+    let appWatched     = watchApplicationElement(notifications)
     // Get the list of windows asynchronously (after notifications are subscribed so we can't miss one).
     let windowsFetched = fetchWindows(after: appWatched)
 
@@ -56,14 +66,18 @@ class OSXApplicationDelegate<
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
     isFrontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
       withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
+    isHidden = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Hidden, initProperties),
+      notifier: self)
 
     properties = [
       mainWindow,
-      isFrontmost
+      isFrontmost,
+      isHidden
     ]
     let attributes: [Attribute] = [
       .MainWindow,
-      .Frontmost
+      .Frontmost,
+      .Hidden
     ]
 
     // Fetch attribute values, after subscribing to notifications so there are no gaps.
@@ -72,7 +86,8 @@ class OSXApplicationDelegate<
     initialized = initializeProperties(properties, ofElement: axElement).asVoid()
   }
 
-  private func watchApplicationElement() -> Promise<Void> {
+  /// Called during initialization to set up an observer on the application element.
+  private func watchApplicationElement(notifications: [Notification]) -> Promise<Void> {
     do {
       weak var weakSelf = self
       observer = try Observer(processID: self.processID, callback: { o, e, n in
@@ -83,12 +98,6 @@ class OSXApplicationDelegate<
     }
 
     return Promise<Void>().thenInBackground { () -> () in
-      let notifications: [Notification] = [
-        .WindowCreated,
-        .MainWindowChanged,
-        .ApplicationActivated,
-        .ApplicationDeactivated
-      ]
       for notification in notifications {
         try traceRequest(self.axElement, "addNotification", notification) {
           try self.observer.addNotification(notification, forElement: self.axElement)
@@ -97,6 +106,7 @@ class OSXApplicationDelegate<
     }
   }
 
+  /// Called during initialization to fetch a list of window elements and initialize window delegates for them.
   private func fetchWindows(after promise: Promise<Void>) -> Promise<Void> {
     return promise.thenInBackground { () -> [UIElement]? in
       // Fetch the list of window elements.
@@ -130,7 +140,7 @@ class OSXApplicationDelegate<
     }
   }
 
-  // Initializes the object and returns it as a Promise that resolves once it's ready.
+  /// Initializes the object and returns it as a Promise that resolves once it's ready.
   static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
     return firstly {  // capture thrown errors in promise chain
       let appDelegate = try OSXApplicationDelegate(axElement: axElement, notifier: notifier)
@@ -147,10 +157,10 @@ class OSXApplicationDelegate<
       onWindowCreated(element)
     case .MainWindowChanged:
       onMainWindowChanged(element)
-    case .ApplicationActivated:
-      onActivationChanged()
-    case .ApplicationDeactivated:
-      onActivationChanged()
+    case .ApplicationActivated, .ApplicationDeactivated:
+      isFrontmost.refresh() as ()
+    case .ApplicationShown, .ApplicationHidden:
+      isHidden.refresh() as ()
     default:
       onWindowEvent(notification, windowElement: element)
     }
@@ -230,10 +240,6 @@ class OSXApplicationDelegate<
     //                 ~-.__|      /_ - ~ ^|      /- _      `..-'
     //                      |     /        |     /     ~-.     `-. _  _  _
     //                      |_____|        |_____|         ~ - . _ _ _ _ _>
-  }
-
-  private func onActivationChanged() {
-    isFrontmost.refresh() as ()
   }
 
   private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) {

@@ -45,8 +45,12 @@ public class Application: Equatable {
   /// -Note: Setting this will bring the window forward to just below the main window of the frontmost
   ///        application.
   public var mainWindow: WriteableProperty<OfOptionalType<Window>> { return delegate.mainWindow }
+
   /// Whether the application is the frontmost application.
   public var isFrontmost: WriteableProperty<OfType<Bool>> { return delegate.isFrontmost }
+
+  /// Whether the application is hidden.
+  public var isHidden: WriteableProperty<OfType<Bool>> { return delegate.isHidden }
 }
 public func ==(lhs: Application, rhs: Application) -> Bool {
   return lhs.delegate.equalTo(rhs.delegate)
@@ -59,6 +63,7 @@ protocol ApplicationDelegate: class {
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>! { get }
   var isFrontmost: WriteableProperty<OfType<Bool>>! { get }
+  var isHidden: WriteableProperty<OfType<Bool>>! { get }
 
   func equalTo(other: ApplicationDelegate) -> Bool
 }

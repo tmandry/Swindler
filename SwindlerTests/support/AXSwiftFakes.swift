@@ -62,6 +62,7 @@ class TestApplicationElementBase: TestUIElement {
     attrs[.Role]      = AXSwift.Role.Application.rawValue
     attrs[.Windows]   = Array<TestUIElement>()
     attrs[.Frontmost] = false
+    attrs[.Hidden]    = false
   }
 
   override func setAttribute(attribute: Attribute, value: Any) throws {

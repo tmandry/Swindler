@@ -60,13 +60,13 @@ public protocol Application {
   ///        application.
   public var mainWindow: WriteableProperty<OfOptionalType<Window>> { get }
 
+  // TODO
   /// The focused (key) window of the application, the one currently accepting keyboardinput.
   public var focusedWindow: Property<OfOptionalType<Window>> { get }
 
   /// Whether the application is the frontmost application.
   public var isFrontmost: WriteableProperty<OfType<Bool>> { get }
 
-  // TODO
   /// Whether the application is hidden.
   public var isHidden: WriteableProperty<OfType<Bool>> { get }
 
