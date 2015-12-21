@@ -628,50 +628,79 @@ class OSXApplicationDelegateSpec: QuickSpec {
     }
 
     describe("isFrontmost") {
-
       context("when an application becomes frontmost") {
-        it("updates") {
+        beforeEach {
           appElement.attrs[.Frontmost] = true
           observer.emit(.ApplicationActivated, forElement: appElement)
+        }
+
+        it("updates") {
           expect(app.isFrontmost.value).toEventually(beTrue())
         }
+
+        it("emits ApplicationIsFrontmostChangedEvent") {
+          notifier.expectEvent(ApplicationIsFrontmostChangedEvent.self)
+        }
+
       }
 
       context("when an application loses frontmost status") {
-        it("updates") {
+        beforeEach {
           appElement.attrs[.Frontmost] = true
           initializeApp()
           appElement.attrs[.Frontmost] = false
           observer.emit(.ApplicationDeactivated, forElement: appElement)
+        }
+
+        it("updates") {
           expect(app.isFrontmost.value).toEventually(beTrue())
         }
-      }
 
+        it("emits ApplicationIsFrontmostChangedEvent") {
+          notifier.expectEvent(ApplicationIsFrontmostChangedEvent.self)
+        }
+
+      }
     }
 
     describe("isHidden") {
-
       context("when an application hides") {
-        it("updates") {
+        beforeEach {
           appElement.attrs[.Hidden] = true
           observer.emit(.ApplicationHidden, forElement: appElement)
+        }
+
+        it("updates") {
           expect(app.isHidden.value).toEventually(beTrue())
         }
+
+        it("emits ApplicationIsHiddenChangedEvent") {
+          notifier.expectEvent(ApplicationIsHiddenChangedEvent.self)
+        }
+
       }
 
       context("when an application unhides") {
-        it("updates") {
+        beforeEach {
           appElement.attrs[.Hidden] = true
           initializeApp()
           appElement.attrs[.Hidden] = false
           observer.emit(.ApplicationShown, forElement: appElement)
+        }
+
+        it("updates") {
           expect(app.isHidden.value).toEventually(beFalse())
         }
-      }
 
+        it("emits ApplicationIsHiddenChangedEvent") {
+          notifier.expectEvent(ApplicationIsHiddenChangedEvent.self)
+        }
+
+      }
     }
 
     describe("Application equality") {
+
       it("returns true for identical app delegates") {
         expect(app).to(equal(Application(delegate: appDelegate)))
       }
@@ -683,6 +712,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
             expect(app).toNot(equal(Application(delegate: otherAppDelegate)))
         }
       }
+
     }
 
     context("when a window is created") {

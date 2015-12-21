@@ -65,9 +65,9 @@ class OSXApplicationDelegate<
         MainWindowPropertyDelegate(axElement, windowFinder: self, windowDelegate: WinDelegate.self, initProperties),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
     isFrontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
-      withEvent: ApplicationFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
+      withEvent: ApplicationIsFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
     isHidden = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Hidden, initProperties),
-      notifier: self)
+      withEvent: ApplicationIsHiddenChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     properties = [
       mainWindow,

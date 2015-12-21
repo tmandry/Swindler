@@ -249,7 +249,15 @@ extension ApplicationPropertyEventTypeInternal {
   }
 }
 
-public struct ApplicationFrontmostChangedEvent: ApplicationPropertyEventTypeInternal {
+public struct ApplicationIsFrontmostChangedEvent: ApplicationPropertyEventTypeInternal {
+  public typealias PropertyType = Bool
+  public var external: Bool
+  public var application: Application
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
+}
+
+public struct ApplicationIsHiddenChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Bool
   public var external: Bool
   public var application: Application
