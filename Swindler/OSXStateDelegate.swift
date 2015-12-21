@@ -13,6 +13,7 @@ protocol EventNotifier: class {
 protocol ApplicationObserverType {
   var frontmostApplicationPID: pid_t? { get }
   func onFrontmostApplicationChanged(handler: () -> ())
+  func makeApplicationFrontmost(pid: pid_t) throws
 }
 
 struct ApplicationObserver: ApplicationObserverType {
@@ -30,6 +31,13 @@ struct ApplicationObserver: ApplicationObserverType {
     notificationCenter.addObserverForName(NSWorkspaceDidDeactivateApplicationNotification, object: nil, queue: nil) { _ in
       handler()
     }
+  }
+
+  func makeApplicationFrontmost(pid: pid_t) throws {
+    guard let app = NSRunningApplication(processIdentifier: pid) else {
+      throw OSXDriverError.RunningApplicationNotFound(processID: pid)
+    }
+    app.activateWithOptions([])
   }
 }
 
@@ -49,7 +57,7 @@ class OSXStateDelegate<
   private var applications: LazyMapCollection<[pid_t: AppDelegate], AppDelegate> { return applicationsByPID.values }
 
   var runningApplications: [ApplicationDelegate] { return applications.map({ $0 as ApplicationDelegate }) }
-  var frontmostApplication: Property<OfOptionalType<Application>>!
+  var frontmostApplication: WriteableProperty<OfOptionalType<Application>>!
   var knownWindows: [WindowDelegate] { return applications.flatMap({ $0.knownWindows }) }
 
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
@@ -69,7 +77,7 @@ class OSXStateDelegate<
     }
 
     let (propertyInit, fulfill, _) = Promise<Void>.pendingPromise()
-    frontmostApplication = Property(
+    frontmostApplication = WriteableProperty(
       FrontmostApplicationPropertyDelegate(appFinder: self, appObserver: appObserver, initPromise: propertyInit),
       notifier: self)
 
@@ -150,7 +158,12 @@ class FrontmostApplicationPropertyDelegate: PropertyDelegate {
   }
 
   func writeValue(newValue: T) throws {
-    fatalError("Not implemented")
+    let pid = newValue.delegate.processID
+    do {
+      try appObserver.makeApplicationFrontmost(pid)
+    } catch {
+      throw PropertyError.InvalidObject(cause: error)
+    }
   }
 
   func initialize() -> Promise<Application?> {

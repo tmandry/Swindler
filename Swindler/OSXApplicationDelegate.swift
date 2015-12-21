@@ -25,14 +25,16 @@ class OSXApplicationDelegate<
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
   var isFrontmost: WriteableProperty<OfType<Bool>>!
 
+  var processID: pid_t!
   var knownWindows: [WindowDelegate] {
     return windows.map({ $0 as WindowDelegate })
   }
 
-  private init(axElement: ApplicationElement, notifier: EventNotifier) {
+  private init(axElement: ApplicationElement, notifier: EventNotifier) throws {
     // TODO: filter out applications by activation policy
     self.axElement = axElement.toElement
     self.notifier = notifier
+    self.processID = try axElement.pid()
 
     // Watch for notifications on app asynchronously.
     let appWatched     = watchApplicationElement()
@@ -73,7 +75,7 @@ class OSXApplicationDelegate<
   private func watchApplicationElement() -> Promise<Void> {
     do {
       weak var weakSelf = self
-      observer = try Observer(processID: axElement.pid(), callback: { o, e, n in
+      observer = try Observer(processID: self.processID, callback: { o, e, n in
         weakSelf?.handleEvent(observer: o, element: e, notification: n)
       })
     } catch {
@@ -130,8 +132,10 @@ class OSXApplicationDelegate<
 
   // Initializes the object and returns it as a Promise that resolves once it's ready.
   static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
-    let appDelegate = OSXApplicationDelegate(axElement: axElement, notifier: notifier)
-    return appDelegate.initialized.then { return appDelegate }
+    return firstly {  // capture thrown errors in promise chain
+      let appDelegate = try OSXApplicationDelegate(axElement: axElement, notifier: notifier)
+      return appDelegate.initialized.then { return appDelegate }
+    }
   }
 
   private func handleEvent(observer observer: Observer, element: UIElement, notification: AXSwift.Notification) {

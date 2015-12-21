@@ -8,6 +8,8 @@ import PromiseKit
 // The window delegate needs an application delegate for building Window objects to pass in events.
 // (Windows have an application property). The delegate isn't actually used so this class does nothing.
 private class StubApplicationDelegate: ApplicationDelegate {
+  var processID: pid_t!
+
   var knownWindows: [WindowDelegate] { return [] }
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!

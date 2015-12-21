@@ -5,6 +5,7 @@ enum OSXDriverError: ErrorType {
   case MissingAttribute(attribute: AXSwift.Attribute, onElement: UIElementType)
   case UnknownWindow(element: UIElementType)
   case WindowIgnored(element: UIElementType)
+  case RunningApplicationNotFound(processID: pid_t)
 }
 
 func unwrapWhenErrors<T>(error: ErrorType) throws -> Promise<T> {

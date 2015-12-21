@@ -23,7 +23,7 @@ public class State {
 // the functioning of the class, so they are not held with weak references.
 protocol StateDelegate {
   var runningApplications: [ApplicationDelegate] { get }
-  var frontmostApplication: Property<OfOptionalType<Application>>! { get }
+  var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
   var knownWindows: [WindowDelegate] { get }
   func on<Event: EventType>(handler: (Event) -> ())
 }
@@ -50,6 +50,8 @@ public func ==(lhs: Application, rhs: Application) -> Bool {
 }
 
 protocol ApplicationDelegate: class {
+  var processID: pid_t! { get }
+
   var knownWindows: [WindowDelegate] { get }
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>! { get }

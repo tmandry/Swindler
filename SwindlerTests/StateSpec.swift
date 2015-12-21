@@ -8,6 +8,7 @@ import PromiseKit
 class StubApplicationObserver: ApplicationObserverType {
   var frontmostApplicationPID: pid_t? { return nil }
   func onFrontmostApplicationChanged(handler: () -> ()) {}
+  func makeApplicationFrontmost(pid: pid_t) throws {}
 }
 
 class FakeApplicationObserver: ApplicationObserverType {
@@ -19,7 +20,11 @@ class FakeApplicationObserver: ApplicationObserverType {
     handlers.append(handler)
   }
 
-  func setFrontmost(pid: pid_t?) {
+  func makeApplicationFrontmost(pid: pid_t) throws {
+    setFrontmost(pid)
+  }
+
+  private func setFrontmost(pid: pid_t?) {
     frontmost_ = pid
     handlers.forEach{ handler in handler() }
   }
@@ -255,6 +260,30 @@ class OSXStateSpec: QuickSpec {
             appObserver.setFrontmost(appElement.processID)
             expect(getElement(state.delegate.frontmostApplication.value)).toEventually(equal(appElement))
           }
+
+        }
+
+        context("when set to an application") {
+
+          it("makes that application frontmost") {
+            expect(state.delegate.frontmostApplication.value).to(beNil())
+            state.delegate.frontmostApplication.set(state.runningApplications.first!)
+            expect(appObserver.frontmostApplicationPID).toEventually(equal(appElement.processID))
+          }
+
+          context("when the system complies") {
+            it("returns the app in the promise") { () -> Promise<Void> in
+              return state.delegate.frontmostApplication.set(state.runningApplications.first!).then { app in
+                expect(app).to(equal(state.runningApplications.first!))
+              }
+            }
+          }
+
+//          context("when the system does not change the frontmost application") {
+//            it("returns the old value in the promise") { () -> Promise<Void> in
+//
+//            }
+//          }
 
         }
       }
