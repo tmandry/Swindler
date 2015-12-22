@@ -46,6 +46,13 @@ public class Application: Equatable {
   ///        application.
   public var mainWindow: WriteableProperty<OfOptionalType<Window>> { return delegate.mainWindow }
 
+  /// The focused (or key) window of the application, the one currently accepting keyboard input.
+  /// Usually the same as the main window, or one of its helper windows such as a file open dialog.
+  ///
+  /// -Note: Sometimes the focused "window" is a sheet and not a window (i.e. it has no title bar
+  ///        and cannot be moved by the user). In that case the value will be nil.
+  public var focusedWindow: Property<OfOptionalType<Window>> { return delegate.focusedWindow }
+
   /// Whether the application is the frontmost application.
   public var isFrontmost: WriteableProperty<OfType<Bool>> { return delegate.isFrontmost }
 
@@ -62,6 +69,7 @@ protocol ApplicationDelegate: class {
   var knownWindows: [WindowDelegate] { get }
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>! { get }
+  var focusedWindow: Property<OfOptionalType<Window>>! { get }
   var isFrontmost: WriteableProperty<OfType<Bool>>! { get }
   var isHidden: WriteableProperty<OfType<Bool>>! { get }
 
@@ -266,6 +274,14 @@ public struct ApplicationIsHiddenChangedEvent: ApplicationPropertyEventTypeInter
 }
 
 public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventTypeInternal {
+  public typealias PropertyType = Window?
+  public var external: Bool
+  public var application: Application
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
+}
+
+public struct ApplicationFocusedWindowChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Window?
   public var external: Bool
   public var application: Application

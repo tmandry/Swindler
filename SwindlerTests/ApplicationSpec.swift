@@ -444,7 +444,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
 
         it("emits an ApplicationMainWindowChangedEvent with correct values") {
           if let event = notifier.expectEvent(ApplicationMainWindowChangedEvent.self) {
-            // expect(event.application).to(equal(app))
+            expect(event.application).to(equal(app))
             expect(event.external).to(beTrue())
             expect(event.oldValue).to(beNil())
             expect(getWindowElement(event.newValue)).to(equal(windowElement))
@@ -625,6 +625,51 @@ class OSXApplicationDelegateSpec: QuickSpec {
         }
       }
 
+    }
+
+    describe("focusedWindow") {
+
+      context("when there is no initial focused window") {
+        it("equals nil") {
+          expect(appElement.attrs[.FocusedWindow]).to(beNil())
+          expect(app.focusedWindow.value).to(beNil())
+        }
+      }
+
+      context("when there is an initial focused window") {
+        it("equals the main window") {
+          let windowElement = createWindow(emitEvent: false)
+          windowElement.attrs[.Focused] = true
+          appElement.attrs[.FocusedWindow] = windowElement
+          initializeApp()
+
+          expect(getWindowElement(app.focusedWindow.value)).to(equal(windowElement))
+        }
+      }
+
+      context("when a window becomes focused") {
+        var windowElement: TestWindowElement!
+        beforeEach {
+          windowElement = createWindow()
+          windowElement.attrs[.Focused] = true
+          appElement.attrs[.FocusedWindow] = windowElement
+          observer.emit(.FocusedWindowChanged, forElement: windowElement)
+        }
+
+        it("updates the value") {
+          expect(getWindowElement(app.focusedWindow.value)).toEventually(equal(windowElement))
+        }
+
+         it("emits an ApplicationFocusedWindowChangedEvent with correct values") {
+           if let event = notifier.expectEvent(ApplicationFocusedWindowChangedEvent.self) {
+             expect(event.application).to(equal(app))
+             expect(event.external).to(beTrue())
+             expect(event.oldValue).to(beNil())
+             expect(getWindowElement(event.newValue)).to(equal(windowElement))
+           }
+         }
+
+      }
     }
 
     describe("isFrontmost") {

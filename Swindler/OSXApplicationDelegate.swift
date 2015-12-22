@@ -19,10 +19,10 @@ class OSXApplicationDelegate<
   private var newWindowHandler = NewWindowHandler<UIElement>()
 
   private var initialized: Promise<Void>!
-
   private var properties: [PropertyType]!
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
+  var focusedWindow: Property<OfOptionalType<Window>>!
   var isFrontmost: WriteableProperty<OfType<Bool>>!
   var isHidden: WriteableProperty<OfType<Bool>>!
 
@@ -40,6 +40,7 @@ class OSXApplicationDelegate<
     let notifications: [Notification] = [
       .WindowCreated,
       .MainWindowChanged,
+      .FocusedWindowChanged,
       .ApplicationActivated,
       .ApplicationDeactivated,
       .ApplicationHidden,
@@ -64,6 +65,10 @@ class OSXApplicationDelegate<
     mainWindow = WriteableProperty<OfOptionalType<Window>>(
         MainWindowPropertyDelegate(axElement, windowFinder: self, windowDelegate: WinDelegate.self, initProperties),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
+    focusedWindow = Property<OfOptionalType<Window>>(
+      WindowPropertyAdapter.init(AXPropertyDelegate(axElement, .FocusedWindow, initProperties),
+        windowFinder: self, windowDelegate: WinDelegate.self),
+      withEvent: ApplicationFocusedWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
     isFrontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
       withEvent: ApplicationIsFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
     isHidden = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Hidden, initProperties),
@@ -71,11 +76,13 @@ class OSXApplicationDelegate<
 
     properties = [
       mainWindow,
+      focusedWindow,
       isFrontmost,
       isHidden
     ]
     let attributes: [Attribute] = [
       .MainWindow,
+      .FocusedWindow,
       .Frontmost,
       .Hidden
     ]
@@ -156,7 +163,9 @@ class OSXApplicationDelegate<
     case .WindowCreated:
       onWindowCreated(element)
     case .MainWindowChanged:
-      onMainWindowChanged(element)
+      onWindowTypePropertyChanged(mainWindow, element: element)
+    case .FocusedWindowChanged:
+      onWindowTypePropertyChanged(focusedWindow, element: element)
     case .ApplicationActivated, .ApplicationDeactivated:
       isFrontmost.refresh() as ()
     case .ApplicationShown, .ApplicationHidden:
@@ -177,34 +186,33 @@ class OSXApplicationDelegate<
     }
   }
 
-  private func onMainWindowChanged(element: UIElement) {
+  /// Does special handling for updating of properties that hold windows (mainWindow, focusedWindow).
+  private func onWindowTypePropertyChanged(property: Property<OfOptionalType<Window>>, element: UIElement) {
     if element == axElement {
-      // Was passed the application (this means there is no main window); we can refresh immediately.
-      mainWindow.refresh() as ()
+      // Was passed the application (this means there is no main/focused window); we can refresh immediately.
+      property.refresh() as ()
     } else if windows.contains({ $0.axElement == element }) {
       // Was passed an already-initialized window; we can refresh immediately.
-      mainWindow.refresh() as ()
+      property.refresh() as ()
     } else {
       // We don't know about the element that has been passed. Wait until the window is initialized.
-      newWindowHandler.performAfterWindowCreatedForElement(element) { self.mainWindow.refresh() }
+      newWindowHandler.performAfterWindowCreatedForElement(element) { property.refresh() }
 
       // In some cases, the element is actually IS the application element, but equality checks
       // inexplicably return false. (This has been observed for Finder.) In this case we will never
       // see a new window for this element. Asynchronously check the element role to handle this case.
-      checkIfMainWindowChangedElementIsActuallyApplication(element)
+      checkIfWindowPropertyElementIsActuallyApplication(element, property: property)
     }
   }
 
-  private func checkIfMainWindowChangedElementIsActuallyApplication(element: UIElement) {
+  private func checkIfWindowPropertyElementIsActuallyApplication(element: UIElement, property: Property<OfOptionalType<Window>>) {
     Promise<Void>().thenInBackground { () -> Role? in
-      guard let role: String = try element.attribute(.Role) else {
-        return nil
-      }
+      guard let role: String = try element.attribute(.Role) else { return nil }
       return Role(rawValue: role)
     }.then { role -> () in
       if role == .Application {
         // There is no main window; we can refresh immediately.
-        self.mainWindow.refresh() as ()
+        property.refresh() as ()
         // Remove the handler that will never be called.
         self.newWindowHandler.removeAllForUIElement(element)
       }
@@ -212,12 +220,12 @@ class OSXApplicationDelegate<
       switch error {
       case AXSwift.Error.InvalidUIElement:
         // The window is already gone.
-        self.mainWindow.refresh() as ()
+        property.refresh() as ()
         self.newWindowHandler.removeAllForUIElement(element)
       default:
         // TODO: Retry on timeout
         // Just refresh and hope for the best. Leave the handler in case the element does show up again.
-        self.mainWindow.refresh() as ()
+        property.refresh() as ()
         log.warn("Received MainWindowChanged on unknown element \(element), then \(error) when " +
                  "trying to read its role")
       }

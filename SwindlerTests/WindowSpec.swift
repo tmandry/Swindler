@@ -13,6 +13,7 @@ private class StubApplicationDelegate: ApplicationDelegate {
   var knownWindows: [WindowDelegate] { return [] }
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
+  var focusedWindow: Property<OfOptionalType<Window>>!
   var isFrontmost: WriteableProperty<OfType<Bool>>!
   var isHidden: WriteableProperty<OfType<Bool>>!
 

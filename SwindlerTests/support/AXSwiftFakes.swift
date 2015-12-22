@@ -100,6 +100,7 @@ class TestWindowElement: TestUIElement {
     attrs[.Title]      = "Window \(id)"
     attrs[.Minimized]  = false
     attrs[.Main]       = true
+    attrs[.Focused]    = true
     attrs[.FullScreen] = false
   }
 
@@ -155,7 +156,8 @@ class FakeObserver: TestObserver {
 
   func emit(notification: AXSwift.Notification, forElement element: TestUIElement) {
     switch notification {
-    case .WindowCreated, .MainWindowChanged:
+    // These notifications usually happen on a window element, but are observed on the application element.
+    case .WindowCreated, .MainWindowChanged, .FocusedWindowChanged:
       if let window = element as? TestWindowElement {
         doEmit(notification, watchedElement: window.app, passedElement: element)
       } else {

@@ -60,8 +60,11 @@ public protocol Application {
   ///        application.
   public var mainWindow: WriteableProperty<OfOptionalType<Window>> { get }
 
-  // TODO
-  /// The focused (key) window of the application, the one currently accepting keyboardinput.
+  /// The focused (or key) window of the application, the one currently accepting keyboard input.
+  /// Usually the same as the main window, or one of its helper windows such as a file open dialog.
+  ///
+  /// -Note: Sometimes the focused "window" is a sheet that is not a window (i.e. it has no title
+  ///        bar and cannot be moved by the user). In that case the value will be nil.
   public var focusedWindow: Property<OfOptionalType<Window>> { get }
 
   /// Whether the application is the frontmost application.
