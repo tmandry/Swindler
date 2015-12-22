@@ -19,7 +19,6 @@ class OSXApplicationDelegate<
   private var newWindowHandler = NewWindowHandler<UIElement>()
 
   private var initialized: Promise<Void>!
-  private var properties: [PropertyType]!
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
   var focusedWindow: Property<OfOptionalType<Window>>!
@@ -74,7 +73,7 @@ class OSXApplicationDelegate<
     isHidden = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Hidden, initProperties),
       withEvent: ApplicationIsHiddenChangedEvent.self, receivingObject: Application.self, notifier: self)
 
-    properties = [
+    let properties: [PropertyType] = [
       mainWindow,
       focusedWindow,
       isFrontmost,
