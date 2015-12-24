@@ -130,11 +130,13 @@ class OSXApplicationDelegate<
 
       return successes(windowPromises, onError: { index, error in
         // Log any errors we encounter, but don't fail.
+        let windowElement = windowElements[index]
         log.debug({
-          let windowElement = windowElements[index]
           let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
           return "Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)"
         }())
+
+        self.newWindowHandler.removeAllForUIElement(windowElement)
       })
     }.then { windowDelegates -> () in
       self.windows = windowDelegates
@@ -182,6 +184,7 @@ class OSXApplicationDelegate<
       self.newWindowHandler.windowCreated(windowElement)
     }.error { error in
       log.debug("Could not watch \(windowElement): \(error)")
+      self.newWindowHandler.removeAllForUIElement(windowElement)
     }
   }
 
