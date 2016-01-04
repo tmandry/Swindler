@@ -143,24 +143,31 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
       beforeEach { AdversaryObserver.reset() }
 
       typealias AppDelegate = OSXApplicationDelegate<TestUIElement, AdversaryApplicationElement, AdversaryObserver>
-      func initializeApp() -> Promise<AppDelegate> {
-        return AppDelegate.initialize(axElement: appElement, notifier: notifier)
+      func initializeApp() -> AppDelegate {
+        // Initializing the app synchronously avoids problems with intermittent failures caused by
+        // Quick/Nimble and simplifies tests.
+        var appDelegate: AppDelegate?
+        waitUntil { done in
+          AppDelegate.initialize(axElement: appElement, notifier: notifier).then { appDel -> () in
+            appDelegate = appDel
+            done()
+          }
+        }
+        return appDelegate!
       }
 
       context("when a property value changes right before observing it") {
 
         context("for a regular property") {
-          it("is read correctly") { () -> Promise<Void> in
+          it("is read correctly") {
             appElement.attrs[.Frontmost] = false
 
             AdversaryObserver.onAddNotification(.ApplicationActivated) { _ in
               appElement.attrs[.Frontmost] = true
             }
 
-            return initializeApp().then { appDelegate -> () in
-              let app = Swindler.Application(delegate: appDelegate)
-              expect(app.isFrontmost.value).toEventually(beTrue())
-            }
+            let app = Swindler.Application(delegate: initializeApp())
+            expect(app.isFrontmost.value).toEventually(beTrue())
           }
         }
 
@@ -176,13 +183,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
               appElement.attrs[.MainWindow] = windowElement
             }
 
-            // There's a problem with intermittent failures when wrapping an eventually expectation
-            // inside waitUntil, so we have to do this. Currently only affects object properties.
-            var app: Swindler.Application!
-            waitUntil { done in initializeApp().then { appDelegate -> () in
-              app = Swindler.Application(delegate: appDelegate)
-              done()
-            } }
+            let app = Swindler.Application(delegate: initializeApp())
             expect(app.mainWindow.value).toEventuallyNot(beNil())
           }
         }
@@ -194,7 +195,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
         // an event is emitted or not.
 
         context("for a regular property") {
-          it("is updated correctly") { () -> Promise<Void> in
+          it("is updated correctly") {
             appElement.attrs[.Frontmost] = false
 
             AdversaryObserver.onAddNotification(.ApplicationActivated) { observer in
@@ -202,10 +203,8 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
               observer.emit(.ApplicationActivated, forElement: appElement)
             }
 
-            return initializeApp().then { appDelegate -> () in
-              let app = Swindler.Application(delegate: appDelegate)
-              expect(app.isFrontmost.value).toEventually(beTrue())
-            }
+            let app = Swindler.Application(delegate: initializeApp())
+            expect(app.isFrontmost.value).toEventually(beTrue())
           }
         }
 
@@ -222,11 +221,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
               observer.emit(.MainWindowChanged, forElement: windowElement)
             }
 
-            var app: Swindler.Application!
-            waitUntil { done in initializeApp().then { appDelegate -> () in
-              app = Swindler.Application(delegate: appDelegate)
-              done()
-            } }
+            let app = Swindler.Application(delegate: initializeApp())
             expect(app.mainWindow.value).toEventuallyNot(beNil())
           }
         }
@@ -236,7 +231,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
       context("when a property value changes right after reading it") {
 
         context("for a regular property") {
-          it("is updated correctly") { () -> Promise<Void> in
+          it("is updated correctly") {
             appElement.attrs[.Frontmost] = false
 
             var observer: AdversaryObserver?
@@ -248,10 +243,8 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
               observer?.emit(.ApplicationActivated, forElement: appElement)
             }
 
-            return initializeApp().then { appDelegate -> () in
-              let app = Swindler.Application(delegate: appDelegate)
-              expect(app.isFrontmost.value).toEventually(beTrue())
-            }
+            let app = Swindler.Application(delegate: initializeApp())
+            expect(app.isFrontmost.value).toEventually(beTrue())
           }
         }
 
@@ -272,11 +265,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
               observer?.emit(.MainWindowChanged, forElement: appElement)
             }
 
-            var app: Swindler.Application!
-            waitUntil { done in initializeApp().then { appDelegate -> () in
-              app = Swindler.Application(delegate: appDelegate)
-              done()
-            } }
+            let app = Swindler.Application(delegate: initializeApp())
             expect(app.mainWindow.value).toEventuallyNot(beNil())
           }
         }
@@ -299,11 +288,12 @@ class OSXApplicationDelegateSpec: QuickSpec {
     func initializeApp() {
       waitUntil { done in
         OSXApplicationDelegate<TestUIElement, AdversaryApplicationElement, FakeObserver>.initialize(
-          axElement: appElement, notifier: notifier).then { applicationDelegate -> () in
-            appDelegate = applicationDelegate
-            observer = appDelegate.observer
-            app = Swindler.Application(delegate: appDelegate)
-            done()
+          axElement: appElement, notifier: notifier
+        ).then { applicationDelegate -> () in
+          appDelegate = applicationDelegate
+          observer = appDelegate.observer
+          app = Swindler.Application(delegate: appDelegate)
+          done()
         }
       }
     }
