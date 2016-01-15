@@ -36,6 +36,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     swindler.on { (event: ApplicationMainWindowChangedEvent) in
       print("new main window: \(event.newValue?.title.value). old: \(event.oldValue?.title.value)")
+      self.frontmostWindowChanged()
+    }
+    swindler.on { (event: FrontmostApplicationChangedEvent) in
+      print("new frontmost app: \(event.newValue). old: \(event.newValue)")
+      self.frontmostWindowChanged()
     }
 
 //    dispatchAfter(10.0) {
@@ -49,6 +54,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        }
 //      }
 //    }
+  }
+
+  private func frontmostWindowChanged() {
+    print("new frontmost window: \(swindler.frontmostApplication.value?.mainWindow.value?.title.value)")
   }
 
   func applicationWillTerminate(aNotification: NSNotification) {
