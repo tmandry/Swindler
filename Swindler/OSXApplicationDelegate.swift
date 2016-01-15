@@ -172,7 +172,7 @@ class OSXApplicationDelegate<
     case .ApplicationShown, .ApplicationHidden:
       isHidden.refresh() as ()
     default:
-      onWindowEvent(notification, windowElement: element)
+      onWindowLevelEvent(notification, windowElement: element)
     }
   }
 
@@ -252,7 +252,7 @@ class OSXApplicationDelegate<
     //                      |_____|        |_____|         ~ - . _ _ _ _ _>
   }
 
-  private func onWindowEvent(notification: AXSwift.Notification, windowElement: UIElement) {
+  private func onWindowLevelEvent(notification: AXSwift.Notification, windowElement: UIElement) {
     func handleEvent(windowDelegate: WinDelegate) {
       windowDelegate.handleEvent(notification, observer: observer)
 
