@@ -79,7 +79,7 @@ final class OSXStateDelegate<
     let (propertyInit, fulfill, _) = Promise<Void>.pendingPromise()
     frontmostApplication = WriteableProperty(
       FrontmostApplicationPropertyDelegate(appFinder: self, appObserver: appObserver, initPromise: propertyInit),
-      notifier: self)
+      withEvent: FrontmostApplicationChangedEvent.self, receivingObject: State.self, notifier: self)
 
     // Must add the observer after configuring frontmostApplication.
     appObserver.onFrontmostApplicationChanged {
@@ -157,7 +157,7 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
     return app
   }
 
-  func writeValue(newValue: T) throws {
+  func writeValue(newValue: Application) throws {
     let pid = newValue.delegate.processID
     do {
       try appObserver.makeApplicationFrontmost(pid)

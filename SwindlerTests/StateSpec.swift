@@ -171,12 +171,18 @@ class OSXStateDelegateSpec: QuickSpec {
         }
 
         context("when the system complies") {
+
           it("returns the app in the promise") { () -> Promise<Void> in
             let state = State(delegate: initializeWithApp())
             return state.frontmostApplication.set(state.runningApplications.first!).then { app in
               expect(app).to(equal(state.runningApplications.first!))
             }
           }
+
+          pending("emits a FrontmostApplicationChangedEvent") {
+            // Need to be able to pass in a TestNotifier to test this (ideally).
+          }
+
         }
 
         context("when the system does not change the frontmost application") {

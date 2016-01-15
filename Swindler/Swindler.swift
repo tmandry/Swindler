@@ -163,23 +163,6 @@ extension EventType {
   }
 }
 
-/// An event on a window.
-public protocol WindowEventType: EventType {
-  var external: Bool { get }  // TODO: remove
-  /// The window corresponding to the event.
-  var window: Window { get }
-}
-
-public struct WindowCreatedEvent: WindowEventType {
-  public var external: Bool
-  public var window: Window
-}
-
-public struct WindowDestroyedEvent: WindowEventType {
-  public var external: Bool
-  public var window: Window
-}
-
 /// An event describing a property change.
 public protocol PropertyEventType: EventType {
   typealias PropertyType
@@ -195,6 +178,41 @@ public protocol PropertyEventType: EventType {
 protocol PropertyEventTypeInternal: PropertyEventType {
   typealias Object
   init(external: Bool, object: Object, oldValue: PropertyType, newValue: PropertyType)
+}
+
+protocol StatePropertyEventTypeInternal: PropertyEventTypeInternal {
+  typealias Object = State
+  init(external: Bool, state: Object, oldValue: PropertyType, newValue: PropertyType)
+}
+extension StatePropertyEventTypeInternal {
+  init(external: Bool, object: Object, oldValue: PropertyType, newValue: PropertyType) {
+    self.init(external: external, state: object, oldValue: oldValue, newValue: newValue)
+  }
+}
+
+public struct FrontmostApplicationChangedEvent: StatePropertyEventTypeInternal {
+  public typealias PropertyType = Application?
+  public var external: Bool
+  public var state: State
+  public var oldValue: PropertyType
+  public var newValue: PropertyType
+}
+
+/// An event on a window.
+public protocol WindowEventType: EventType {
+  var external: Bool { get }  // TODO: remove
+  /// The window corresponding to the event.
+  var window: Window { get }
+}
+
+public struct WindowCreatedEvent: WindowEventType {
+  public var external: Bool
+  public var window: Window
+}
+
+public struct WindowDestroyedEvent: WindowEventType {
+  public var external: Bool
+  public var window: Window
 }
 
 public protocol WindowPropertyEventType: WindowEventType, PropertyEventType {}

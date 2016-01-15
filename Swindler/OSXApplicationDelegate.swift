@@ -61,16 +61,16 @@ final class OSXApplicationDelegate<
       .recover(unwrapWhenErrors)
 
     // Configure properties.
-    mainWindow = WriteableProperty<OfOptionalType<Window>>(
+    mainWindow = WriteableProperty(
         MainWindowPropertyDelegate(axElement, windowFinder: self, windowDelegate: WinDelegate.self, initProperties),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
-    focusedWindow = Property<OfOptionalType<Window>>(
+    focusedWindow = Property(
       WindowPropertyAdapter.init(AXPropertyDelegate(axElement, .FocusedWindow, initProperties),
         windowFinder: self, windowDelegate: WinDelegate.self),
       withEvent: ApplicationFocusedWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
-    isFrontmost = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Frontmost, initProperties),
+    isFrontmost = WriteableProperty(AXPropertyDelegate(axElement, .Frontmost, initProperties),
       withEvent: ApplicationIsFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
-    isHidden = WriteableProperty<OfType<Bool>>(AXPropertyDelegate(axElement, .Hidden, initProperties),
+    isHidden = WriteableProperty(AXPropertyDelegate(axElement, .Hidden, initProperties),
       withEvent: ApplicationIsHiddenChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     let properties: [PropertyType] = [
