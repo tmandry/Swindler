@@ -39,7 +39,11 @@ class OSXStateDelegateSpec: QuickSpec {
     func initialize(
       appObserver: ApplicationObserverType = StubApplicationObserver()
     ) -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver> {
-      return OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>(appObserver: appObserver)
+      let stateDel = OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>(appObserver: appObserver)
+      waitUntil { done in
+        stateDel.frontmostApplication.initialized.then { done() }
+      }
+      return stateDel
     }
 
     context("during initialization") {
