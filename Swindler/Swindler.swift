@@ -188,10 +188,10 @@ extension StatePropertyEventTypeInternal {
 
 public struct FrontmostApplicationChangedEvent: StatePropertyEventTypeInternal {
   public typealias PropertyType = Application?
-  public var external: Bool
-  public var state: State
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let state: State
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
 
 /// An event on a window.
@@ -202,13 +202,13 @@ public protocol WindowEventType: EventType {
 }
 
 public struct WindowCreatedEvent: WindowEventType {
-  public var external: Bool
-  public var window: Window
+  public let external: Bool
+  public let window: Window
 }
 
 public struct WindowDestroyedEvent: WindowEventType {
-  public var external: Bool
-  public var window: Window
+  public let external: Bool
+  public let window: Window
 }
 
 public protocol WindowPropertyEventType: WindowEventType, PropertyEventType {}
@@ -225,34 +225,34 @@ extension WindowPropertyEventTypeInternal {
 
 public struct WindowPosChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGPoint
-  public var external: Bool
-  public var window: Window
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let window: Window
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
 
 public struct WindowSizeChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = CGSize
-  public var external: Bool
-  public var window: Window
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let window: Window
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
 
 public struct WindowTitleChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = String
-  public var external: Bool
-  public var window: Window
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let window: Window
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
 
 public struct WindowMinimizedChangedEvent: WindowPropertyEventTypeInternal {
   public typealias PropertyType = Bool
-  public var external: Bool
-  public var window: Window
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let window: Window
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
 
 public protocol ApplicationEventType: EventType {
@@ -273,24 +273,24 @@ extension ApplicationPropertyEventTypeInternal {
 
 public struct ApplicationIsHiddenChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Bool
-  public var external: Bool
-  public var application: Application
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let application: Application
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
 
 public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Window?
-  public var external: Bool
-  public var application: Application
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let application: Application
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
 
 public struct ApplicationFocusedWindowChangedEvent: ApplicationPropertyEventTypeInternal {
   public typealias PropertyType = Window?
-  public var external: Bool
-  public var application: Application
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
+  public let external: Bool
+  public let application: Application
+  public let oldValue: PropertyType
+  public let newValue: PropertyType
 }
