@@ -22,7 +22,6 @@ final class OSXApplicationDelegate<
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
   var focusedWindow: Property<OfOptionalType<Window>>!
-  var isFrontmost: WriteableProperty<OfType<Bool>>!
   var isHidden: WriteableProperty<OfType<Bool>>!
 
   var processID: pid_t!
@@ -40,8 +39,6 @@ final class OSXApplicationDelegate<
       .WindowCreated,
       .MainWindowChanged,
       .FocusedWindowChanged,
-      .ApplicationActivated,
-      .ApplicationDeactivated,
       .ApplicationHidden,
       .ApplicationShown
     ]
@@ -68,21 +65,17 @@ final class OSXApplicationDelegate<
       WindowPropertyAdapter.init(AXPropertyDelegate(axElement, .FocusedWindow, initProperties),
         windowFinder: self, windowDelegate: WinDelegate.self),
       withEvent: ApplicationFocusedWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
-    isFrontmost = WriteableProperty(AXPropertyDelegate(axElement, .Frontmost, initProperties),
-      withEvent: ApplicationIsFrontmostChangedEvent.self, receivingObject: Application.self, notifier: self)
     isHidden = WriteableProperty(AXPropertyDelegate(axElement, .Hidden, initProperties),
       withEvent: ApplicationIsHiddenChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     let properties: [PropertyType] = [
       mainWindow,
       focusedWindow,
-      isFrontmost,
       isHidden
     ]
     let attributes: [Attribute] = [
       .MainWindow,
       .FocusedWindow,
-      .Frontmost,
       .Hidden
     ]
 
@@ -185,8 +178,6 @@ final class OSXApplicationDelegate<
       onWindowTypePropertyChanged(mainWindow, element: element)
     case .FocusedWindowChanged:
       onWindowTypePropertyChanged(focusedWindow, element: element)
-    case .ApplicationActivated, .ApplicationDeactivated:
-      isFrontmost.refresh() as ()
     case .ApplicationShown, .ApplicationHidden:
       isHidden.refresh() as ()
     default:

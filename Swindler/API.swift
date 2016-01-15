@@ -67,6 +67,7 @@ public protocol Application {
   ///        bar and cannot be moved by the user). In that case the value will be nil.
   public var focusedWindow: Property<OfOptionalType<Window>> { get }
 
+  // TODO?
   /// Whether the application is the frontmost application.
   public var isFrontmost: WriteableProperty<OfType<Bool>> { get }
 

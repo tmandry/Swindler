@@ -53,9 +53,6 @@ public final class Application: Equatable {
   ///        and cannot be moved by the user). In that case the value will be nil.
   public var focusedWindow: Property<OfOptionalType<Window>> { return delegate.focusedWindow }
 
-  /// Whether the application is the frontmost application.
-  public var isFrontmost: WriteableProperty<OfType<Bool>> { return delegate.isFrontmost }
-
   /// Whether the application is hidden.
   public var isHidden: WriteableProperty<OfType<Bool>> { return delegate.isHidden }
 }
@@ -70,7 +67,6 @@ protocol ApplicationDelegate: class {
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>! { get }
   var focusedWindow: Property<OfOptionalType<Window>>! { get }
-  var isFrontmost: WriteableProperty<OfType<Bool>>! { get }
   var isHidden: WriteableProperty<OfType<Bool>>! { get }
 
   func equalTo(other: ApplicationDelegate) -> Bool
@@ -273,14 +269,6 @@ extension ApplicationPropertyEventTypeInternal {
   init(external: Bool, object: Object, oldValue: PropertyType, newValue: PropertyType) {
     self.init(external: external, application: object, oldValue: oldValue, newValue: newValue)
   }
-}
-
-public struct ApplicationIsFrontmostChangedEvent: ApplicationPropertyEventTypeInternal {
-  public typealias PropertyType = Bool
-  public var external: Bool
-  public var application: Application
-  public var oldValue: PropertyType
-  public var newValue: PropertyType
 }
 
 public struct ApplicationIsHiddenChangedEvent: ApplicationPropertyEventTypeInternal {

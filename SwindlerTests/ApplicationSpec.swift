@@ -39,7 +39,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
 
       context("when the application is missing a required property attribute") {
         it("resolves to an error") { () -> Promise<Void> in
-          appElement.attrs[.Frontmost] = nil
+          appElement.attrs[.Hidden] = nil
           let promise = AppDelegate.initialize(axElement: appElement, notifier: notifier)
           return expectToFail(promise)
         }
@@ -162,14 +162,14 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
 
         context("for a regular property") {
           it("is read correctly") {
-            appElement.attrs[.Frontmost] = false
+            appElement.attrs[.Hidden] = false
 
-            AdversaryObserver.onAddNotification(.ApplicationActivated) { _ in
-              appElement.attrs[.Frontmost] = true
+            AdversaryObserver.onAddNotification(.ApplicationHidden) { _ in
+              appElement.attrs[.Hidden] = true
             }
 
             let app = Swindler.Application(delegate: initializeApp())
-            expect(app.isFrontmost.value).toEventually(beTrue())
+            expect(app.isHidden.value).toEventually(beTrue())
           }
         }
 
@@ -198,15 +198,15 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
 
         context("for a regular property") {
           it("is updated correctly") {
-            appElement.attrs[.Frontmost] = false
+            appElement.attrs[.Hidden] = false
 
-            AdversaryObserver.onAddNotification(.ApplicationActivated) { observer in
-              appElement.attrs[.Frontmost] = true
-              observer.emit(.ApplicationActivated, forElement: appElement)
+            AdversaryObserver.onAddNotification(.ApplicationHidden) { observer in
+              appElement.attrs[.Hidden] = true
+              observer.emit(.ApplicationHidden, forElement: appElement)
             }
 
             let app = Swindler.Application(delegate: initializeApp())
-            expect(app.isFrontmost.value).toEventually(beTrue())
+            expect(app.isHidden.value).toEventually(beTrue())
           }
         }
 
@@ -234,19 +234,19 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
 
         context("for a regular property") {
           it("is updated correctly") {
-            appElement.attrs[.Frontmost] = false
+            appElement.attrs[.Hidden] = false
 
             var observer: AdversaryObserver?
-            AdversaryObserver.onAddNotification(.ApplicationActivated) { obs in
+            AdversaryObserver.onAddNotification(.ApplicationHidden) { obs in
               observer = obs
             }
-            appElement.onFirstAttributeRead(.Frontmost) { _ in
-              appElement.attrs[.Frontmost] = true
-              observer?.emit(.ApplicationActivated, forElement: appElement)
+            appElement.onFirstAttributeRead(.Hidden) { _ in
+              appElement.attrs[.Hidden] = true
+              observer?.emit(.ApplicationHidden, forElement: appElement)
             }
 
             let app = Swindler.Application(delegate: initializeApp())
-            expect(app.isFrontmost.value).toEventually(beTrue())
+            expect(app.isHidden.value).toEventually(beTrue())
           }
         }
 
@@ -706,42 +706,6 @@ class OSXApplicationDelegateSpec: QuickSpec {
              expect(getWindowElement(event.newValue)).to(equal(windowElement))
            }
          }
-
-      }
-    }
-
-    describe("isFrontmost") {
-      context("when an application becomes frontmost") {
-        beforeEach {
-          appElement.attrs[.Frontmost] = true
-          observer.emit(.ApplicationActivated, forElement: appElement)
-        }
-
-        it("updates") {
-          expect(app.isFrontmost.value).toEventually(beTrue())
-        }
-
-        it("emits ApplicationIsFrontmostChangedEvent") {
-          notifier.expectEvent(ApplicationIsFrontmostChangedEvent.self)
-        }
-
-      }
-
-      context("when an application loses frontmost status") {
-        beforeEach {
-          appElement.attrs[.Frontmost] = true
-          initializeApp()
-          appElement.attrs[.Frontmost] = false
-          observer.emit(.ApplicationDeactivated, forElement: appElement)
-        }
-
-        it("updates") {
-          expect(app.isFrontmost.value).toEventually(beTrue())
-        }
-
-        it("emits ApplicationIsFrontmostChangedEvent") {
-          notifier.expectEvent(ApplicationIsFrontmostChangedEvent.self)
-        }
 
       }
     }
