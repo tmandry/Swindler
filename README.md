@@ -6,7 +6,7 @@ excellent hardware and UNIX-based OS that "just works".
 
 But along the way we gave up something dear to us: control over our desktop environment.
 
-The goal of Swindler is to help us **take back that control**, and give us the best of both worlds.
+**The goal of Swindler is to help us take back that control**, and give us the best of both worlds.
 
 ## What Swindler Does
 
@@ -33,10 +33,10 @@ accessibility APIs. (See the example below.)
 Window managers on OS X rely on IPC: you _ask_ an application for a window's position, _wait_ for it
 to respond, _request_ that it be moved or focused, then _wait_ for the application to comply (or
 not). Most of the time this works okay, but it works at the mercy of the remote application's event
-loop, which can often lead to long, multi-second delays.
+loop, which can lead to long, multi-second delays.
 
 Swindler maintains a model of all applications and window states, so your code knows everything
-about the windows on the screen. **Reads are instantaneous**, because all state is kept within your
+about the windows on the screen. **Reads are instantaneous**, because all state is cached within your
 application's process and stays up to date. Swindler is extensively tested to ensure it stays
 consistent with the system in any situation.
 
