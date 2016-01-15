@@ -131,7 +131,9 @@ class TestObserver: ObserverType {
 // observed and supports emitting notifications.
 class FakeObserver: TestObserver {
   static var observers: [FakeObserver] = []
-  var callback: Callback!
+
+  private var callback: Callback!
+  private let lock: NSLock = NSLock()
 
   required init(processID: pid_t, callback: Callback) throws {
     self.callback = callback
@@ -142,6 +144,9 @@ class FakeObserver: TestObserver {
   var watchedElements: [TestUIElement: [AXSwift.Notification]] = [:]
 
   override func addNotification(notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+    lock.lock()
+    defer { lock.unlock() }
+
     if watchedElements[element] == nil {
       watchedElements[element] = []
     }
@@ -149,6 +154,9 @@ class FakeObserver: TestObserver {
   }
 
   override func removeNotification(notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+    lock.lock()
+    defer { lock.unlock() }
+
     if let watchedNotifications = watchedElements[element] {
       watchedElements[element] = watchedNotifications.filter{ $0 != notification }
     }
