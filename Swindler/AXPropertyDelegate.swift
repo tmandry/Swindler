@@ -2,7 +2,7 @@ import AXSwift
 import PromiseKit
 
 /// Implements PropertyDelegate using the AXUIElement API.
-class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelegate {
+final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelegate {
   typealias InitDict = [AXSwift.Attribute: Any]
   let axElement: UIElement
   let attribute: AXSwift.Attribute

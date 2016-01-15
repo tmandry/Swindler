@@ -42,7 +42,7 @@ struct ApplicationObserver: ApplicationObserverType {
 }
 
 /// Implements StateDelegate using the AXUIElement API.
-class OSXStateDelegate<
+final class OSXStateDelegate<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: StateDelegate, EventNotifier {
@@ -139,7 +139,7 @@ extension OSXStateDelegate: AppFinder {
   }
 }
 
-class FrontmostApplicationPropertyDelegate: PropertyDelegate {
+private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
   typealias T = Application
 
   weak var appFinder: AppFinder?

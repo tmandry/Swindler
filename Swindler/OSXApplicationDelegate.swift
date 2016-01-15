@@ -2,7 +2,7 @@ import AXSwift
 import PromiseKit
 
 /// Implements ApplicationDelegate using the AXUIElement API.
-class OSXApplicationDelegate<
+final class OSXApplicationDelegate<
   UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
   where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: ApplicationDelegate, PropertyNotifier {
@@ -384,7 +384,7 @@ protocol OSXDelegateType {
 extension OSXWindowDelegate: OSXDelegateType {}
 
 /// Custom PropertyDelegate for the mainWindow property.
-class MainWindowPropertyDelegate<
+private final class MainWindowPropertyDelegate<
   AppElement: ApplicationElementType, WinFinder: WindowFinder, WinDelegate: OSXDelegateType
   where WinFinder.UIElement == WinDelegate.UIElement
 >: PropertyDelegate {
@@ -427,7 +427,7 @@ class MainWindowPropertyDelegate<
 }
 
 /// Converts a UIElement attribute into a readable Window property.
-class WindowPropertyAdapter<
+private final class WindowPropertyAdapter<
     Delegate: PropertyDelegate, WinFinder: WindowFinder, WinDelegate: OSXDelegateType
     where Delegate.T == WinFinder.UIElement, WinFinder.UIElement == WinDelegate.UIElement
 >: PropertyDelegate {

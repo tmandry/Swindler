@@ -152,7 +152,7 @@ public class Property<TypeSpec: PropertyTypeSpec> {
 
   /// Forces the value of the property to refresh. Most properties are watched so you don't need to
   /// call this yourself.
-  public func refresh() -> Promise<Type> {
+  public final func refresh() -> Promise<Type> {
     // Allow queueing up a refresh before initialization is complete, which means "assume the value
     // you will be initialized with is going to be stale". This is useful if an event is received
     // before fully initializing.
@@ -208,7 +208,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
 
   /// The value of the property. Reading is instant and synchronous, but writing is asynchronous and
   /// the value will not be updated until the write is complete. Use `set` to retrieve a promise.
-  override public var value: Type {
+  override public final var value: Type {
     get {
       return super.value
     }
@@ -224,7 +224,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
 
   /// Sets the value of the property.
   /// - returns: A promise that resolves to the new actual value of the property.
-  public func set(newValue: NonOptionalType) -> Promise<Type> {
+  public final func set(newValue: NonOptionalType) -> Promise<Type> {
     return Promise<Void>().then(on: backgroundQueue) { () throws -> (Type, Type) in
       self.requestLock.lock()
       defer { self.requestLock.unlock() }

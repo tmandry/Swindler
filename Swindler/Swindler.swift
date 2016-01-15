@@ -1,6 +1,6 @@
 /// The state represents the entire state of the OS, including all known windows, applications, and
 /// spaces.
-public class State {
+public final class State {
   let delegate: StateDelegate
   init(delegate: StateDelegate) {
     self.delegate = delegate
@@ -32,7 +32,7 @@ protocol StateDelegate {
 }
 
 /// A running application.
-public class Application: Equatable {
+public final class Application: Equatable {
   let delegate: ApplicationDelegate
   init(delegate: ApplicationDelegate) {
     self.delegate = delegate
@@ -77,7 +77,7 @@ protocol ApplicationDelegate: class {
 }
 
 /// A window.
-public class Window: Equatable {
+public final class Window: Equatable {
   internal let delegate: WindowDelegate
 
   // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.

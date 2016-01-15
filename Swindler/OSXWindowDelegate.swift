@@ -2,7 +2,7 @@ import AXSwift
 import PromiseKit
 
 /// Implements WindowDelegate using the AXUIElement API.
-class OSXWindowDelegate<
+final class OSXWindowDelegate<
   UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
   where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
 >: WindowDelegate, PropertyNotifier {
