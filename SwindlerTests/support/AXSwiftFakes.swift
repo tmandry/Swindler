@@ -220,35 +220,50 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
   var onRead: Optional<(AdversaryApplicationElement) -> ()> = nil
   var watchAttribute: Attribute? = nil
   var alreadyCalled = false
+  var onMainThread = true
 
   /// Defines code that runs on the main thread before returning the value of the attribute.
-  func onFirstAttributeRead(attribute: Attribute, handler: (AdversaryApplicationElement) -> ()) {
+  func onFirstAttributeRead(attribute: Attribute, onMainThread: Bool = true, handler: (AdversaryApplicationElement) -> ()) {
     watchAttribute = attribute
     onRead = handler
     alreadyCalled = false
+    self.onMainThread = onMainThread
+  }
+
+  var lock = NSLock()
+  private func handleAttributeRead() {
+    lock.lock()
+    defer { lock.unlock() }
+
+    if !self.alreadyCalled {
+      if self.onMainThread {
+        performOnMainThread { self.onRead?(self) }
+      } else {
+        self.onRead?(self)
+      }
+
+      self.alreadyCalled = true
+    }
   }
 
   override func attribute<T>(attribute: Attribute) throws -> T? {
     let result: T? = try super.attribute(attribute)
-    if attribute == watchAttribute && !alreadyCalled {
-      performOnMainThread {
-        if !self.alreadyCalled {
-          self.onRead?(self)
-          self.alreadyCalled = true
-        }
-      }
+    if attribute == watchAttribute {
+      handleAttributeRead()
+    }
+    return result
+  }
+  override func arrayAttribute<T>(attribute: Attribute) throws -> [T]? {
+    let result: [T]? = try super.arrayAttribute(attribute)
+    if attribute == watchAttribute {
+      handleAttributeRead()
     }
     return result
   }
   override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
     let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
     if let watchAttribute = watchAttribute where attributes.contains(watchAttribute) {
-      performOnMainThread {
-        if !self.alreadyCalled {
-          self.onRead?(self)
-          self.alreadyCalled = true
-        }
-      }
+      handleAttributeRead()
     }
     return result
   }

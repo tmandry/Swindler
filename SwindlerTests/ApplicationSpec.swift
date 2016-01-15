@@ -109,6 +109,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
             axElement: appElement, notifier: notifier)
           return expectToFail(promise)
         }
+
       }
 
       context("when the observer throws an error during adding notifications") {
@@ -123,6 +124,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
             axElement: appElement, notifier: notifier)
           return expectToFail(promise)
         }
+
       }
 
     }
@@ -267,6 +269,52 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
 
             let app = Swindler.Application(delegate: initializeApp())
             expect(app.mainWindow.value).toEventuallyNot(beNil())
+          }
+        }
+
+      }
+
+      describe("knownWindows") {
+        var windowElement: TestWindowElement!
+        var observer: AdversaryObserver?
+        beforeEach {
+          windowElement = TestWindowElement(forApp: appElement)
+          AdversaryObserver.onAddNotification(.WindowCreated) { observer = $0 }
+        }
+
+        // Currently I don't have a way of making these race condition tests deterministic. They
+        // rely on 100ms sleeps. This isn't ideal, but they fail consistently for me before the fix.
+
+        context("when a window is created right after reading the windows attribute, but the event comes before the read returns") {
+          it("doesn't remove the window") {
+            appElement.onFirstAttributeRead(.Windows, onMainThread: false) { _ in
+              performOnMainThread {
+                appElement.windows.append(windowElement)
+                observer?.emit(.WindowCreated, forElement: windowElement)
+              }
+
+              // Wait for event to be processed on main thread.
+              NSThread.sleepForTimeInterval(0.1)
+
+              // Will return no windows.
+            }
+
+            let appDelegate = initializeApp()
+            expect(appDelegate.knownWindows).toEventually(haveCount(1))
+          }
+        }
+
+        context("when a window is created right before reading the windows attribute and the event comes after reading") {
+          it("doesn't create more than one window") {
+            appElement.windows.append(windowElement)  // before read
+
+            let appDelegate = initializeApp()
+            waitUntil(appDelegate.knownWindows.count == 1)
+            observer?.emit(.WindowCreated, forElement: windowElement)
+
+            NSRunLoop.mainRunLoop().runUntilDate(NSDate(timeIntervalSinceNow: 0.1))
+
+            expect(appDelegate.knownWindows).to(haveCount(1))
           }
         }
 

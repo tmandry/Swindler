@@ -116,16 +116,17 @@ class OSXApplicationDelegate<
   private func fetchWindows(after promise: Promise<Void>) -> Promise<Void> {
     return promise.thenInBackground { () -> [UIElement]? in
       // Fetch the list of window elements.
-      return try self.axElement.arrayAttribute(.Windows)
-    }.then { maybeWindowElements -> Promise<[WinDelegate]> in
+      return try traceRequest(self.axElement, "arrayAttribute", AXSwift.Attribute.Windows) {
+        return try self.axElement.arrayAttribute(.Windows)
+      }
+    }.then { maybeWindowElements -> Promise<Void> in
       guard let windowElements = maybeWindowElements else {
         throw OSXDriverError.MissingAttribute(attribute: .Windows, onElement: self.axElement)
       }
 
       // Initialize OSXWindowDelegates from the window elements.
       let windowPromises = windowElements.map({ windowElement in
-        WinDelegate.initialize(
-            appDelegate: self, notifier: self.notifier, axElement: windowElement, observer: self.observer)
+        self.createWindowForElementIfNotExists(windowElement)
       })
 
       return successes(windowPromises, onError: { index, error in
@@ -135,16 +136,33 @@ class OSXApplicationDelegate<
           let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
           return "Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)"
         }())
+      }).asVoid()
+    }
+  }
 
-        self.newWindowHandler.removeAllForUIElement(windowElement)
-      })
-    }.then { windowDelegates -> () in
-      self.windows = windowDelegates
-
-      // Now we can process any events received during initialization that depended on these windows.
-      for windowDelegate in windowDelegates {
-        self.newWindowHandler.windowCreated(windowDelegate.axElement)
+  /// Initializes an OSXWindowDelegate for the given axElement and adds it to `windows`, then calls
+  /// newWindowHandler handlers for that window, if any. If the window has already been added, does
+  /// nothing, and the returned promise resolves to nil.
+  private func createWindowForElementIfNotExists(axElement: UIElement) -> Promise<WinDelegate?> {
+    return WinDelegate.initialize(
+      appDelegate: self, notifier: notifier, axElement: axElement, observer: observer
+    ).then { windowDelegate -> WinDelegate? in
+      // This check needs to happen here, because it's possible (though rare) to call this method from two
+      // different places (fetchWindows and onWindowCreated) before initialization of either one is complete.
+      if self.windows.contains({ $0.axElement == axElement }) {
+        return nil
       }
+
+      self.windows.append(windowDelegate)
+      self.newWindowHandler.windowCreated(axElement)
+
+      return windowDelegate
+    }.recover { error -> WinDelegate? in
+      // If this initialization of WinDelegate failed, the window is somehow invalid and we won't
+      // be seeing it again. Here we assume that if there were other initializations requested, they
+      // won't succeed either.
+      self.newWindowHandler.removeAllForUIElement(axElement)
+      throw error
     }
   }
 
@@ -177,14 +195,13 @@ class OSXApplicationDelegate<
   }
 
   private func onWindowCreated(windowElement: UIElement) {
-    WinDelegate.initialize(appDelegate: self, notifier: notifier, axElement: windowElement, observer: observer).then { windowDelegate -> () in
+    createWindowForElementIfNotExists(windowElement).then { windowDelegate -> () in
+      guard let windowDelegate = windowDelegate else { return }
+
       let window = Window(delegate: windowDelegate, appDelegate: self)
-      self.windows.append(windowDelegate)
       self.notifier?.notify(WindowCreatedEvent(external: true, window: window))
-      self.newWindowHandler.windowCreated(windowElement)
     }.error { error in
       log.debug("Could not watch \(windowElement): \(error)")
-      self.newWindowHandler.removeAllForUIElement(windowElement)
     }
   }
 
