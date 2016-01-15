@@ -119,7 +119,7 @@ extension OSXStateDelegate: PropertyNotifier {
   typealias Object = State
 
   // TODO... can we get rid of this or simplify it?
-  func notify<Event: PropertyEventTypeInternal where Event.Object == State>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+  func notify<Event: PropertyEventType where Event.Object == State>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
     notify(Event(external: external, object: State(delegate: self), oldValue: oldValue, newValue: newValue))
   }
 

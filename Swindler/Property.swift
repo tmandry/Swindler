@@ -6,7 +6,7 @@ protocol PropertyNotifier: class {
   typealias Object
 
   /// Called when the property value has been updated.
-  func notify<Event: PropertyEventTypeInternal where Event.Object == Object>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType)
+  func notify<Event: PropertyEventType where Event.Object == Object>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType)
 
   /// Called when the underlying object has become invalid.
   func notifyInvalid()
@@ -138,7 +138,7 @@ public class Property<TypeSpec: PropertyTypeSpec> {
   }
 
   /// Use this initializer if there is an event associated with the property.
-  convenience init<Impl: PropertyDelegate, Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Impl.T == NonOptionalType, Event.PropertyType == Type, Event.Object == Object, Notifier.Object == Object>(_ delegate: Impl, withEvent: Event.Type, receivingObject: Object.Type, notifier: Notifier) {
+  convenience init<Impl: PropertyDelegate, Notifier: PropertyNotifier, Event: PropertyEventType, Object where Impl.T == NonOptionalType, Event.PropertyType == Type, Event.Object == Object, Notifier.Object == Object>(_ delegate: Impl, withEvent: Event.Type, receivingObject: Object.Type, notifier: Notifier) {
     self.init(delegate, notifier: notifier)
     self.notifier = PropertyNotifierThunk(notifier, withEvent: Event.self, receivingObject: Object.self)
   }
@@ -279,7 +279,7 @@ private struct PropertyNotifierThunk<TypeSpec: PropertyTypeSpec> {
   let notify: Optional<(external: Bool, oldValue: PropertyType, newValue: PropertyType) -> ()>
   let notifyInvalid: () -> ()
 
-  init<Notifier: PropertyNotifier, Event: PropertyEventTypeInternal, Object where Event.PropertyType == PropertyType, Notifier.Object == Object, Event.Object == Object>(_ wrapped: Notifier, withEvent: Event.Type, receivingObject: Object.Type) {
+  init<Notifier: PropertyNotifier, Event: PropertyEventType, Object where Event.PropertyType == PropertyType, Notifier.Object == Object, Event.Object == Object>(_ wrapped: Notifier, withEvent: Event.Type, receivingObject: Object.Type) {
     weak var wrappedNotifier = wrapped
     self.notifyInvalid = { wrappedNotifier?.notifyInvalid() }
     self.notify = { (external: Bool, oldValue: PropertyType, newValue: PropertyType) in

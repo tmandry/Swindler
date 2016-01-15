@@ -35,7 +35,7 @@ private class TestWindowPropertyNotifier: PropertyNotifier {
   var events: [Event] = []
   var stillValid = true
 
-  func notify<EventT: PropertyEventTypeInternal where EventT.Object == Window>(event: EventT.Type, external: Bool, oldValue: EventT.PropertyType, newValue: EventT.PropertyType) {
+  func notify<EventT: PropertyEventType where EventT.Object == Window>(event: EventT.Type, external: Bool, oldValue: EventT.PropertyType, newValue: EventT.PropertyType) {
     events.append(Event(type: event, external: external, oldValue: oldValue, newValue: newValue))
   }
   func notifyInvalid() {

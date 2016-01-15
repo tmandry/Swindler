@@ -137,7 +137,7 @@ final class OSXWindowDelegate<
     }
   }
 
-  func notify<Event: PropertyEventTypeInternal where Event.Object == Window>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+  func notify<Event: PropertyEventType where Event.Object == Window>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
     guard let window = Window(delegate: self) else {
       // Application terminated already; shouldn't send events.
       return
