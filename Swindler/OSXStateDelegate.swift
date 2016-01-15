@@ -22,13 +22,18 @@ struct ApplicationObserver: ApplicationObserverType {
   }
 
   func onFrontmostApplicationChanged(handler: () -> ()) {
-    let notificationCenter = NSWorkspace.sharedWorkspace().notificationCenter
+    let sharedWorkspace    = NSWorkspace.sharedWorkspace()
+    let notificationCenter = sharedWorkspace.notificationCenter
 
-    // Err on the side of updating too often.
-    notificationCenter.addObserverForName(NSWorkspaceDidActivateApplicationNotification, object: nil, queue: nil) { _ in
+    // Err on the side of updating too often; watch both activate and deactivate notifications.
+    notificationCenter.addObserverForName(
+      NSWorkspaceDidActivateApplicationNotification, object: sharedWorkspace, queue: nil
+    ) { _ in
       handler()
     }
-    notificationCenter.addObserverForName(NSWorkspaceDidDeactivateApplicationNotification, object: nil, queue: nil) { _ in
+    notificationCenter.addObserverForName(
+      NSWorkspaceDidDeactivateApplicationNotification, object: sharedWorkspace, queue: nil
+    ) { _ in
       handler()
     }
   }
