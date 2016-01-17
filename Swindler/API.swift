@@ -67,7 +67,7 @@ public protocol Application {
   ///        bar and cannot be moved by the user). In that case the value will be nil.
   public var focusedWindow: Property<OfOptionalType<Window>> { get }
 
-  // TODO?
+  // TODO (convenience)
   /// Whether the application is the frontmost application.
   public var isFrontmost: WriteableProperty<OfType<Bool>> { get }
 
@@ -111,11 +111,11 @@ public protocol Window: Equatable {
   /// Whether the window is minimized.
   public var isMinimized: WriteableProperty<OfType<Bool>> { get }
 
-  // TODO
+  // TODO (convenience)
   /// Whether or not the window is the main window of its application.
   public var isMain: WriteableProperty<OfType<Bool>> { get }
 
-  // TODO
+  // TODO (convenience)
   /// Whether or not the window is the focused (key) window of its application, the one currently
   /// accepting keyboard input.
   public var isFocused: Property<OfType<Bool>> { get }
