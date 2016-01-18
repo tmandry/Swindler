@@ -147,22 +147,28 @@ public protocol Window: Equatable {
 //   - cause: {.Moved, .ScreenLayoutChanged}
 // SpaceChanged
 
-// TODO
 /// A physical display.
 public protocol Screen: Equatable {
-  /// The rectangle defining the screen boundaries in global coordinates. Note that these may be negative.
-  public var rect: CGRect { get }
+  /// The frame defining the screen boundaries in global coordinates. Note that x and y may be negative.
+  public var frame: CGRect { get }
 
+  /// The frame defining the screen boundaries in global coordinates, excluding the menu bar and dock.
+  public var applicationFrame: CGRect { get }
+
+  // TODO
   /// The windows currently visible on this screen.
   public var visibleWindows: [Window] { get }
 
+  // TODO
   // use case?
   /// The known windows that are on this screen.
   public var knownWindows: [Window] { get }
 
+  // TODO
   /// The known spaces that correspond to this screen.
   public var knownSpaces: [Space] { get }
 
+  // TODO
   /// The space that is currently visible on this screen.
   public var currentSpace: Space { get }
 }

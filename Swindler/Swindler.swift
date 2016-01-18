@@ -7,13 +7,16 @@ public final class State {
   }
 
   /// The currently running applications.
-  public var runningApplications: [Application] { return delegate.runningApplications.map({ Application(delegate: $0) }) }
+  public var runningApplications: [Application] { return delegate.runningApplications.map{ Application(delegate: $0) } }
 
   /// The frontmost application.
   public var frontmostApplication: WriteableProperty<OfOptionalType<Application>> { return delegate.frontmostApplication }
 
   /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
-  public var knownWindows: [Window] { return delegate.knownWindows.flatMap({ Window(delegate: $0) }) }
+  public var knownWindows: [Window] { return delegate.knownWindows.flatMap{ Window(delegate: $0) } }
+
+  /// The physical screens in the current display configuration.
+  public var screens: [Screen] { return delegate.screens.map{ Screen(delegate: $0) } }
 
   /// Calls `handler` when the specified `Event` occurs.
   public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
@@ -28,6 +31,7 @@ protocol StateDelegate {
   var runningApplications: [ApplicationDelegate] { get }
   var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
   var knownWindows: [WindowDelegate] { get }
+  var screens: [ScreenDelegate] { get }
   func on<Event: EventType>(handler: (Event) -> ())
 }
 
@@ -136,6 +140,33 @@ protocol WindowDelegate: class {
   var isFullscreen: WriteableProperty<OfType<Bool>>! { get }
 
   func equalTo(other: WindowDelegate) -> Bool
+}
+
+/// A physical display.
+public final class Screen: Equatable, CustomDebugStringConvertible {
+  internal let delegate: ScreenDelegate
+  internal init(delegate: ScreenDelegate) {
+    self.delegate = delegate
+  }
+
+  public var debugDescription: String { return delegate.debugDescription }
+
+  /// The frame defining the screen boundaries in global coordinates.
+  /// -Note: x and y may be negative.
+  public var frame: CGRect { return delegate.frame }
+
+  /// The frame defining the screen boundaries in global coordinates, excluding the menu bar and dock.
+  public var applicationFrame: CGRect { return delegate.applicationFrame }
+}
+public func ==(lhs: Screen, rhs: Screen) -> Bool {
+  return lhs.delegate.equalTo(rhs.delegate)
+}
+
+internal protocol ScreenDelegate: class, CustomDebugStringConvertible {
+  var frame: CGRect { get }
+  var applicationFrame: CGRect { get }
+
+  func equalTo(other: ScreenDelegate) -> Bool
 }
 
 // (oldSpace, newSpace, windowsArrived, windowsDeparted)

@@ -64,11 +64,20 @@ final class OSXStateDelegate<
   var runningApplications: [ApplicationDelegate] { return applications.map({ $0 as ApplicationDelegate }) }
   var frontmostApplication: WriteableProperty<OfOptionalType<Application>>!
   var knownWindows: [WindowDelegate] { return applications.flatMap({ $0.knownWindows }) }
+  var screens: [ScreenDelegate]
 
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
 
   init(appObserver: ApplicationObserverType) {
     log.debug("Initializing Swindler")
+
+    guard let nsScreens = NSScreen.screens() else {
+      // TODO fail
+      screens = []
+      log.error("Could not initialize Swindler: NSScreen could not obtain screen information")
+      return
+    }
+    screens = nsScreens.map{ OSXScreenDelegate(nsScreen: $0) }
 
     let appPromises = ApplicationElement.all().map { appElement in
       return AppDelegate.initialize(axElement: appElement, notifier: self).then { application in

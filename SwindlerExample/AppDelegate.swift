@@ -21,6 +21,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(aNotification: NSNotification) {
     swindler = Swindler.state
+
+    print("screens: \(swindler.screens)")
+
     swindler.on { (event: WindowCreatedEvent) in
       let window = event.window
       print("new window: \(window.title.value)")
