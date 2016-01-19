@@ -12,7 +12,6 @@
 		2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */; };
 		2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898C1C22718E00C422C0 /* StateSpec.swift */; };
 		2F6189921C22718E00C422C0 /* WindowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898E1C22718E00C422C0 /* WindowSpec.swift */; };
-		2F6189941C2272BD00C422C0 /* support in Resources */ = {isa = PBXBuildFile; fileRef = 2F6189931C2272BD00C422C0 /* support */; };
 		2F61899A1C22737600C422C0 /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189971C22737600C422C0 /* AXSwiftFakes.swift */; };
 		2F61899B1C22737600C422C0 /* ExpectationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189981C22737600C422C0 /* ExpectationHelpers.swift */; };
 		2F61899C1C22737600C422C0 /* TestNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189991C22737600C422C0 /* TestNotifier.swift */; };
@@ -67,7 +66,6 @@
 		2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationSpec.swift; sourceTree = "<group>"; };
 		2F61898C1C22718E00C422C0 /* StateSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateSpec.swift; sourceTree = "<group>"; };
 		2F61898E1C22718E00C422C0 /* WindowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowSpec.swift; sourceTree = "<group>"; };
-		2F6189931C2272BD00C422C0 /* support */ = {isa = PBXFileReference; lastKnownFileType = folder; name = support; path = /Users/tyler/code/Swindler/SwindlerTests/support; sourceTree = "<absolute>"; };
 		2F6189971C22737600C422C0 /* AXSwiftFakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AXSwiftFakes.swift; path = support/AXSwiftFakes.swift; sourceTree = "<group>"; };
 		2F6189981C22737600C422C0 /* ExpectationHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ExpectationHelpers.swift; path = support/ExpectationHelpers.swift; sourceTree = "<group>"; };
 		2F6189991C22737600C422C0 /* TestNotifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestNotifier.swift; path = support/TestNotifier.swift; sourceTree = "<group>"; };
@@ -434,7 +432,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F6189941C2272BD00C422C0 /* support in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
