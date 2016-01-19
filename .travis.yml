@@ -1,0 +1,8 @@
+language: objective-c
+cache: cocoapods
+
+xcode_workspace: Swindler.xcworkspace
+xcode_scheme: Swindler
+
+osx_image: xcode7.2
+xcode_sdk: macosx10.11
