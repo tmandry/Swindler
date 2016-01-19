@@ -179,9 +179,9 @@ class OSXStateDelegateSpec: QuickSpec {
             }
           }
 
-          pending("emits a FrontmostApplicationChangedEvent") {
-            // Need to be able to pass in a TestNotifier to test this (ideally).
-          }
+//          pending("emits a FrontmostApplicationChangedEvent") {
+//            // Need to be able to pass in a TestNotifier to test this (ideally).
+//          }
 
         }
 
