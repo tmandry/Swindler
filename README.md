@@ -1,4 +1,6 @@
 # Swindler
+
+[![Join the chat at https://gitter.im/tmandry/Swindler](https://badges.gitter.im/tmandry/Swindler.svg)](https://gitter.im/tmandry/Swindler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 _A Swift window management framework for OS X_
 
 In the past few years, many developers formerly on Linux and Windows have migrated to Mac for their
