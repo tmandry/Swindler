@@ -1,7 +1,8 @@
 # Swindler
-
-[![Join the chat at https://gitter.im/tmandry/Swindler](https://badges.gitter.im/tmandry/Swindler.svg)](https://gitter.im/tmandry/Swindler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 _A Swift window management framework for OS X_
+
+[![Build Status](https://travis-ci.org/tmandry/Swindler.svg?branch=master)](https://travis-ci.org/tmandry/Swindler)
+[![Join the chat at https://gitter.im/tmandry/Swindler](https://badges.gitter.im/tmandry/Swindler.svg)](https://gitter.im/tmandry/Swindler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 In the past few years, many developers formerly on Linux and Windows have migrated to Mac for their
 excellent hardware and UNIX-based OS that "just works".
@@ -118,6 +119,8 @@ Swindler is in development and is in **alpha**. Here is the state of its major f
 You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/Swindler/API.swift).
 
 ## Contact
+
+You can chat with us on [Gitter](https://gitter.im/tmandry/Swindler).
 
 Follow me on Twitter: [@tmandry](https://twitter.com/tmandry)
 
