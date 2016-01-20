@@ -34,17 +34,23 @@ struct Log {
 
   /// Log something purely informational (not visible in production).
   func info(@autoclosure out: () -> (String)) {
-    log(out(), level: ASL_LEVEL_INFO, withColor: Color.cyan)
+    #if SWINDLER_DEBUG
+      log(out(), level: ASL_LEVEL_INFO, withColor: Color.cyan)
+    #endif
   }
 
   /// Log debug info (not visible in production).
   func debug(@autoclosure out: () -> (String)) {
-    log(out(), level: ASL_LEVEL_DEBUG, withColor: Color.blue)
+    #if SWINDLER_DEBUG
+      log(out(), level: ASL_LEVEL_DEBUG, withColor: Color.blue)
+    #endif
   }
 
   /// Log more verbose debug info (usually not visible in production or development).
   func trace(@autoclosure out: () -> (String)) {
-    log(out(), level: ASL_LEVEL_DEBUG, withColor: Color.gray)
+    #if SWINDLER_TRACE
+      log(out(), level: ASL_LEVEL_DEBUG, withColor: Color.gray)
+    #endif
   }
 
   struct Color {
