@@ -5,14 +5,6 @@ import Nimble
 import AXSwift
 import PromiseKit
 
-class StubStateDelegate: StateDelegate {
-  var runningApplications: [ApplicationDelegate] = []
-  var frontmostApplication: WriteableProperty<OfOptionalType<Swindler.Application>>!
-  var knownWindows: [WindowDelegate] = []
-  var screens: [ScreenDelegate] = []
-  func on<Event: EventType>(handler: (Event) -> ()) {}
-}
-
 class OSXApplicationDelegateInitializeSpec: QuickSpec {
   override func spec() {
 

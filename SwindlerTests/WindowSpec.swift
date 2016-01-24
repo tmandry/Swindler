@@ -5,23 +5,6 @@ import Nimble
 import AXSwift
 import PromiseKit
 
-// The window delegate needs an application delegate for building Window objects to pass in events.
-// (Windows have an application property). The delegate isn't actually used so this class does nothing.
-private class StubApplicationDelegate: ApplicationDelegate {
-  var processID: pid_t!
-
-  var stateDelegate: StateDelegate? = StubStateDelegate()
-
-  var knownWindows: [WindowDelegate] { return [] }
-
-  var mainWindow: WriteableProperty<OfOptionalType<Window>>!
-  var focusedWindow: Property<OfOptionalType<Window>>!
-  var isFrontmost: WriteableProperty<OfType<Bool>>!
-  var isHidden: WriteableProperty<OfType<Bool>>!
-
-  func equalTo(other: ApplicationDelegate) -> Bool { return false }
-}
-
 // The window delegate holds a weak reference to the app delegate, so we use this singleton to ensure
 // it doesn't get destroyed. Same for app -> state. See #3.
 private let stubApplicationDelegate = StubApplicationDelegate()
