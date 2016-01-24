@@ -1,6 +1,71 @@
 import AXSwift
 import PromiseKit
 
+// MARK: - Application
+
+/// A running application.
+public final class Application: Equatable {
+  internal let delegate: ApplicationDelegate
+
+  // An Application holds a strong reference to the State (and therefore the StateDelegate).
+  // It should not be held internally by delegates, or it would create a reference cycle.
+  internal var state_: State!
+
+  internal init(delegate: ApplicationDelegate, stateDelegate: StateDelegate) {
+    self.delegate = delegate
+    self.state_ = State(delegate: stateDelegate)
+  }
+
+  /// This initializer only fails if the StateDelegate has been destroyed.
+  internal convenience init?(delegate: ApplicationDelegate) {
+    guard let stateDelegate = delegate.stateDelegate else {
+      log.debug("Application for delegate \(delegate) failed to initialize because of unreachable StateDelegate")
+      return nil
+    }
+    self.init(delegate: delegate, stateDelegate: stateDelegate)
+  }
+
+  /// The global Swindler state.
+  public var swindlerState: State { return state_ }
+
+  /// The known windows of the application. Windows on spaces that we haven't seen yet aren't included.
+  public var knownWindows: [Window] { return delegate.knownWindows.flatMap({ Window(delegate: $0) }) }
+
+  /// The main window of the application.
+  /// -Note: Setting this will bring the window forward to just below the main window of the frontmost
+  ///        application.
+  public var mainWindow: WriteableProperty<OfOptionalType<Window>> { return delegate.mainWindow }
+
+  /// The focused (or key) window of the application, the one currently accepting keyboard input.
+  /// Usually the same as the main window, or one of its helper windows such as a file open dialog.
+  ///
+  /// -Note: Sometimes the focused "window" is a sheet and not a window (i.e. it has no title bar
+  ///        and cannot be moved by the user). In that case the value will be nil.
+  public var focusedWindow: Property<OfOptionalType<Window>> { return delegate.focusedWindow }
+
+  /// Whether the application is hidden.
+  public var isHidden: WriteableProperty<OfType<Bool>> { return delegate.isHidden }
+}
+public func ==(lhs: Application, rhs: Application) -> Bool {
+  return lhs.delegate.equalTo(rhs.delegate)
+}
+
+protocol ApplicationDelegate: class {
+  var processID: pid_t! { get }
+
+  var stateDelegate: StateDelegate? { get }
+
+  var knownWindows: [WindowDelegate] { get }
+
+  var mainWindow: WriteableProperty<OfOptionalType<Window>>! { get }
+  var focusedWindow: Property<OfOptionalType<Window>>! { get }
+  var isHidden: WriteableProperty<OfType<Bool>>! { get }
+
+  func equalTo(other: ApplicationDelegate) -> Bool
+}
+
+// MARK: - OSXApplicationDelegate
+
 /// Implements ApplicationDelegate using the AXUIElement API.
 final class OSXApplicationDelegate<
   UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
@@ -332,6 +397,8 @@ extension OSXApplicationDelegate: CustomStringConvertible {
   }
 }
 
+// MARK: Support
+
 /// Stores internal new window handlers for OSXApplicationDelegate.
 private struct NewWindowHandler<UIElement: Equatable> {
   private var handlers: [HandlerType<UIElement>] = []
@@ -358,6 +425,8 @@ private struct HandlerType<UIElement> {
   let windowElement: UIElement
   let handler: Void -> Void
 }
+
+// MARK: PropertyDelegates
 
 /// Used by WindowPropertyAdapter to match a UIElement to a Window object.
 protocol WindowFinder: class {

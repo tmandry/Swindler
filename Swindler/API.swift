@@ -179,15 +179,6 @@ public protocol Screen: Equatable {
 // Events
 
 // ScreenLayoutChanged
-// SpaceChanged
-
-struct SpaceChangedEvent {
-  var screen: Screen
-  var oldValue: Space
-  var newValue: Space
-  var windowsLost: [Window]
-  var windowsGained: [Window]
-}
 
 // TODO
 // Spaces may be culled when they no longer have any windows and are not visible?
@@ -212,8 +203,17 @@ public protocol Space: Equatable {
 
 // Events
 
+// SpaceChanged
 // SpaceDiscovered
 // SpaceCulled?
+
+struct SpaceChangedEvent {
+  var screen: Screen
+  var oldValue: Space
+  var newValue: Space
+  var windowsLost: [Window]
+  var windowsGained: [Window]
+}
 
 /// The basic protocol for an event struct.
 public protocol EventType {

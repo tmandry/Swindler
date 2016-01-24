@@ -1,6 +1,81 @@
 import AXSwift
 import PromiseKit
 
+// MARK: - Window
+
+/// A window.
+public final class Window: Equatable {
+  internal let delegate: WindowDelegate
+
+  // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.
+  // It should not be held internally by delegates, or it would create a reference cycle.
+  private var application_: Application!
+
+  internal init(delegate: WindowDelegate, application: Application) {
+    self.delegate = delegate
+    self.application_ = application
+  }
+
+  /// This initializer fails only if the ApplicationDelegate is no longer reachable (because the
+  /// application terminated, which means this window no longer exists), or the StateDelegate has
+  /// been destroyed.
+  internal convenience init?(delegate: WindowDelegate) {
+    guard let appDelegate = delegate.appDelegate else {
+      // The application terminated.
+      log.debug("Window for delegate \(delegate) failed to initialize because of unreachable ApplicationDelegate")
+      return nil
+    }
+    guard let app = Application(delegate: appDelegate) else {
+      log.debug("Window for delegate \(delegate) failed to initialize because Application failed to initialize")
+      return nil
+    }
+    self.init(delegate: delegate, application: app)
+  }
+
+  /// The application the window belongs to.
+  public var application: Application { return application_ }
+
+  /// Whether or not the window referred to by this type remains valid. Windows usually become
+  /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
+  /// They can also become invalid because they do not have all the required properties, or because
+  /// the application that owns them is otherwise not giving a well-behaved response.
+  public var isValid: Bool { return delegate.isValid }
+
+  /// The position of the top-left corner of the window in screen coordinates.
+  public var position: WriteableProperty<OfType<CGPoint>> { return delegate.position }
+  /// The size of the window in screen coordinates.
+  public var size: WriteableProperty<OfType<CGSize>> { return delegate.size }
+
+  /// The window title.
+  public var title: Property<OfType<String>> { return delegate.title }
+
+  /// Whether the window is minimized.
+  public var isMinimized: WriteableProperty<OfType<Bool>> { return delegate.isMinimized }
+
+  /// Whether the window is fullscreen or not.
+  public var isFullscreen: WriteableProperty<OfType<Bool>> { return delegate.isFullscreen }
+}
+public func ==(lhs: Window, rhs: Window) -> Bool {
+  return lhs.delegate.equalTo(rhs.delegate)
+}
+
+protocol WindowDelegate: class {
+  var isValid: Bool { get }
+
+  // Optional because a WindowDelegate shouldn't hold a strong reference to its parent ApplicationDelegate.
+  var appDelegate: ApplicationDelegate? { get }
+
+  var position: WriteableProperty<OfType<CGPoint>>! { get }
+  var size: WriteableProperty<OfType<CGSize>>! { get }
+  var title: Property<OfType<String>>! { get }
+  var isMinimized: WriteableProperty<OfType<Bool>>! { get }
+  var isFullscreen: WriteableProperty<OfType<Bool>>! { get }
+
+  func equalTo(other: WindowDelegate) -> Bool
+}
+
+// MARK: - OSXWindowDelegate
+
 /// Implements WindowDelegate using the AXUIElement API.
 final class OSXWindowDelegate<
   UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType

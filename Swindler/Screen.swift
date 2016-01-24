@@ -1,5 +1,36 @@
 import PromiseKit
 
+// MARK: - Screen
+
+/// A physical display.
+public final class Screen: Equatable, CustomDebugStringConvertible {
+  internal let delegate: ScreenDelegate
+  internal init(delegate: ScreenDelegate) {
+    self.delegate = delegate
+  }
+
+  public var debugDescription: String { return delegate.debugDescription }
+
+  /// The frame defining the screen boundaries in global coordinates.
+  /// -Note: x and y may be negative.
+  public var frame: CGRect { return delegate.frame }
+
+  /// The frame defining the screen boundaries in global coordinates, excluding the menu bar and dock.
+  public var applicationFrame: CGRect { return delegate.applicationFrame }
+}
+public func ==(lhs: Screen, rhs: Screen) -> Bool {
+  return lhs.delegate.equalTo(rhs.delegate)
+}
+
+protocol ScreenDelegate: class, CustomDebugStringConvertible {
+  var frame: CGRect { get }
+  var applicationFrame: CGRect { get }
+
+  func equalTo(other: ScreenDelegate) -> Bool
+}
+
+// MARK: - OSXScreenDelegate
+
 private let kNSScreenNumber = "NSScreenNumber"
 
 final class OSXScreenDelegate: ScreenDelegate {

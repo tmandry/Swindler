@@ -4,6 +4,49 @@ import PromiseKit
 /// The global Swindler state, lazily initialized.
 public var state = State(delegate: OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>(appObserver: ApplicationObserver()))
 
+// MARK: - State
+
+/// The state represents the entire state of the OS, including all known windows, applications, and
+/// spaces.
+public final class State {
+  let delegate: StateDelegate
+  init(delegate: StateDelegate) {
+    self.delegate = delegate
+  }
+
+  /// The currently running applications.
+  public var runningApplications: [Application] {
+    return delegate.runningApplications.map{ Application(delegate: $0, stateDelegate: delegate) }
+  }
+
+  /// The frontmost application.
+  public var frontmostApplication: WriteableProperty<OfOptionalType<Application>> { return delegate.frontmostApplication }
+
+  /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
+  public var knownWindows: [Window] { return delegate.knownWindows.flatMap{ Window(delegate: $0) } }
+
+  /// The physical screens in the current display configuration.
+  public var screens: [Screen] { return delegate.screens.map{ Screen(delegate: $0) } }
+
+  /// Calls `handler` when the specified `Event` occurs.
+  public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
+}
+
+// All public classes in Swindler are implemented with an internal delegate. This decoupling aids in
+// testing and hides implementation details from the API.
+//
+// Our delegates differ from most Apple API delegates in that they are internal and are critical to
+// the functioning of the class, so they are not held with weak references.
+protocol StateDelegate: class {
+  var runningApplications: [ApplicationDelegate] { get }
+  var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
+  var knownWindows: [WindowDelegate] { get }
+  var screens: [ScreenDelegate] { get }
+  func on<Event: EventType>(handler: (Event) -> ())
+}
+
+// MARK: - OSXStateDelegate
+
 /// An object responsible for propagating the given event. Used internally by the OSX delegates.
 protocol EventNotifier: class {
   func notify<Event: EventType>(event: Event)
@@ -142,6 +185,8 @@ extension OSXStateDelegate: PropertyNotifier {
     assertionFailure("State can't become invalid")
   }
 }
+
+// MARK: PropertyDelegates
 
 protocol AppFinder: class {
   func findAppByPID(pid: pid_t) -> Application?
