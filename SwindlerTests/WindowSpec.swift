@@ -10,6 +10,8 @@ import PromiseKit
 private class StubApplicationDelegate: ApplicationDelegate {
   var processID: pid_t!
 
+  var stateDelegate: StateDelegate? = StubStateDelegate()
+
   var knownWindows: [WindowDelegate] { return [] }
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>!
@@ -21,7 +23,7 @@ private class StubApplicationDelegate: ApplicationDelegate {
 }
 
 // The window delegate holds a weak reference to the app delegate, so we use this singleton to ensure
-// it doesn't get destroyed.
+// it doesn't get destroyed. Same for app -> state. See #3.
 private let stubApplicationDelegate = StubApplicationDelegate()
 
 class OSXWindowDelegateInitializeSpec: QuickSpec {
@@ -148,13 +150,15 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
 
       var observer: AdversaryObserver!
       func initialize() -> Promise<WinDelegate> {
-        return AppDelegate.initialize(axElement: appElement, notifier: TestNotifier()).then { appDelegate -> WinDelegate in
-          observer = appDelegate.observer
-          guard let winDelegate = appDelegate.knownWindows.first as! WinDelegate? else {
-            throw TestError("Window delegate was not initialized by application delegate")
+        return AppDelegate
+          .initialize(axElement: appElement, stateDelegate: StubStateDelegate(), notifier: TestNotifier())
+          .then { appDelegate -> WinDelegate in
+            observer = appDelegate.observer
+            guard let winDelegate = appDelegate.knownWindows.first as! WinDelegate? else {
+              throw TestError("Window delegate was not initialized by application delegate")
+            }
+            return winDelegate
           }
-          return winDelegate
-        }
       }
 
       context("when a property value changes right before observing it") {
@@ -269,16 +273,12 @@ class OSXWindowDelegateSpec: QuickSpec {
     }
 
     describe("property updates") {
-      var window: Window!
-      beforeEach {
-        window = Window(delegate: windowDelegate, appDelegate: stubApplicationDelegate)
-      }
 
       describe("title") {
         it("updates when the title changes") {
           windowElement.attrs[.Title] = "updated title"
           windowDelegate.handleEvent(.TitleChanged, observer: TestObserver())
-          expect(window.title.value).toEventually(equal("updated title"))
+          expect(windowDelegate.title.value).toEventually(equal("updated title"))
         }
       }
 
@@ -286,7 +286,7 @@ class OSXWindowDelegateSpec: QuickSpec {
         it("updates when the window is moved") {
           windowElement.attrs[.Position] = CGPoint(x: 1, y: 1)
           windowDelegate.handleEvent(.Moved, observer: TestObserver())
-          expect(window.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
+          expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
         }
       }
 
@@ -294,7 +294,7 @@ class OSXWindowDelegateSpec: QuickSpec {
         it("updates when the window is resized") {
           windowElement.attrs[.Size] = CGSize(width: 123, height: 123)
           windowDelegate.handleEvent(.Resized, observer: TestObserver())
-          expect(window.size.value).toEventually(equal(CGSize(width: 123, height: 123)))
+          expect(windowDelegate.size.value).toEventually(equal(CGSize(width: 123, height: 123)))
         }
       }
 
@@ -302,7 +302,7 @@ class OSXWindowDelegateSpec: QuickSpec {
         it("updates when the window is resized") {
           windowElement.attrs[.FullScreen] = true
           windowDelegate.handleEvent(.Resized, observer: TestObserver())
-          expect(window.isFullscreen.value).toEventually(beTrue())
+          expect(windowDelegate.isFullscreen.value).toEventually(beTrue())
         }
       }
 
@@ -310,11 +310,11 @@ class OSXWindowDelegateSpec: QuickSpec {
         it("updates when the window is minimized and restored") {
           windowElement.attrs[.Minimized] = true
           windowDelegate.handleEvent(.WindowMiniaturized, observer: TestObserver())
-          expect(window.isMinimized.value).toEventually(beTrue())
+          expect(windowDelegate.isMinimized.value).toEventually(beTrue())
 
           windowElement.attrs[.Minimized] = false
           windowDelegate.handleEvent(.WindowDeminiaturized, observer: TestObserver())
-          expect(window.isMinimized.value).toEventually(beFalse())
+          expect(windowDelegate.isMinimized.value).toEventually(beFalse())
         }
       }
 

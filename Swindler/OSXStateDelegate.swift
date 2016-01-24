@@ -80,7 +80,7 @@ final class OSXStateDelegate<
     screens = nsScreens.map{ OSXScreenDelegate(nsScreen: $0) }
 
     let appPromises = ApplicationElement.all().map { appElement in
-      return AppDelegate.initialize(axElement: appElement, notifier: self).then { application in
+      return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self).then { application in
         self.applicationsByPID[try application.axElement.pid()] = application
       }.asVoid().recover { error -> () in
         let pid = try? appElement.pid()

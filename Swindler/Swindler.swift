@@ -7,7 +7,9 @@ public final class State {
   }
 
   /// The currently running applications.
-  public var runningApplications: [Application] { return delegate.runningApplications.map{ Application(delegate: $0) } }
+  public var runningApplications: [Application] {
+    return delegate.runningApplications.map{ Application(delegate: $0, stateDelegate: delegate) }
+  }
 
   /// The frontmost application.
   public var frontmostApplication: WriteableProperty<OfOptionalType<Application>> { return delegate.frontmostApplication }
@@ -27,7 +29,7 @@ public final class State {
 //
 // Our delegates differ from most Apple API delegates in that they are internal and are critical to
 // the functioning of the class, so they are not held with weak references.
-protocol StateDelegate {
+protocol StateDelegate: class {
   var runningApplications: [ApplicationDelegate] { get }
   var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
   var knownWindows: [WindowDelegate] { get }
@@ -37,10 +39,28 @@ protocol StateDelegate {
 
 /// A running application.
 public final class Application: Equatable {
-  let delegate: ApplicationDelegate
-  init(delegate: ApplicationDelegate) {
+  internal let delegate: ApplicationDelegate
+
+  // An Application holds a strong reference to the State (and therefore the StateDelegate).
+  // It should not be held internally by delegates, or it would create a reference cycle.
+  internal var state_: State!
+
+  internal init(delegate: ApplicationDelegate, stateDelegate: StateDelegate) {
     self.delegate = delegate
+    self.state_ = State(delegate: stateDelegate)
   }
+
+  /// This initializer only fails if the StateDelegate has been destroyed.
+  internal convenience init?(delegate: ApplicationDelegate) {
+    guard let stateDelegate = delegate.stateDelegate else {
+      log.debug("Application for delegate \(delegate) failed to initialize because of unreachable StateDelegate")
+      return nil
+    }
+    self.init(delegate: delegate, stateDelegate: stateDelegate)
+  }
+
+  /// The global Swindler state.
+  public var swindlerState: State { return state_ }
 
   /// The known windows of the application. Windows on spaces that we haven't seen yet aren't included.
   public var knownWindows: [Window] { return delegate.knownWindows.flatMap({ Window(delegate: $0) }) }
@@ -67,6 +87,8 @@ public func ==(lhs: Application, rhs: Application) -> Bool {
 protocol ApplicationDelegate: class {
   var processID: pid_t! { get }
 
+  var stateDelegate: StateDelegate? { get }
+
   var knownWindows: [WindowDelegate] { get }
 
   var mainWindow: WriteableProperty<OfOptionalType<Window>>! { get }
@@ -81,23 +103,28 @@ public final class Window: Equatable {
   internal let delegate: WindowDelegate
 
   // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.
-  // It should not be held internally by delegates, or it could create a reference cycle.
+  // It should not be held internally by delegates, or it would create a reference cycle.
   private var application_: Application!
 
-  internal init(delegate: WindowDelegate, appDelegate: ApplicationDelegate) {
+  internal init(delegate: WindowDelegate, application: Application) {
     self.delegate = delegate
-    self.application_ = Application(delegate: appDelegate)
+    self.application_ = application
   }
 
   /// This initializer fails only if the ApplicationDelegate is no longer reachable (because the
-  /// application terminated, which means this window no longer exists).
+  /// application terminated, which means this window no longer exists), or the StateDelegate has
+  /// been destroyed.
   internal convenience init?(delegate: WindowDelegate) {
     guard let appDelegate = delegate.appDelegate else {
       // The application terminated.
       log.debug("Window for delegate \(delegate) failed to initialize because of unreachable ApplicationDelegate")
       return nil
     }
-    self.init(delegate: delegate, appDelegate: appDelegate)
+    guard let app = Application(delegate: appDelegate) else {
+      log.debug("Window for delegate \(delegate) failed to initialize because Application failed to initialize")
+      return nil
+    }
+    self.init(delegate: delegate, application: app)
   }
 
   /// The application the window belongs to.

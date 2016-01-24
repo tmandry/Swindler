@@ -43,6 +43,9 @@ public protocol State {
 
 /// A running application.
 public protocol Application {
+  /// The global Swindler state.
+  public var swindlerState: State { get }
+
   // TODO
   /// The NSRunningApplication that corresponds to this application.
   public var runningApplication: NSRunningApplication { get }

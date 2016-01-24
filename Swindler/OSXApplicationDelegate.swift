@@ -9,7 +9,9 @@ final class OSXApplicationDelegate<
   typealias Object = Application
   typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
 
+  weak var stateDelegate: StateDelegate?
   private weak var notifier: EventNotifier?
+
   internal let axElement: UIElement  // internal for testing only
   internal var observer: Observer!  // internal for testing only
   private var windows: [WinDelegate] = []
@@ -29,9 +31,10 @@ final class OSXApplicationDelegate<
     return windows.map({ $0 as WindowDelegate })
   }
 
-  private init(axElement: ApplicationElement, notifier: EventNotifier) throws {
+  private init(axElement: ApplicationElement, stateDelegate: StateDelegate, notifier: EventNotifier) throws {
     // TODO: filter out applications by activation policy
     self.axElement = axElement.toElement
+    self.stateDelegate = stateDelegate
     self.notifier = notifier
     self.processID = try axElement.pid()
 
@@ -160,9 +163,13 @@ final class OSXApplicationDelegate<
   }
 
   /// Initializes the object and returns it as a Promise that resolves once it's ready.
-  static func initialize(axElement axElement: ApplicationElement, notifier: EventNotifier) -> Promise<OSXApplicationDelegate> {
+  static func initialize(
+    axElement axElement: ApplicationElement,
+    stateDelegate: StateDelegate,
+    notifier: EventNotifier
+  ) -> Promise<OSXApplicationDelegate> {
     return firstly {  // capture thrown errors in promise chain
-      let appDelegate = try OSXApplicationDelegate(axElement: axElement, notifier: notifier)
+      let appDelegate = try OSXApplicationDelegate(axElement: axElement, stateDelegate: stateDelegate, notifier: notifier)
       return appDelegate.initialized.then { return appDelegate }
     }
   }
@@ -187,9 +194,10 @@ final class OSXApplicationDelegate<
 
   private func onWindowCreated(windowElement: UIElement) {
     createWindowForElementIfNotExists(windowElement).then { windowDelegate -> () in
-      guard let windowDelegate = windowDelegate else { return }
+      guard let windowDelegate = windowDelegate,
+                window = Window(delegate: windowDelegate)
+      else { return }
 
-      let window = Window(delegate: windowDelegate, appDelegate: self)
       self.notifier?.notify(WindowCreatedEvent(external: true, window: window))
     }.error { error in
       log.debug("Could not watch \(windowElement): \(error)")
@@ -268,7 +276,7 @@ final class OSXApplicationDelegate<
         // Remove window.
         windows = windows.filter({ !$0.equalTo(windowDelegate) })
 
-        let window = Window(delegate: windowDelegate, appDelegate: self)
+        guard let window = Window(delegate: windowDelegate) else { return }
         notifier?.notify(WindowDestroyedEvent(external: true, window: window))
       }
     }
@@ -289,7 +297,8 @@ final class OSXApplicationDelegate<
   }
 
   func notify<Event: PropertyEventType where Event.Object == Application>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
-    notifier?.notify(Event(external: external, object: Application(delegate: self), oldValue: oldValue, newValue: newValue))
+    guard let application = Application(delegate: self) else { return }
+    notifier?.notify(Event(external: external, object: application, oldValue: oldValue, newValue: newValue))
   }
 
   func notifyInvalid() {
