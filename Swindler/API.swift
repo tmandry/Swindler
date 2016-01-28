@@ -53,7 +53,7 @@ public protocol Application {
   /// The known windows of the application. Windows on spaces that we haven't seen yet aren't included.
   public var knownWindows: [Window] { get }
 
-  // TODO
+  // TODO (convenience)
   /// All application windows that are currently visible on the screen (including those that are obscured fully
   /// by other windows). This does not include windows that are minimized, hidden, or on another space.
   public var visibleWindows: [Window] { get }

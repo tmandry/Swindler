@@ -111,9 +111,9 @@ Swindler is in development and is in **alpha**. Here is the state of its major f
 
 - Asynchronous property system: **100% complete**
 - Event system: **100% complete**
-- Window API: **80% complete**
-- Application API: **80% complete**
-- Screen API: **0% complete**
+- Window API: **90% complete**
+- Application API: **90% complete**
+- Screen API: **30% complete**
 - Spaces API: **0% complete**
 
 You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/Swindler/API.swift).
