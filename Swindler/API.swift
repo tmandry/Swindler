@@ -126,8 +126,7 @@ public protocol Window: Equatable {
   /// Whether the window is full screen or not.
   public var isFullscreen: WriteableProperty<OfType<Bool>> { get }
 
-  // TODO
-  /// The screen that (most of) the window is on.
+  /// The screen that (most of) the window is on. `nil` if the window is completely off-screen.
   public var screen: Property<OfType<Screen>> { get }
 
   // TODO

@@ -35,6 +35,18 @@ public final class Window: Equatable {
   /// The application the window belongs to.
   public var application: Application { return application_ }
 
+  /// The screen that (most of) the window is on. `nil` if the window is completely off-screen.
+  public var screen: Screen? {
+    let screenIntersectSizes =
+      application.swindlerState.screens.lazy
+      .map    { screen            in (screen, screen.frame.intersect(self.rect)) }
+      .filter { screen, intersect in !intersect.isNull }
+      .map    { screen, intersect in (screen, intersect.size.width*intersect.size.height) }
+    let bestScreen = screenIntersectSizes.maxElement{ lhs, rhs in lhs.1 < rhs.1 }?.0
+    return bestScreen
+  }
+  private var rect: CGRect { return CGRect(origin: position.value, size: size.value) }
+
   /// Whether or not the window referred to by this type remains valid. Windows usually become
   /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
   /// They can also become invalid because they do not have all the required properties, or because

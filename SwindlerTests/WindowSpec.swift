@@ -305,3 +305,75 @@ class OSXWindowDelegateSpec: QuickSpec {
 
   }
 }
+
+class WindowSpec: QuickSpec {
+  override func spec() {
+
+    var state: State!
+    var stateDelegate: StubStateDelegate!
+    var window: Window!
+    var windowDelegate: StubWindowDelegate!
+    beforeEach {
+      stateDelegate = StubStateDelegate()
+      state = State(delegate: stateDelegate)
+      let appDelegate = StubApplicationDelegate()
+      let app = Application(delegate: appDelegate, stateDelegate: state.delegate)
+      windowDelegate = StubWindowDelegate()
+      window = Window(delegate: windowDelegate, application: app)
+
+      stateDelegate.runningApplications = [app.delegate]
+      appDelegate.knownWindows = [window.delegate]
+    }
+
+    describe("screen") {
+      var leftScreen: Screen!
+      var rightScreen: Screen!
+      beforeEach {
+        leftScreen = Screen(delegate: StubScreenDelegate(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000)))
+        rightScreen = Screen(delegate: StubScreenDelegate(frame: CGRect(x: 1000, y: 0, width: 1000, height: 1000)))
+        stateDelegate.screens = [leftScreen.delegate, rightScreen.delegate]
+      }
+
+      func setWindowRect(rect: CGRect) {
+        windowDelegate.position_.value = rect.origin
+        windowDelegate.size_.value     = rect.size
+        waitUntil { done in
+          when(windowDelegate.position.refresh(), windowDelegate.size.refresh())
+            .then { _ in done() }
+        }
+      }
+
+      context("when the window is entirely on one screen") {
+        it("returns that screen") {
+          setWindowRect(CGRect(x: 100, y: 100, width: 100, height: 100))
+          expect(window.screen).to(equal(leftScreen))
+          setWindowRect(CGRect(x: 1200, y: 100, width: 100, height: 100))
+          expect(window.screen).to(equal(rightScreen))
+        }
+      }
+
+      context("when the window is entirely off screen") {
+        it("returns nil") {
+          setWindowRect(CGRect(x: 100, y: 1100, width: 100, height: 100))
+          expect(window.screen).to(beNil())
+        }
+      }
+
+      context("when the window is partly off screen but intersecting one screen") {
+        it("returns that screen") {
+          setWindowRect(CGRect(x: 100, y: -50, width: 100, height: 100))
+          expect(window.screen).to(equal(leftScreen))
+        }
+      }
+
+      context("when the window is on two screens") {
+        it("returns the screen most of the window is on") {
+          setWindowRect(CGRect(x: 900, y: 100, width: 300, height: 100))
+          expect(window.screen).to(equal(rightScreen))
+        }
+      }
+
+    }
+
+  }
+}

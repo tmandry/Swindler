@@ -22,7 +22,7 @@ private class TestPropertyDelegate<T: Equatable>: PropertyDelegate {
   }
 }
 
-private class TestWindowPropertyNotifier: PropertyNotifier {
+class TestPropertyNotifier: PropertyNotifier {
   typealias Object = Window
 
   // We must make our own struct because we don't have a window.
@@ -48,13 +48,13 @@ class PropertySpec: QuickSpec {
 
     // Set up a position property on a test AX window.
     var windowElement: TestWindowElement!
-    var notifier: TestWindowPropertyNotifier!
+    var notifier: TestPropertyNotifier!
     @warn_unused_result
     func setUpWithAttributes(attrs: [AXSwift.Attribute: Any]) -> WriteableProperty<OfType<CGPoint>> {
       windowElement = TestWindowElement(forApp: TestApplicationElement())
       windowElement.attrs = attrs
       let initPromise = Promise<[AXSwift.Attribute: Any]>(attrs)
-      notifier = TestWindowPropertyNotifier()
+      notifier = TestPropertyNotifier()
       let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
       return WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
     }
