@@ -89,6 +89,29 @@ struct ApplicationObserver: ApplicationObserverType {
   }
 }
 
+/// Wraps behavior needed to track screen layout changes.
+protocol ScreenObserverType {
+  func onScreenLayoutChanged(handler: () -> ())
+  func allScreens() -> [NSScreen]?
+}
+
+struct ScreenObserver: ScreenObserverType {
+  func onScreenLayoutChanged(handler: () -> ()) {
+    let sharedApplication  = NSApplication.sharedApplication()
+    let notificationCenter = NSWorkspace.sharedWorkspace().notificationCenter
+
+    notificationCenter.addObserverForName(
+      NSApplicationDidChangeScreenParametersNotification, object: sharedApplication, queue: nil
+    ) { _ in
+      handler()
+    }
+  }
+
+  func allScreens() -> [NSScreen]? {
+    return NSScreen.screens()
+  }
+}
+
 /// Implements StateDelegate using the AXUIElement API.
 final class OSXStateDelegate<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
@@ -121,6 +144,16 @@ final class OSXStateDelegate<
       return
     }
     screens = nsScreens.map{ OSXScreenDelegate(nsScreen: $0) }
+
+//    screenObserver.onScreenLayoutChanged {
+//      let (screens, event) = OSXScreenDelegate<NSScreen>.handleScreenChange(
+//        newScreens: screenObserver.allScreens()!,
+//        oldScreens: self.screens.map{ $0 as! OSXScreenDelegate<NSScreen> },
+//        state: State(delegate: self)
+//      )
+//      self.screens = screens
+//      self.notify(event)
+//    }
 
     let appPromises = ApplicationElement.all().map { appElement in
       return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self).then { application in

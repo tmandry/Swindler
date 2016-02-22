@@ -6,6 +6,7 @@ enum OSXDriverError: ErrorType {
   case UnknownWindow(element: UIElementType)
   case WindowIgnored(element: UIElementType)
   case RunningApplicationNotFound(processID: pid_t)
+  case ScreensNotAvailable()
 }
 
 func unwrapWhenErrors<T>(error: ErrorType) throws -> Promise<T> {

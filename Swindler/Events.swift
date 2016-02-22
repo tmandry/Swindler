@@ -130,3 +130,11 @@ public struct ApplicationFocusedWindowChangedEvent: ApplicationPropertyEventType
   public let oldValue: PropertyType
   public let newValue: PropertyType
 }
+
+public struct ScreenLayoutChangedEvent: EventType {
+  public let external: Bool
+  public let addedScreens: [Screen]
+  public let removedScreens: [Screen]
+  public let resizedScreens: [Screen]
+  public let unchangedScreens: [Screen]
+}

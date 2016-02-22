@@ -23,7 +23,6 @@ public protocol State {
   /// by other windows). This does not include windows that are minimized, hidden, or on another space.
   public var visibleWindows: [Window] { get }
 
-  // TODO
   /// The physical screens in the current display configuration.
   public var screens: [Screen]
 
