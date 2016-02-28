@@ -93,44 +93,43 @@ extension OSXScreenDelegate {
     newScreens nsScreens: [NSScreenT], oldScreens: [OSXScreenDelegate], state: State
   ) -> ([OSXScreenDelegate], ScreenLayoutChangedEvent) {
     // Make a new screen delegate for every screen, because NSScreen objects can become stale.
-    var newScreens: [OSXScreenDelegate] = []
-    nsScreens.forEach{ s in newScreens.append(OSXScreenDelegate(nsScreen: s)) }
+    let newScreens = nsScreens.map{ OSXScreenDelegate(nsScreen: $0) }
 
-    let oldIds = Set(oldScreens.map{ $0.directDisplayID })
-    let newScreensById = newScreens
-      .reduce([CGDirectDisplayID: OSXScreenDelegate<NSScreenT>]()) { (var dict, screen) in
-        dict[screen.directDisplayID] = screen
-        return dict
+    var oldScreensById: [CGDirectDisplayID: OSXScreenDelegate] = [:]
+    for oldScreen in oldScreens {
+      oldScreensById[oldScreen.directDisplayID] = oldScreen
+    }
+
+    var addedScreens:     [Screen] = []
+    var resizedScreens:   [Screen] = []
+    var unchangedScreens: [Screen] = []
+
+    for newScreen in newScreens {
+      guard let oldScreen = oldScreensById[newScreen.directDisplayID] else {
+        addedScreens.append(Screen(delegate: newScreen))
+        continue
       }
-    let newIds = Set(newScreens.map{ $0.directDisplayID })
 
-    let addedScreens = newScreens.lazy
-      .filter{ !oldIds.contains($0.directDisplayID) }
-    let oldScreenNewScreens = oldScreens.lazy
-      .map   {  ($0, newScreensById[$0.directDisplayID]) }
-    let removedScreens = oldScreenNewScreens
-      .filter{ (oldScreen, newScreen) in newScreen == nil }
-      .map   { (oldScreen, newScreen) in oldScreen }
+      // Remove from dict to signifiy that we've seen it.
+      oldScreensById[newScreen.directDisplayID] = nil
 
-    let remainingScreens = oldScreenNewScreens
-      .filter{ (oldScreen, newScreen) in newScreen != nil }
-    let resizedScreens = remainingScreens
-      .filter{ $0.frame != $1!.frame }
-      .map   { (oldScreen, newScreen) in newScreen! }
-    let unchangedScreens = remainingScreens
-      .filter{ $0.frame == $1!.frame }
-      .map   { (oldScreen, newScreen) in newScreen! }
+      if newScreen.frame != oldScreen.frame || newScreen.applicationFrame != oldScreen.applicationFrame {
+        resizedScreens.append(Screen(delegate: newScreen))
+        continue
+      }
 
-    func wrapInScreen(delegate: OSXScreenDelegate<NSScreenT>) -> Screen { return Screen(delegate: delegate) }
+      unchangedScreens.append(Screen(delegate: newScreen))
+    }
 
-    let removedScreensArr = Array(removedScreens)
-    let rs: [Screen] = removedScreensArr.map{ Screen(delegate: $0) }
+    // All old screens that match a new screen were removed from oldScreensById.
+    let removedScreens = Array(oldScreensById.values.map{ Screen(delegate: $0) })
+
     let event = ScreenLayoutChangedEvent(
       external: false,
-      addedScreens: Array(addedScreens).map(wrapInScreen),
-      removedScreens: rs,
-      resizedScreens: Array(resizedScreens).map(wrapInScreen),
-      unchangedScreens: Array(unchangedScreens).map(wrapInScreen)
+      addedScreens: addedScreens,
+      removedScreens: removedScreens,
+      resizedScreens: resizedScreens,
+      unchangedScreens: unchangedScreens
     )
     return (newScreens, event)
   }
