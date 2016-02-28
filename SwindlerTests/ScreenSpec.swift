@@ -57,7 +57,7 @@ class OSXScreenDelegateSpec: QuickSpec {
           expect(screens.first).to(equal(screenDelegate1))
           expect(event.addedScreens).to(haveCount(0))
           expect(event.removedScreens).to(haveCount(0))
-          expect(event.resizedScreens).to(haveCount(0))
+          expect(event.changedScreens).to(haveCount(0))
           expect(event.unchangedScreens).to(haveCount(1))
           expect(event.unchangedScreens.first).to(equal(Screen(delegate: screenDelegate1)))
         }
@@ -75,7 +75,7 @@ class OSXScreenDelegateSpec: QuickSpec {
           expect(screens.filter{ $0.equalTo(screenDelegate2) }).to(haveCount(1))
           expect(event.addedScreens).to(haveCount(1))
           expect(event.removedScreens).to(haveCount(0))
-          expect(event.resizedScreens).to(haveCount(0))
+          expect(event.changedScreens).to(haveCount(0))
           expect(event.unchangedScreens).to(haveCount(1))
           expect(event.addedScreens.first).to(equal(Screen(delegate: screenDelegate2)))
         }
@@ -93,14 +93,14 @@ class OSXScreenDelegateSpec: QuickSpec {
           expect(screens.first).to(equal(screenDelegate1))
           expect(event.addedScreens).to(haveCount(0))
           expect(event.removedScreens).to(haveCount(1))
-          expect(event.resizedScreens).to(haveCount(0))
+          expect(event.changedScreens).to(haveCount(0))
           expect(event.unchangedScreens).to(haveCount(1))
           expect(event.removedScreens.first).to(equal(Screen(delegate: screenDelegate2)))
         }
       }
 
       context("when a screen is resized") {
-        it("is handled") {
+        it("is marked as changed") {
           let state = State(delegate: StubStateDelegate())
           var oldNSScreen = StubNSScreen(1)
           oldNSScreen.frame = CGRect(x: 0, y: 0, width: 1280, height: 1080)
@@ -113,9 +113,29 @@ class OSXScreenDelegateSpec: QuickSpec {
           expect(screens.first).to(equal(screenDelegate1))
           expect(event.addedScreens).to(haveCount(0))
           expect(event.removedScreens).to(haveCount(0))
-          expect(event.resizedScreens).to(haveCount(1))
+          expect(event.changedScreens).to(haveCount(1))
           expect(event.unchangedScreens).to(haveCount(0))
-          expect(event.resizedScreens.first).to(equal(Screen(delegate: screenDelegate1)))
+          expect(event.changedScreens.first).to(equal(Screen(delegate: screenDelegate1)))
+        }
+      }
+
+      context("when a screen is moved") {
+        it("is marked as changed") {
+          let state = State(delegate: StubStateDelegate())
+          var oldNSScreen1 = StubNSScreen(1)
+          oldNSScreen1.frame = CGRect(x: 0, y: -100, width: 1024, height: 768)
+          let (screens, event) = OSXScreenDelegate<StubNSScreen>.handleScreenChange(
+            newScreens: [nsScreen1, nsScreen2],
+            oldScreens: [OSXScreenDelegate(nsScreen: oldNSScreen1), screenDelegate2],
+            state: state
+          )
+          expect(screens).to(haveCount(2))
+          expect(screens.first).to(equal(screenDelegate1))
+          expect(event.addedScreens).to(haveCount(0))
+          expect(event.removedScreens).to(haveCount(0))
+          expect(event.changedScreens).to(haveCount(1))
+          expect(event.unchangedScreens).to(haveCount(1))
+          expect(event.changedScreens.first).to(equal(Screen(delegate: screenDelegate1)))
         }
       }
 

@@ -101,12 +101,14 @@ extension OSXScreenDelegate {
     }
 
     var addedScreens:     [Screen] = []
-    var resizedScreens:   [Screen] = []
+    var changedScreens:   [Screen] = []
     var unchangedScreens: [Screen] = []
 
     for newScreen in newScreens {
+      let newScreenWrapped = Screen(delegate: newScreen)
+
       guard let oldScreen = oldScreensById[newScreen.directDisplayID] else {
-        addedScreens.append(Screen(delegate: newScreen))
+        addedScreens.append(newScreenWrapped)
         continue
       }
 
@@ -114,11 +116,10 @@ extension OSXScreenDelegate {
       oldScreensById[newScreen.directDisplayID] = nil
 
       if newScreen.frame != oldScreen.frame || newScreen.applicationFrame != oldScreen.applicationFrame {
-        resizedScreens.append(Screen(delegate: newScreen))
-        continue
+        changedScreens.append(newScreenWrapped)
+      } else {
+        unchangedScreens.append(newScreenWrapped)
       }
-
-      unchangedScreens.append(Screen(delegate: newScreen))
     }
 
     // All old screens that match a new screen were removed from oldScreensById.
@@ -128,7 +129,7 @@ extension OSXScreenDelegate {
       external: false,
       addedScreens: addedScreens,
       removedScreens: removedScreens,
-      resizedScreens: resizedScreens,
+      changedScreens: changedScreens,
       unchangedScreens: unchangedScreens
     )
     return (newScreens, event)

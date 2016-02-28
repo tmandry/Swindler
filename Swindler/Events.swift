@@ -135,6 +135,7 @@ public struct ScreenLayoutChangedEvent: EventType {
   public let external: Bool
   public let addedScreens: [Screen]
   public let removedScreens: [Screen]
-  public let resizedScreens: [Screen]
+  /// Screens whose frame has changed (moved, resized, or both).
+  public let changedScreens: [Screen]
   public let unchangedScreens: [Screen]
 }
