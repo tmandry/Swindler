@@ -176,7 +176,14 @@ public protocol Screen: Equatable {
 
 // Events
 
-// ScreenLayoutChanged
+struct ScreenLayoutChangedEvent {
+  let external: Bool
+  let addedScreens: [Screen]
+  let removedScreens: [Screen]
+  /// Screens whose frame has changed (moved, resized, or both).
+  let changedScreens: [Screen]
+  let unchangedScreens: [Screen]
+}
 
 // TODO
 // Spaces may be culled when they no longer have any windows and are not visible?
