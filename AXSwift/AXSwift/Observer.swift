@@ -118,7 +118,11 @@ private func internalCallback(axObserver: AXObserver,
                               userData: UnsafeMutablePointer<Void>) {
   let observer = Unmanaged<Observer>.fromOpaque(COpaquePointer(userData)).takeUnretainedValue()
   let element  = UIElement(axElement)
-  let notif    = Notification(rawValue: notification as String)!
+  guard let notif = Notification(rawValue: notification as String) else {
+    NSLog("Unknown AX notification %s received", notification as String)
+    return
+  }
+
   observer.callback!(observer: observer, element: element, notification: notif)
 }
 
@@ -130,6 +134,10 @@ private func internalCallback(axObserver: AXObserver,
   let observer = Unmanaged<Observer>.fromOpaque(COpaquePointer(userData)).takeUnretainedValue()
   let element  = UIElement(axElement)
   let info     = cfInfo as NSDictionary? as! [String: AnyObject]?
-  let notif    = Notification(rawValue: notification as String)!
+  guard let notif = Notification(rawValue: notification as String) else {
+    NSLog("Unknown AX notification %s received", notification as String)
+    return
+  }
+
   observer.callbackWithInfo!(observer: observer, element: element, notification: notif, info: info)
 }
