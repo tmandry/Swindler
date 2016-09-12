@@ -2,7 +2,7 @@
 #define ASLLOG_H
 
 #import <Foundation/Foundation.h>
-#include <asl.h>
+#import <asl.h>
 
 /// Swift can't import C varargs methods that use ..., which asl_log does. This function wraps asl_log
 /// so Swift can see it.

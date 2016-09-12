@@ -2,9 +2,9 @@ import AXSwift
 import PromiseKit
 
 enum OSXDriverError: ErrorType {
-  case MissingAttribute(attribute: AXSwift.Attribute, onElement: UIElementType)
-  case UnknownWindow(element: UIElementType)
-  case WindowIgnored(element: UIElementType)
+  case MissingAttribute(attribute: AXSwift.Attribute, onElement: Any)
+  case UnknownWindow(element: Any)
+  case WindowIgnored(element: Any)
   case RunningApplicationNotFound(processID: pid_t)
   case ScreensNotAvailable()
 }
