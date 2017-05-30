@@ -1,40 +1,40 @@
-extension AXError: ErrorType { }
+extension AXError: Swift.Error { }
 
 // For some reason values don't get described in this enum, so we have to do it manually.
 extension AXError: CustomStringConvertible {
-  private var valueAsString: String {
+  fileprivate var valueAsString: String {
     switch (self) {
-    case Success:
+    case .success:
       return "Success"
-    case Failure:
+    case .failure:
       return "Failure"
-    case IllegalArgument:
+    case .illegalArgument:
       return "IllegalArgument"
-    case InvalidUIElement:
+    case .invalidUIElement:
       return "InvalidUIElement"
-    case InvalidUIElementObserver:
+    case .invalidUIElementObserver:
       return "InvalidUIElementObserver"
-    case CannotComplete:
+    case .cannotComplete:
       return "CannotComplete"
-    case AttributeUnsupported:
+    case .attributeUnsupported:
       return "AttributeUnsupported"
-    case ActionUnsupported:
+    case .actionUnsupported:
       return "ActionUnsupported"
-    case NotificationUnsupported:
+    case .notificationUnsupported:
       return "NotificationUnsupported"
-    case NotImplemented:
+    case .notImplemented:
       return "NotImplemented"
-    case NotificationAlreadyRegistered:
+    case .notificationAlreadyRegistered:
       return "NotificationAlreadyRegistered"
-    case NotificationNotRegistered:
+    case .notificationNotRegistered:
       return "NotificationNotRegistered"
-    case APIDisabled:
+    case .apiDisabled:
       return "APIDisabled"
-    case NoValue:
+    case .noValue:
       return "NoValue"
-    case ParameterizedAttributeUnsupported:
+    case .parameterizedAttributeUnsupported:
       return "ParameterizedAttributeUnsupported"
-    case NotEnoughPrecision:
+    case .notEnoughPrecision:
       return "NotEnoughPrecision"
     }
   }

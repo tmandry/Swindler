@@ -2,16 +2,16 @@ import Cocoa
 import AXSwift
 
 class ApplicationDelegate: NSObject, NSApplicationDelegate {
-  func applicationDidFinishLaunching(aNotification: NSNotification) {
+  func applicationDidFinishLaunching(_ aNotification: Notification) {
     // Check that we have permission
     guard UIElement.isProcessTrusted(withPrompt: true) else {
       NSLog("No accessibility API permission, exiting")
-      NSRunningApplication.currentApplication().terminate()
+      NSRunningApplication.current().terminate()
       return
     }
 
     // Get Active Application
-    if let application = NSWorkspace.sharedWorkspace().frontmostApplication {
+    if let application = NSWorkspace.shared().frontmostApplication {
       NSLog("localizedName: \(application.localizedName), processIdentifier: \(application.processIdentifier)")
       let uiApp = Application(application)!
       NSLog("windows: \(try! uiApp.windows())")
@@ -52,6 +52,6 @@ class ApplicationDelegate: NSObject, NSApplicationDelegate {
     // NSLog("windows: \(try! sys.windows())")
     NSLog("attributes: \(try! systemWideElement.attributes())")
 
-    NSRunningApplication.currentApplication().terminate()
+    NSRunningApplication.current().terminate()
   }
 }
