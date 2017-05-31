@@ -116,12 +116,12 @@ private func internalCallback(_ axObserver: AXObserver,
                               axElement: AXUIElement,
                               notification: CFString,
                               userData: UnsafeMutableRawPointer?) {
-  if let userData = userData {
-    let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()
-    let element  = UIElement(axElement)
-    let notif    = AXNotification(rawValue: notification as String)!
-    observer.callback!(observer, element, notif)
-  }
+  guard let userData = userData else { fatalError("userData should be an AXSwift.Observer") }
+
+  let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()
+  let element  = UIElement(axElement)
+  let notif    = AXNotification(rawValue: notification as String)!
+  observer.callback!(observer, element, notif)
 }
 
 private func internalInfoCallback(_ axObserver: AXObserver,
@@ -129,11 +129,11 @@ private func internalInfoCallback(_ axObserver: AXObserver,
                               notification: CFString,
                               cfInfo: CFDictionary,
                               userData: UnsafeMutableRawPointer?) {
-  if let userData = userData {
-    let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()
-    let element  = UIElement(axElement)
-    let info     = cfInfo as NSDictionary? as! [String: AnyObject]?
-    let notif    = AXNotification(rawValue: notification as String)!
-    observer.callbackWithInfo!(observer, element, notif, info)
-  }
+  guard let userData = userData else { fatalError("userData should be an AXSwift.Observer") }
+
+  let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()
+  let element  = UIElement(axElement)
+  let info     = cfInfo as NSDictionary? as! [String: AnyObject]?
+  let notif    = AXNotification(rawValue: notification as String)!
+  observer.callbackWithInfo!(observer, element, notif, info)
 }
