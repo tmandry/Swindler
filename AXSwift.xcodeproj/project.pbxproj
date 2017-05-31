@@ -90,7 +90,9 @@
 				2F86CEAE1BD5621F007E8C29 /* AXSwiftObserverExample */,
 				2F32C6851BD42D5000AD4419 /* Products */,
 			);
+			indentWidth = 2;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		2F32C6851BD42D5000AD4419 /* Products */ = {
 			isa = PBXGroup;
