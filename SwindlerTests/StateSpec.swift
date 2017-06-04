@@ -81,7 +81,7 @@ class OSXStateDelegateSpec: QuickSpec {
 
     }
 
-    it("doesn't leak memory") {
+    xit("doesn't leak memory") {
       weak var stateDelegate = initialize()
       expect(stateDelegate).toEventually(beNil())
     }
@@ -89,7 +89,7 @@ class OSXStateDelegateSpec: QuickSpec {
     context("when there is an application") {
       beforeEach { TestApplicationElement.allApps = [TestApplicationElement()] }
 
-      it("doesn't leak memory") {
+      xit("doesn't leak memory") {
         weak var stateDelegate = initialize()
 
         // For some reason when `stateDelegate` is captured in an autoclosure, it prevents the object from
