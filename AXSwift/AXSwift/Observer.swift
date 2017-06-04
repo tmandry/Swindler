@@ -120,7 +120,10 @@ private func internalCallback(_ axObserver: AXObserver,
 
   let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()
   let element  = UIElement(axElement)
-  let notif    = AXNotification(rawValue: notification as String)!
+  guard let notif = Notification(rawValue: notification as String) else {
+    NSLog("Unknown AX notification %s received", notification as String)
+    return
+  }
   observer.callback!(observer, element, notif)
 }
 
@@ -134,6 +137,9 @@ private func internalInfoCallback(_ axObserver: AXObserver,
   let observer = Unmanaged<Observer>.fromOpaque(userData).takeUnretainedValue()
   let element  = UIElement(axElement)
   let info     = cfInfo as NSDictionary? as! [String: AnyObject]?
-  let notif    = AXNotification(rawValue: notification as String)!
+  guard let notif = Notification(rawValue: notification as String) else {
+    NSLog("Unknown AX notification %s received", notification as String)
+    return
+  }
   observer.callbackWithInfo!(observer, element, notif, info)
 }
