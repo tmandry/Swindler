@@ -1,6 +1,6 @@
 /// All possible notifications you can subscribe to with `Observer`.
 /// - seeAlso: [Notificatons](https://developer.apple.com/library/mac/documentation/AppKit/Reference/NSAccessibility_Protocol_Reference/index.html#//apple_ref/c/data/NSAccessibilityAnnouncementRequestedNotification)
-public enum Notification: String {
+public enum AXNotification: String {
   // Focus notifications
   case MainWindowChanged       = "AXMainWindowChanged"
   case FocusedWindowChanged    = "AXFocusedWindowChanged"
@@ -159,9 +159,9 @@ public enum Subrole: String {
 /// Orientations returned by the orientation property.
 /// - seeAlso: [NSAccessibilityOrientation](https://developer.apple.com/library/mac/documentation/AppKit/Reference/NSAccessibility_Protocol_Reference/index.html#//apple_ref/c/tdef/NSAccessibilityOrientation)
 public enum Orientation: Int {
-   case Unknown    = 0
-   case Vertical   = 1
-   case Horizontal = 2
+   case unknown    = 0
+   case vertical   = 1
+   case horizontal = 2
 }
 
 public enum Attribute: String {

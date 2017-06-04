@@ -3,7 +3,7 @@ public final class Application: UIElement {
   // Creates a UIElement for the given process ID.
   // Does NOT check if the given process actually exists, just checks for a valid ID.
   convenience init?(forKnownProcessID processID: pid_t) {
-    let appElement = AXUIElementCreateApplication(processID).takeRetainedValue()
+    let appElement = AXUIElementCreateApplication(processID)
     self.init(appElement)
 
     if (processID < 0) {
@@ -14,7 +14,7 @@ public final class Application: UIElement {
   /// Creates an `Application` from a `NSRunningApplication` instance.
   /// - returns: The `Application`, or `nil` if the given application is not running.
   public convenience init?(_ app: NSRunningApplication) {
-    if app.terminated {
+    if app.isTerminated {
       return nil
     }
     self.init(forKnownProcessID: app.processIdentifier)
@@ -32,26 +32,26 @@ public final class Application: UIElement {
   /// Creates an `Application` for every running application with a UI.
   /// - returns: An array of `Application`s.
   public class func all() -> [Application] {
-    let runningApps = NSWorkspace.sharedWorkspace().runningApplications
+    let runningApps = NSWorkspace.shared().runningApplications
     return runningApps
-      .filter({ $0.activationPolicy != .Prohibited })
+      .filter({ $0.activationPolicy != .prohibited })
       .flatMap({ Application($0) })
   }
 
   /// Creates an `Application` for every running instance of the given `bundleID`.
   /// - returns: A (potentially empty) array of `Application`s.
-  public class func allForBundleID(bundleID: String) -> [Application] {
-    let runningApps = NSWorkspace.sharedWorkspace().runningApplications
+  public class func allForBundleID(_ bundleID: String) -> [Application] {
+    let runningApps = NSWorkspace.shared().runningApplications
     return runningApps
       .filter({ $0.bundleIdentifier == bundleID })
       .flatMap({ Application($0) })
   }
 
   /// Creates an `Observer` on this application, if it is still alive.
-  public func createObserver(callback: Observer.Callback) -> Observer? {
+  public func createObserver(_ callback: @escaping Observer.Callback) -> Observer? {
     do {
       return try Observer(processID: try pid(), callback: callback)
-    } catch AXError.InvalidUIElement {
+    } catch AXError.invalidUIElement {
       return nil
     } catch let error {
       fatalError("Caught unexpected error creating observer: \(error)")
@@ -59,10 +59,10 @@ public final class Application: UIElement {
   }
 
   /// Creates an `Observer` on this application, if it is still alive.
-  public func createObserver(callback: Observer.CallbackWithInfo) -> Observer? {
+  public func createObserver(_ callback: @escaping Observer.CallbackWithInfo) -> Observer? {
     do {
       return try Observer(processID: try pid(), callback: callback)
-    } catch AXError.InvalidUIElement {
+    } catch AXError.invalidUIElement {
       return nil
     } catch let error {
       fatalError("Caught unexpected error creating observer: \(error)")
@@ -78,7 +78,7 @@ public final class Application: UIElement {
   }
 
   /// Returns the element at the specified top-down coordinates, or nil if there is none.
-  public override func elementAtPosition(x: Float, _ y: Float) throws -> UIElement? {
+  public override func elementAtPosition(_ x: Float, _ y: Float) throws -> UIElement? {
     return try super.elementAtPosition(x, y)
   }
 }
