@@ -8,10 +8,10 @@ protocol UIElementType: Equatable {
   static var globalMessagingTimeout: Float { get }
 
   func pid() throws -> pid_t
-  func attribute<T>(attribute: Attribute) throws -> T?
-  func arrayAttribute<T>(attribute: Attribute) throws -> [T]?
-  func setAttribute(attribute: Attribute, value: Any) throws
-  func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute: Any]
+  func attribute<T>(_ attribute: Attribute) throws -> T?
+  func arrayAttribute<T>(_ attribute: Attribute) throws -> [T]?
+  func setAttribute(_ attribute: Attribute, value: Any) throws
+  func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute: Any]
 
   var inspect: String { get }
 }
@@ -19,19 +19,23 @@ extension AXSwift.UIElement: UIElementType { }
 
 /// Protocol that wraps AXSwift.Observer.
 protocol ObserverType {
-  typealias UIElement: UIElementType
+  associatedtype UIElement: UIElementType
+  associatedtype Context
 
-  init(processID: pid_t, callback: (observer: Self, element: UIElement, notification: AXSwift.Notification) -> ()) throws
-  func addNotification(notification: AXSwift.Notification, forElement: UIElement) throws
-  func removeNotification(notification: AXSwift.Notification, forElement: UIElement) throws
+  typealias Callback = (Context, UIElement, AXSwift.AXNotification) -> Void
+
+  init(processID: pid_t, callback: @escaping Callback) throws
+  func addNotification(_ notification: AXSwift.AXNotification, forElement: UIElement) throws
+  func removeNotification(_ notification: AXSwift.AXNotification, forElement: UIElement) throws
 }
 extension AXSwift.Observer: ObserverType {
   typealias UIElement = AXSwift.UIElement
+  typealias Context = AXSwift.Observer
 }
 
 /// Protocol that wraps AXSwift.Application.
 protocol ApplicationElementType: UIElementType {
-  typealias UIElement: UIElementType
+  associatedtype UIElement: UIElementType
 
   static func all() -> [Self]
 

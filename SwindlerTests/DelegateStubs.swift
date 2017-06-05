@@ -6,7 +6,7 @@ class StubStateDelegate: StateDelegate {
   var frontmostApplication: WriteableProperty<OfOptionalType<Swindler.Application>>!
   var knownWindows: [WindowDelegate] = []
   var screens: [ScreenDelegate] = []
-  func on<Event: EventType>(handler: (Event) -> ()) {}
+  func on<Event: EventType>(_ handler: @escaping (Event) -> ()) {}
 }
 
 class StubApplicationDelegate: ApplicationDelegate {
@@ -21,7 +21,7 @@ class StubApplicationDelegate: ApplicationDelegate {
   var isFrontmost: WriteableProperty<OfType<Bool>>!
   var isHidden: WriteableProperty<OfType<Bool>>!
 
-  func equalTo(other: ApplicationDelegate) -> Bool { return self === other }
+  func equalTo(_ other: ApplicationDelegate) -> Bool { return self === other }
 }
 
 class StubWindowDelegate: WindowDelegate {
@@ -45,7 +45,7 @@ class StubWindowDelegate: WindowDelegate {
     size = WriteableProperty(size_, notifier: notifier)
   }
 
-  func equalTo(other: WindowDelegate) -> Bool { return self === other }
+  func equalTo(_ other: WindowDelegate) -> Bool { return self === other }
 }
 
 class StubScreenDelegate: ScreenDelegate {
@@ -60,7 +60,7 @@ class StubScreenDelegate: ScreenDelegate {
 
   var debugDescription: String { return "StubScreenDelegate" }
 
-  func equalTo(other: ScreenDelegate) -> Bool { return self === other }
+  func equalTo(_ other: ScreenDelegate) -> Bool { return self === other }
 }
 
 class StubPropertyDelegate<T: Equatable>: PropertyDelegate {
@@ -77,13 +77,13 @@ class StubPropertyDelegate<T: Equatable>: PropertyDelegate {
     return value
   }
 
-  func writeValue(newValue: T) throws {
+  func writeValue(_ newValue: T) throws {
     lock.lock()
     defer { lock.unlock() }
     value = newValue
   }
 
   func initialize() -> Promise<T?> {
-    return Promise(value)
+    return Promise(value: value)
   }
 }

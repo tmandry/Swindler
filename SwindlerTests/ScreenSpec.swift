@@ -6,24 +6,24 @@ import Nimble
 struct StubNSScreen: NSScreenType {
   var frame: CGRect
   var visibleFrame: CGRect { return frame }
-  var deviceDescription: [String: AnyObject] {
+  var deviceDescription: [String: Any] {
     return [
-      "NSScreenNumber": NSNumber(int: number)
+      "NSScreenNumber": NSNumber(value: number as Int32)
     ]
   }
 
   var displayName: String
 
-  private var number: Int32
+  fileprivate var number: Int32
 
   init(_ number: Int32 = 1) {
-    self.frame = CGRect(x: (number-1)*1024, y: 0, width: 1024, height: 768)
+    self.frame = CGRect(x: Int((number-1)*1024), y: 0, width: 1024, height: 768)
     self.number = number
     self.displayName = "StubNSScreen\(number)"
   }
 }
 
-func ==<NSScreenT>(lhs: OSXScreenDelegate<NSScreenT>, rhs: OSXScreenDelegate<NSScreenT>) -> Bool
+public func ==<NSScreenT>(lhs: OSXScreenDelegate<NSScreenT>, rhs: OSXScreenDelegate<NSScreenT>) -> Bool
 {
   return lhs.equalTo(rhs)
 }

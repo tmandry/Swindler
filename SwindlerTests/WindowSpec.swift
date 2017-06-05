@@ -20,7 +20,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
       windowElement = TestWindowElement(forApp: TestApplicationElement())
     }
 
-    func initializeWithElement(winElement: TestWindowElement) -> Promise<WinDelegate> {
+    func initializeWithElement(_ winElement: TestWindowElement) -> Promise<WinDelegate> {
       return WinDelegate.initialize(
         appDelegate: stubApplicationDelegate, notifier: TestNotifier(), axElement: winElement, observer: TestObserver())
     }
@@ -35,7 +35,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
         initialize().then { delegate -> () in
           windowDelegate = delegate
           done()
-        }
+        }.always {}
       }
       expect(windowDelegate).to(beNil())
     }
@@ -72,9 +72,10 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
 
       context("when called with a window that is missing attributes") {
         it("returns an error") { () -> Promise<Void> in
-          windowElement.attrs.removeValueForKey(.Position)
+          windowElement.attrs.removeValue(forKey: .Position)
 
-          let expectedError = OSXDriverError.MissingAttribute(attribute: .Position, onElement: windowElement)
+          // TODO put the detailed error back, or take out the error class
+          let expectedError = PropertyError.invalidObject(cause: PropertyError.missingValue)
           return expectToFail(initialize(), with: expectedError)
         }
       }
@@ -166,7 +167,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
 
           AdversaryObserver.onAddNotification(.WindowMiniaturized) { observer in
             observer.emit(.WindowMiniaturized, forElement: windowElement)
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async() {
               windowElement.attrs[.Minimized] = true
             }
           }
@@ -217,10 +218,11 @@ class OSXWindowDelegateSpec: QuickSpec {
             appDelegate: stubApplicationDelegate,
             notifier: notifier,
             axElement: windowElement,
-            observer: TestObserver()).then { winDelegate -> () in
+            observer: TestObserver()
+        ).then { winDelegate -> () in
           windowDelegate = winDelegate
           done()
-        }
+        }.always {}
       }
     }
 
@@ -237,7 +239,7 @@ class OSXWindowDelegateSpec: QuickSpec {
         windowDelegate.handleEvent(.Moved, observer: TestObserver())
       }
 
-      func getWindowElement(window: Window?) -> TestUIElement? {
+      func getWindowElement(_ window: Window?) -> TestUIElement? {
         return ((window?.delegate) as! WinDelegate?)?.axElement
       }
 
@@ -334,12 +336,12 @@ class WindowSpec: QuickSpec {
         stateDelegate.screens = [leftScreen.delegate, rightScreen.delegate]
       }
 
-      func setWindowRect(rect: CGRect) {
+      func setWindowRect(_ rect: CGRect) {
         windowDelegate.position_.value = rect.origin
         windowDelegate.size_.value     = rect.size
         waitUntil { done in
-          when(windowDelegate.position.refresh(), windowDelegate.size.refresh())
-            .then { _ in done() }
+          when(fulfilled: windowDelegate.position.refresh(), windowDelegate.size.refresh())
+            .then { _ in done() }.always {}
         }
       }
 

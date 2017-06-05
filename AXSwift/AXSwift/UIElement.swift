@@ -285,7 +285,7 @@ open class UIElement {
     }
     guard let array = value as? [AnyObject] else {
       // For consistency with the other array attribute APIs, throw if it's not an array.
-      throw Error.illegalArgument
+      throw AXError.illegalArgument
     }
     return array.map({ unpackAXValue($0) as! T })
   }

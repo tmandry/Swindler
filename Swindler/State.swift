@@ -29,7 +29,7 @@ public final class State {
   public var screens: [Screen] { return delegate.screens.map{ Screen(delegate: $0) } }
 
   /// Calls `handler` when the specified `Event` occurs.
-  public func on<Event: EventType>(handler: (Event) -> ()) { delegate.on(handler) }
+  public func on<Event: EventType>(_ handler: @escaping (Event) -> ()) { delegate.on(handler) }
 }
 
 // All public classes in Swindler are implemented with an internal delegate. This decoupling aids in
@@ -42,66 +42,66 @@ protocol StateDelegate: class {
   var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
   var knownWindows: [WindowDelegate] { get }
   var screens: [ScreenDelegate] { get }
-  func on<Event: EventType>(handler: (Event) -> ())
+  func on<Event: EventType>(_ handler: @escaping (Event) -> ())
 }
 
 // MARK: - OSXStateDelegate
 
 /// An object responsible for propagating the given event. Used internally by the OSX delegates.
 protocol EventNotifier: class {
-  func notify<Event: EventType>(event: Event)
+  func notify<Event: EventType>(_ event: Event)
 }
 
 /// Wraps behavior needed to track the frontmost applications.
 protocol ApplicationObserverType {
   var frontmostApplicationPID: pid_t? { get }
-  func onFrontmostApplicationChanged(handler: () -> ())
-  func makeApplicationFrontmost(pid: pid_t) throws
+  func onFrontmostApplicationChanged(_ handler: @escaping () -> ())
+  func makeApplicationFrontmost(_ pid: pid_t) throws
 }
 
 struct ApplicationObserver: ApplicationObserverType {
   var frontmostApplicationPID: pid_t? {
-    return NSWorkspace.sharedWorkspace().frontmostApplication?.processIdentifier
+    return NSWorkspace.shared().frontmostApplication?.processIdentifier
   }
 
-  func onFrontmostApplicationChanged(handler: () -> ()) {
-    let sharedWorkspace    = NSWorkspace.sharedWorkspace()
+  func onFrontmostApplicationChanged(_ handler: @escaping () -> ()) {
+    let sharedWorkspace    = NSWorkspace.shared()
     let notificationCenter = sharedWorkspace.notificationCenter
 
     // Err on the side of updating too often; watch both activate and deactivate notifications.
-    notificationCenter.addObserverForName(
-      NSWorkspaceDidActivateApplicationNotification, object: sharedWorkspace, queue: nil
+    notificationCenter.addObserver(
+      forName: NSNotification.Name.NSWorkspaceDidActivateApplication, object: sharedWorkspace, queue: nil
     ) { _ in
       handler()
     }
-    notificationCenter.addObserverForName(
-      NSWorkspaceDidDeactivateApplicationNotification, object: sharedWorkspace, queue: nil
+    notificationCenter.addObserver(
+      forName: NSNotification.Name.NSWorkspaceDidDeactivateApplication, object: sharedWorkspace, queue: nil
     ) { _ in
       handler()
     }
   }
 
-  func makeApplicationFrontmost(pid: pid_t) throws {
+  func makeApplicationFrontmost(_ pid: pid_t) throws {
     guard let app = NSRunningApplication(processIdentifier: pid) else {
-      throw OSXDriverError.RunningApplicationNotFound(processID: pid)
+      throw OSXDriverError.runningApplicationNotFound(processID: pid)
     }
-    app.activateWithOptions([])
+    app.activate(options: [])
   }
 }
 
 /// Wraps behavior needed to track screen layout changes.
 protocol ScreenObserverType {
-  func onScreenLayoutChanged(handler: () -> ())
+  func onScreenLayoutChanged(_ handler: @escaping () -> ())
   func allScreens() -> [NSScreen]?
 }
 
 struct ScreenObserver: ScreenObserverType {
-  func onScreenLayoutChanged(handler: () -> ()) {
-    let sharedApplication  = NSApplication.sharedApplication()
-    let notificationCenter = NSWorkspace.sharedWorkspace().notificationCenter
+  func onScreenLayoutChanged(_ handler: @escaping () -> ()) {
+    let sharedApplication  = NSApplication.shared()
+    let notificationCenter = NSWorkspace.shared().notificationCenter
 
-    notificationCenter.addObserverForName(
-      NSApplicationDidChangeScreenParametersNotification, object: sharedApplication, queue: nil
+    notificationCenter.addObserver(
+      forName: NSNotification.Name.NSApplicationDidChangeScreenParameters, object: sharedApplication, queue: nil
     ) { _ in
       handler()
     }
@@ -115,17 +115,18 @@ struct ScreenObserver: ScreenObserverType {
 /// Implements StateDelegate using the AXUIElement API.
 final class OSXStateDelegate<
     UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+  >: StateDelegate, EventNotifier
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
->: StateDelegate, EventNotifier {
+ {
   typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
   typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
-  private typealias EventHandler = (EventType) -> ()
+  fileprivate typealias EventHandler = (EventType) -> ()
 
-  private var applicationsByPID: [pid_t: AppDelegate] = [:]
-  private var eventHandlers: [String: [EventHandler]] = [:]
+  fileprivate var applicationsByPID: [pid_t: AppDelegate] = [:]
+  fileprivate var eventHandlers: [String: [EventHandler]] = [:]
 
   // For convenience/readability.
-  private var applications: LazyMapCollection<[pid_t: AppDelegate], AppDelegate> { return applicationsByPID.values }
+  fileprivate var applications: LazyMapCollection<[pid_t: AppDelegate], AppDelegate> { return applicationsByPID.values }
 
   var runningApplications: [ApplicationDelegate] { return applications.map({ $0 as ApplicationDelegate }) }
   var frontmostApplication: WriteableProperty<OfOptionalType<Application>>!
@@ -166,9 +167,12 @@ final class OSXStateDelegate<
       }
     }
 
-    let (propertyInit, fulfill, _) = Promise<Void>.pendingPromise()
+    let (propertyInitPromise, propertyInit, propertyInitError) = Promise<Void>.pending()
     frontmostApplication = WriteableProperty(
-      FrontmostApplicationPropertyDelegate(appFinder: self, appObserver: appObserver, initPromise: propertyInit),
+      FrontmostApplicationPropertyDelegate(
+        appFinder: self,
+        appObserver: appObserver,
+        initPromise: propertyInitPromise),
       withEvent: FrontmostApplicationChangedEvent.self, receivingObject: State.self, notifier: self)
 
     // Must add the observer after configuring frontmostApplication.
@@ -177,14 +181,16 @@ final class OSXStateDelegate<
     }
 
     // Must not allow frontmostApplication to initialize until the observer is in place.
-    when(appPromises).asVoid().then(fulfill)
+    when(fulfilled: appPromises).asVoid().then(execute: propertyInit).catch(execute: propertyInitError)
 
-    frontmostApplication.initialized.then {
+    frontmostApplication.initialized.catch { error in
+      log.error("Caught error: \(error)")
+    }.always {
       log.debug("Done initializing")
     }
   }
 
-  func on<Event: EventType>(handler: (Event) -> ()) {
+  func on<Event: EventType>(_ handler: @escaping (Event) -> ()) {
     let notification = Event.typeName
     if eventHandlers[notification] == nil {
       eventHandlers[notification] = []
@@ -195,8 +201,8 @@ final class OSXStateDelegate<
   }
 
   // TODO: extract this behavior to a self-contained Notifier struct
-  func notify<Event: EventType>(event: Event) {
-    assert(NSThread.currentThread().isMainThread)
+  func notify<Event: EventType>(_ event: Event) {
+    assert(Thread.current.isMainThread)
     if let handlers = eventHandlers[Event.typeName] {
       for handler in handlers {
         handler(event)
@@ -209,7 +215,9 @@ extension OSXStateDelegate: PropertyNotifier {
   typealias Object = State
 
   // TODO... can we get rid of this or simplify it?
-  func notify<Event: PropertyEventType where Event.Object == State>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+  func notify<Event: PropertyEventType>(
+    _ event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType
+  ) where Event.Object == State {
     notify(Event(external: external, object: State(delegate: self), oldValue: oldValue, newValue: newValue))
   }
 
@@ -222,10 +230,10 @@ extension OSXStateDelegate: PropertyNotifier {
 // MARK: PropertyDelegates
 
 protocol AppFinder: class {
-  func findAppByPID(pid: pid_t) -> Application?
+  func findAppByPID(_ pid: pid_t) -> Application?
 }
 extension OSXStateDelegate: AppFinder {
-  func findAppByPID(pid: pid_t) -> Application? {
+  func findAppByPID(_ pid: pid_t) -> Application? {
     guard let appDelegate = applicationsByPID[pid] else { return nil }
     return Application(delegate: appDelegate)
   }
@@ -249,12 +257,12 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
     return app
   }
 
-  func writeValue(newValue: Application) throws {
+  func writeValue(_ newValue: Application) throws {
     let pid = newValue.delegate.processID
     do {
-      try appObserver.makeApplicationFrontmost(pid)
+      try appObserver.makeApplicationFrontmost(pid!)
     } catch {
-      throw PropertyError.InvalidObject(cause: error)
+      throw PropertyError.invalidObject(cause: error)
     }
   }
 
@@ -263,14 +271,14 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
     return initPromise.then { return self.readValue() }
   }
 
-  private func findAppByPID(pid: pid_t) -> Application? {
+  fileprivate func findAppByPID(_ pid: pid_t) -> Application? {
     // TODO extract into runOnMainThread util
     // Avoid using locks by forcing calls out to `windowFinder` to happen on the main thead.
     var app: Application? = nil
-    if NSThread.currentThread().isMainThread {
+    if Thread.current.isMainThread {
       app = appFinder?.findAppByPID(pid)
     } else {
-      dispatch_sync(dispatch_get_main_queue()) {
+      DispatchQueue.main.sync {
         app = self.appFinder?.findAppByPID(pid)
       }
     }

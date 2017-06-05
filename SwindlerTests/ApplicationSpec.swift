@@ -64,7 +64,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
             .then { delegate -> () in
               appDelegate = delegate
               done()
-            }
+            }.always {}
         }
         expect(appDelegate).to(beNil())
       }
@@ -79,7 +79,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
             .then { delegate -> () in
               appDelegate = delegate
               done()
-            }
+            }.always {}
         }
         expect(appDelegate).toNot(beNil())
         expect(notifier).to(beNil())
@@ -97,17 +97,17 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
                 expect(delegate.knownWindows).to(haveCount(1))
                 appDelegate = delegate
                 done()
-              }
+              }.always {}
           }
           expect(appDelegate).to(beNil())
         }
       }
 
       context("when the observer throws an error during initialization") {
-        class ThrowingInitObserver: FakeObserver {
-          required init(processID: pid_t, callback: Callback) throws {
+        final class ThrowingInitObserver: FakeObserver {
+          required init(processID: pid_t, callback: @escaping Callback) throws {
             try super.init(processID: processID, callback: callback)
-            throw AXSwift.Error.Failure
+            throw AXError.failure
           }
         }
 
@@ -121,8 +121,8 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
 
       context("when the observer throws an error during adding notifications") {
         class ThrowingAddObserver: FakeObserver {
-          override func addNotification(notification: AXSwift.Notification, forElement element: TestUIElement) throws {
-            throw AXSwift.Error.Failure
+          override func addNotification(_ notification: AXNotification, forElement element: TestUIElement) throws {
+            throw AXError.failure
           }
         }
 
@@ -166,7 +166,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
             .then { appDel -> () in
               appDelegate = appDel
               done()
-            }
+            }.always {}
         }
         return appDelegate!
       }
@@ -307,7 +307,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
               }
 
               // Wait for event to be processed on main thread.
-              NSThread.sleepForTimeInterval(0.1)
+              Thread.sleep(forTimeInterval: 0.1)
 
               // Will return no windows.
             }
@@ -325,7 +325,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
             waitUntil(appDelegate.knownWindows.count == 1)
             observer?.emit(.WindowCreated, forElement: windowElement)
 
-            NSRunLoop.mainRunLoop().runUntilDate(NSDate(timeIntervalSinceNow: 0.1))
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.1))
 
             expect(appDelegate.knownWindows).to(haveCount(1))
           }
@@ -358,7 +358,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
           appDelegate = applicationDelegate
           observer = appDelegate.observer
           done()
-        }
+        }.always {}
       }
     }
 
@@ -368,8 +368,9 @@ class OSXApplicationDelegateSpec: QuickSpec {
       initializeApp()
     }
 
+    @discardableResult
     func createWindow(
-      emitEvent emitEvent: Bool = true,
+      emitEvent: Bool = true,
       windowElement element: TestWindowElement? = nil
     ) -> TestWindowElement {
       let windowElement = element ?? TestWindowElement(forApp: appElement)
@@ -378,16 +379,16 @@ class OSXApplicationDelegateSpec: QuickSpec {
       return windowElement
     }
 
-    func getWindowElement(windowDelegate: WindowDelegate?) -> TestUIElement? {
+    func getWindowElement(_ windowDelegate: WindowDelegate?) -> TestUIElement? {
       typealias WinDelegate = OSXWindowDelegate<TestUIElement, AdversaryApplicationElement, FakeObserver>
       return (windowDelegate as! WinDelegate?)?.axElement
     }
-    func getWindowElementForWindow(window: Window?) -> TestUIElement? {
+    func getWindowElementForWindow(_ window: Window?) -> TestUIElement? {
       return getWindowElement(window?.delegate)
     }
 
     describe("knownWindows") {
-      func getWindowElements(windows: [WindowDelegate]) -> [TestUIElement] {
+      func getWindowElements(_ windows: [WindowDelegate]) -> [TestUIElement] {
         return windows.map({ getWindowElement($0)! })
       }
 
@@ -520,8 +521,8 @@ class OSXApplicationDelegateSpec: QuickSpec {
           // Usually we get the MWC notification before WindowCreated. Simply doing dispatch_async
           // to wait for WindowCreated doesn't always work, so we defeat that here.
           observer.emit(.MainWindowChanged, forElement: windowElement)
-          dispatch_async(dispatch_get_main_queue()) {
-            dispatch_async(dispatch_get_main_queue()) {
+          DispatchQueue.main.async() {
+            DispatchQueue.main.async() {
               observer.emit(.WindowCreated, forElement: windowElement)
             }
           }
@@ -577,7 +578,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
         var windowElement: TestWindowElement!
         var windowDelegate: WindowDelegate!
         var setPromise: Promise<Window?>!
-        func createAndSetMainWindow(element: TestWindowElement) {
+        func createAndSetMainWindow(_ element: TestWindowElement) {
           windowElement = element
           createWindow(windowElement: element)
           waitUntil(appDelegate.knownWindows.count == 1)
@@ -605,7 +606,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
 
         context("when the app refuses to make the window main") {
           class MyWindowElement: TestWindowElement {
-            override func setAttribute(attribute: Attribute, value: Any) throws {
+            override func setAttribute(_ attribute: Attribute, value: Any) throws {
               if attribute == .Main { return }
               else { try super.setAttribute(attribute, value: value) }
             }

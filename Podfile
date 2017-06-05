@@ -1,10 +1,11 @@
 workspace 'Swindler'
+swift_version = '3.0'
 
 use_frameworks!
 
 def testing_pods
-  pod 'Quick', '~> 0.8.0'
-  pod 'Nimble', '~> 4.0.0'
+  pod 'Quick',  '~> 1.1.0'
+  pod 'Nimble', '~> 7.0.0'
 end
 
 xcodeproj 'Swindler'
@@ -16,10 +17,9 @@ target 'SwindlerTestsProfile' do
 end
 
 target 'Swindler' do
-  pod 'PromiseKit/CorePromise', '~> 3.0.0'
-#  pod 'PromiseKit/Foundation', '~> 3.0.0'
+  pod 'PromiseKit', '~> 4.2.0'
 end
 
 target 'SwindlerExample' do
-  pod 'PromiseKit/CorePromise', '~> 3.0.0'
+  pod 'PromiseKit/CorePromise', '~> 4.2.0'
 end

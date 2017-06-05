@@ -16,8 +16,8 @@ internal extension EventType {
 
 /// An event describing a property change.
 protocol PropertyEventType: EventType {
-  typealias PropertyType
-  typealias Object
+  associatedtype PropertyType
+  associatedtype Object
   init(external: Bool, object: Object, oldValue: PropertyType, newValue: PropertyType)
 
   /// The old value of the property.
@@ -28,7 +28,7 @@ protocol PropertyEventType: EventType {
 }
 
 protocol StatePropertyEventType: PropertyEventType {
-  typealias Object = State
+  associatedtype Object = State
   init(external: Bool, state: Object, oldValue: PropertyType, newValue: PropertyType)
 }
 extension StatePropertyEventType {
@@ -56,7 +56,7 @@ public struct WindowDestroyedEvent: EventType {
 }
 
 protocol WindowPropertyEventType: PropertyEventType {
-  typealias Object = Window
+  associatedtype Object = Window
   init(external: Bool, window: Object, oldValue: PropertyType, newValue: PropertyType)
 }
 extension WindowPropertyEventType {
@@ -98,7 +98,7 @@ public struct WindowMinimizedChangedEvent: WindowPropertyEventType {
 }
 
 protocol ApplicationPropertyEventType: PropertyEventType {
-  typealias Object = Application
+  associatedtype Object = Application
   init(external: Bool, application: Object, oldValue: PropertyType, newValue: PropertyType)
 }
 extension ApplicationPropertyEventType {

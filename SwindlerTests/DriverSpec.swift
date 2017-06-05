@@ -49,7 +49,7 @@ class OSXDriverSpec: QuickSpec {
       it("emits WindowCreatedEvent") {
         var callbacks = 0
         state.on { (event: WindowCreatedEvent) in
-          callbacks++
+          callbacks += 1
         }
         let window = TestWindowElement(forApp: appElement)
         observer.emit(.WindowCreated, forElement: window)
@@ -64,7 +64,7 @@ class OSXDriverSpec: QuickSpec {
       it("emits WindowDestroyedEvent") {
         var callbacks = 0
         state.on { (event: WindowDestroyedEvent) in
-          callbacks++
+          callbacks += 1
         }
         observer.emit(.UIElementDestroyed, forElement: windowElement)
         expect(callbacks).toEventually(equal(1), description: "callback should be called once")
@@ -82,7 +82,7 @@ class OSXDriverSpec: QuickSpec {
       it("emits a ChangedEvent") {
         var callbacks = 0
         state.on { (event: WindowPosChangedEvent) in
-          callbacks++
+          callbacks += 1
         }
         windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
         observer.emit(.Moved, forElement: windowElement)
@@ -93,10 +93,10 @@ class OSXDriverSpec: QuickSpec {
         var callbacks1 = 0
         var callbacks2 = 0
         state.on { (event: WindowPosChangedEvent) in
-          callbacks1++
+          callbacks1 += 1
         }
         state.on { (event: WindowPosChangedEvent) in
-          callbacks2++
+          callbacks2 += 1
         }
         windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
         observer.emit(.Moved, forElement: windowElement)

@@ -9,7 +9,7 @@ public final class Window: Equatable {
 
   // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.
   // It should not be held internally by delegates, or it would create a reference cycle.
-  private var application_: Application!
+  fileprivate var application_: Application!
 
   internal init(delegate: WindowDelegate, application: Application) {
     self.delegate = delegate
@@ -39,13 +39,13 @@ public final class Window: Equatable {
   public var screen: Screen? {
     let screenIntersectSizes =
       application.swindlerState.screens.lazy
-      .map    { screen            in (screen, screen.frame.intersect(self.rect)) }
+      .map    { screen            in (screen, screen.frame.intersection(self.rect)) }
       .filter { screen, intersect in !intersect.isNull }
       .map    { screen, intersect in (screen, intersect.size.width*intersect.size.height) }
-    let bestScreen = screenIntersectSizes.maxElement{ lhs, rhs in lhs.1 < rhs.1 }?.0
+    let bestScreen = screenIntersectSizes.max{ lhs, rhs in lhs.1 < rhs.1 }?.0
     return bestScreen
   }
-  private var rect: CGRect { return CGRect(origin: position.value, size: size.value) }
+  fileprivate var rect: CGRect { return CGRect(origin: position.value, size: size.value) }
 
   /// Whether or not the window referred to by this type remains valid. Windows usually become
   /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
@@ -83,27 +83,28 @@ protocol WindowDelegate: class {
   var isMinimized: WriteableProperty<OfType<Bool>>! { get }
   var isFullscreen: WriteableProperty<OfType<Bool>>! { get }
 
-  func equalTo(other: WindowDelegate) -> Bool
+  func equalTo(_ other: WindowDelegate) -> Bool
 }
 
 // MARK: - OSXWindowDelegate
 
 /// Implements WindowDelegate using the AXUIElement API.
 final class OSXWindowDelegate<
-  UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+    UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+  >: WindowDelegate, PropertyNotifier
   where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement
->: WindowDelegate, PropertyNotifier {
+ {
   typealias Object = Window
 
-  private weak var notifier: EventNotifier?
-  private var initialized: Promise<Void>!
+  fileprivate weak var notifier: EventNotifier?
+  fileprivate var initialized: Promise<Void>!
 
   let axElement: UIElement
 
-  private(set) var isValid: Bool = true
+  fileprivate(set) var isValid: Bool = true
 
-  private var axProperties: [PropertyType]!
-  private var watchedAxProperties: [AXSwift.Notification: [PropertyType]]!
+  fileprivate var axProperties: [PropertyType]!
+  fileprivate var watchedAxProperties: [AXSwift.AXNotification: [PropertyType]]!
 
   weak var appDelegate: ApplicationDelegate?
 
@@ -113,13 +114,13 @@ final class OSXWindowDelegate<
   var isMinimized: WriteableProperty<OfType<Bool>>!
   var isFullscreen: WriteableProperty<OfType<Bool>>!
 
-  private init(appDelegate: ApplicationDelegate, notifier: EventNotifier?, axElement: UIElement, observer: Observer) throws {
+  fileprivate init(appDelegate: ApplicationDelegate, notifier: EventNotifier?, axElement: UIElement, observer: Observer) throws {
     self.appDelegate = appDelegate
     self.notifier = notifier
     self.axElement = axElement
 
     // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
-    let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pendingPromise()
+    let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pending()
 
     // Initialize all properties.
     position = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
@@ -167,18 +168,19 @@ final class OSXWindowDelegate<
     let subroleChecked = initPromise.then { attributeValues -> () in
       if attributeValues[.Subrole] as! String? == "AXUnknown" {
         log.debug("Window \(axElement) has subrole AXUnknown, unwatching")
-        self.unwatchWindowElement(axElement, observer: observer, notifications: notifications)
-        throw OSXDriverError.WindowIgnored(element: axElement)
+        self.unwatchWindowElement(axElement, observer: observer, notifications: notifications).catch { error in
+          log.warn("Error while unwatching ignored window \(axElement): \(error)")
+        }
+        throw OSXDriverError.windowIgnored(element: axElement)
       }
     }
 
     initialized =
-      when(initializeProperties(axProperties, ofElement: axElement).asVoid(), subroleChecked)
-      .recover(unwrapWhenErrors)
+      when(fulfilled: initializeProperties(axProperties, ofElement: axElement).asVoid(), subroleChecked)
   }
 
-  private func watchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) -> Promise<Void> {
-    return Promise<Void>().thenInBackground { () -> () in
+  fileprivate func watchWindowElement(_ element: UIElement, observer: Observer, notifications: [AXNotification]) -> Promise<Void> {
+    return Promise<Void>(value: ()).then(on: .global()) { () -> () in
       for notification in notifications {
         try traceRequest(self.axElement, "addNotification", notification) {
           try observer.addNotification(notification, forElement: self.axElement)
@@ -187,8 +189,8 @@ final class OSXWindowDelegate<
     }
   }
 
-  private func unwatchWindowElement(element: UIElement, observer: Observer, notifications: [Notification]) {
-    Promise<Void>().thenInBackground { () -> () in
+  fileprivate func unwatchWindowElement(_ element: UIElement, observer: Observer, notifications: [AXNotification]) -> Promise<Void> {
+    return Promise<Void>(value: ()).then(on: .global()) { () -> () in
       for notification in notifications {
         try traceRequest(self.axElement, "removeNotification", notification) {
           try observer.removeNotification(notification, forElement: self.axElement)
@@ -199,7 +201,7 @@ final class OSXWindowDelegate<
 
   // Initializes the window and returns it as a Promise once it's ready.
   static func initialize(
-      appDelegate appDelegate: ApplicationDelegate,
+      appDelegate: ApplicationDelegate,
       notifier: EventNotifier?,
       axElement: UIElement,
       observer: Observer
@@ -211,7 +213,7 @@ final class OSXWindowDelegate<
     }
   }
 
-  func handleEvent(event: AXSwift.Notification, observer: Observer) {
+  func handleEvent(_ event: AXSwift.AXNotification, observer: Observer) {
     switch event {
     case .UIElementDestroyed:
       isValid = false
@@ -224,7 +226,9 @@ final class OSXWindowDelegate<
     }
   }
 
-  func notify<Event: PropertyEventType where Event.Object == Window>(event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType) {
+  func notify<Event: PropertyEventType>(
+    _ event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType
+  ) where Event.Object == Window {
     guard let window = Window(delegate: self) else {
       // Application terminated already; shouldn't send events.
       return
@@ -236,7 +240,7 @@ final class OSXWindowDelegate<
     isValid = false
   }
 
-  func equalTo(rhs: WindowDelegate) -> Bool {
+  func equalTo(_ rhs: WindowDelegate) -> Bool {
     if let other = rhs as? OSXWindowDelegate {
       return self.axElement == other.axElement
     } else {

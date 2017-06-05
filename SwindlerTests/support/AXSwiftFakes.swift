@@ -6,40 +6,43 @@ class TestUIElement: UIElementType, Hashable {
 
   static var elementCount: Int = 0
 
-  var id: Int = elementCount++
+  var id: Int
   var processID: pid_t = 0
   var attrs: [Attribute: Any] = [:]
 
   var throwInvalid: Bool = false
 
-  init() { }
+  init() {
+    TestUIElement.elementCount += 1
+    id = TestUIElement.elementCount
+  }
   var hashValue: Int { return id }
 
   func pid() throws -> pid_t { return processID }
-  func attribute<T>(attribute: Attribute) throws -> T? {
-    if throwInvalid { throw AXSwift.Error.InvalidUIElement }
+  func attribute<T>(_ attribute: Attribute) throws -> T? {
+    if throwInvalid { throw AXSwift.AXError.invalidUIElement }
     if let value = attrs[attribute] {
       return (value as! T)
     }
     return nil
   }
-  func arrayAttribute<T>(attribute: Attribute) throws -> [T]? {
-    if throwInvalid { throw AXSwift.Error.InvalidUIElement }
+  func arrayAttribute<T>(_ attribute: Attribute) throws -> [T]? {
+    if throwInvalid { throw AXSwift.AXError.invalidUIElement }
     guard let value = attrs[attribute] else  {
       return nil
     }
     return (value as! [T])
   }
-  func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute: Any] {
-    if throwInvalid { throw AXSwift.Error.InvalidUIElement }
+  func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute: Any] {
+    if throwInvalid { throw AXSwift.AXError.invalidUIElement }
     var result: [Attribute: Any] = [:]
     for attribute in attributes {
       result[attribute] = attrs[attribute]
     }
     return result
   }
-  func setAttribute(attribute: Attribute, value: Any) throws {
-    if throwInvalid { throw AXSwift.Error.InvalidUIElement }
+  func setAttribute(_ attribute: Attribute, value: Any) throws {
+    if throwInvalid { throw AXSwift.AXError.invalidUIElement }
     attrs[attribute] = value
   }
 
@@ -65,7 +68,7 @@ class TestApplicationElementBase: TestUIElement {
     attrs[.Hidden]    = false
   }
 
-  override func setAttribute(attribute: Attribute, value: Any) throws {
+  override func setAttribute(_ attribute: Attribute, value: Any) throws {
     // Synchronize .MainWindow with .Main on the window.
     if attribute == .MainWindow {
       if let oldWindowElement = attrs[.MainWindow] as! TestWindowElement? {
@@ -104,7 +107,7 @@ class TestWindowElement: TestUIElement {
     attrs[.FullScreen] = false
   }
 
-  override func setAttribute(attribute: Attribute, value: Any) throws {
+  override func setAttribute(_ attribute: Attribute, value: Any) throws {
     // Synchronize .Main with .MainWindow on the application.
     if attribute == .Main {
       // Setting .Main to false does nothing.
@@ -118,32 +121,44 @@ class TestWindowElement: TestUIElement {
 }
 
 class TestObserver: ObserverType {
-  typealias Callback = (observer: TestObserver, element: TestUIElement, notification: AXSwift.Notification) -> ()
+  typealias UIElement = TestUIElement
+  typealias Context = TestObserver
+  //typealias Callback = (Context, TestUIElement, AXNotification) -> ()
 
-  required init(processID: pid_t, callback: Callback) throws { }
+  required init(processID: pid_t, callback: @escaping Callback) throws { }
   init() { }
 
-  func addNotification(notification: AXSwift.Notification, forElement: TestUIElement) throws {}
-  func removeNotification(notification: AXSwift.Notification, forElement: TestUIElement) throws {}
+  func addNotification(_ notification: AXNotification, forElement: TestUIElement) throws {}
+  func removeNotification(_ notification: AXNotification, forElement: TestUIElement) throws {}
 }
 
 // A more elaborate TestObserver that actually tracks which elements and notifications are being
 // observed and supports emitting notifications.
-class FakeObserver: TestObserver {
-  static var observers: [FakeObserver] = []
+/*protocol FakeObserverType: ObserverType {
+  typealias UIElement = TestUIElement
+  static var observers: [Self] { get set }
+  var watchedElements: [TestUIElement: [AXNotification]] { get set }
+  var callback: Callback! { get set }
+  var lock: NSLock { get set }
+}
+extension FakeObserverType where Context == Self, UIElement == TestUIElement {*/
+class FakeObserver: ObserverType {
+  typealias Context = FakeObserver
+  typealias UIElement = TestUIElement
+  static var observers: [Context] = []
+  var callback: Callback!
+  var lock: NSLock = NSLock()
+  var watchedElements: [TestUIElement: [AXNotification]] = [:]
 
-  private var callback: Callback!
-  private let lock: NSLock = NSLock()
+  //static var observers: [FakeObserverBase] = []
 
-  required init(processID: pid_t, callback: Callback) throws {
+  required init(processID: pid_t, callback: @escaping Callback) throws {
     self.callback = callback
-    try super.init(processID: processID, callback: callback)
+    //try ObserverType.init(processID: processID, callback: callback)
     FakeObserver.observers.append(self)
   }
 
-  var watchedElements: [TestUIElement: [AXSwift.Notification]] = [:]
-
-  override func addNotification(notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+  func addNotification(_ notification: AXNotification, forElement element: TestUIElement) throws {
     lock.lock()
     defer { lock.unlock() }
 
@@ -153,7 +168,7 @@ class FakeObserver: TestObserver {
     watchedElements[element]!.append(notification)
   }
 
-  override func removeNotification(notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+  func removeNotification(_ notification: AXNotification, forElement element: TestUIElement) throws {
     lock.lock()
     defer { lock.unlock() }
 
@@ -162,7 +177,7 @@ class FakeObserver: TestObserver {
     }
   }
 
-  func emit(notification: AXSwift.Notification, forElement element: TestUIElement) {
+  func emit(_ notification: AXNotification, forElement element: TestUIElement) {
     switch notification {
     // These notifications usually happen on a window element, but are observed on the application element.
     case .WindowCreated, .MainWindowChanged, .FocusedWindowChanged:
@@ -176,19 +191,28 @@ class FakeObserver: TestObserver {
     }
   }
 
-  func doEmit(notification: AXSwift.Notification, watchedElement: TestUIElement, passedElement: TestUIElement) {
+  func doEmit(_ notification: AXNotification, watchedElement: TestUIElement, passedElement: TestUIElement) {
     let watched = watchedElements[watchedElement] ?? []
     if watched.contains(notification) {
-      callback(observer: self, element: passedElement, notification: notification)
+      callback(self, passedElement, notification)
     }
   }
 }
-
+/*
+final class FakeObserver: FakeObserverType {
+  typealias Context = FakeObserver
+  typealias UIElement = TestUIElement
+  static var observers: [Context] = []
+  var callback: Callback!
+  var lock: NSLock = NSLock()
+  var watchedElements: [TestUIElement: [AXNotification]] = [:]
+}
+*/
 // MARK: - Adversaries
 
 /// Allows defining adversarial actions when a property is observed.
-class AdversaryObserver: FakeObserver {
-  static var onNotification: Notification? = nil
+final class AdversaryObserver: FakeObserver {
+  static var onNotification: AXNotification? = nil
   static var handler: Optional<(AdversaryObserver) -> ()> = nil
 
   /// Call this in beforeEach for any tests that use this class.
@@ -198,13 +222,13 @@ class AdversaryObserver: FakeObserver {
   }
 
   /// Defines code that runs on the main thread before returning from addNotification.
-  static func onAddNotification(notification: Notification, handler: (AdversaryObserver) -> ()) {
+  static func onAddNotification(_ notification: AXNotification, handler: @escaping (AdversaryObserver) -> ()) {
     onNotification = notification
     self.handler = handler
   }
 
   override func addNotification(
-      notification: AXSwift.Notification, forElement element: TestUIElement) throws {
+      _ notification: AXNotification, forElement element: TestUIElement) throws {
     try super.addNotification(notification, forElement: element)
     if notification == AdversaryObserver.onNotification {
       performOnMainThread { AdversaryObserver.handler!(self) }
@@ -223,7 +247,7 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
   var onMainThread = true
 
   /// Defines code that runs on the main thread before returning the value of the attribute.
-  func onFirstAttributeRead(attribute: Attribute, onMainThread: Bool = true, handler: (AdversaryApplicationElement) -> ()) {
+  func onFirstAttributeRead(_ attribute: Attribute, onMainThread: Bool = true, handler: @escaping (AdversaryApplicationElement) -> ()) {
     watchAttribute = attribute
     onRead = handler
     alreadyCalled = false
@@ -231,7 +255,7 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
   }
 
   var lock = NSLock()
-  private func handleAttributeRead() {
+  fileprivate func handleAttributeRead() {
     lock.lock()
     defer { lock.unlock() }
 
@@ -246,23 +270,23 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
     }
   }
 
-  override func attribute<T>(attribute: Attribute) throws -> T? {
+  override func attribute<T>(_ attribute: Attribute) throws -> T? {
     let result: T? = try super.attribute(attribute)
     if attribute == watchAttribute {
       handleAttributeRead()
     }
     return result
   }
-  override func arrayAttribute<T>(attribute: Attribute) throws -> [T]? {
+  override func arrayAttribute<T>(_ attribute: Attribute) throws -> [T]? {
     let result: [T]? = try super.arrayAttribute(attribute)
     if attribute == watchAttribute {
       handleAttributeRead()
     }
     return result
   }
-  override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+  override func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
     let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
-    if let watchAttribute = watchAttribute where attributes.contains(watchAttribute) {
+    if let watchAttribute = watchAttribute, attributes.contains(watchAttribute) {
       handleAttributeRead()
     }
     return result
@@ -276,13 +300,13 @@ class AdversaryWindowElement: TestWindowElement {
   var alreadyCalled = false
 
   /// Defines code that runs on the main thread before returning the value of the attribute.
-  func onAttributeFirstRead(attribute: Attribute, handler: () -> ()) {
+  func onAttributeFirstRead(_ attribute: Attribute, handler: @escaping () -> ()) {
     watchAttribute = attribute
     onRead = handler
     alreadyCalled = false
   }
 
-  override func attribute<T>(attribute: Attribute) throws -> T? {
+  override func attribute<T>(_ attribute: Attribute) throws -> T? {
     let result: T? = try super.attribute(attribute)
     if attribute == watchAttribute {
       performOnMainThread {
@@ -294,9 +318,9 @@ class AdversaryWindowElement: TestWindowElement {
     }
     return result
   }
-  override func getMultipleAttributes(attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+  override func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
     let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
-    if let watchAttribute = watchAttribute where attributes.contains(watchAttribute) {
+    if let watchAttribute = watchAttribute, attributes.contains(watchAttribute) {
       performOnMainThread {
         if !self.alreadyCalled {
           self.onRead?()
@@ -309,11 +333,11 @@ class AdversaryWindowElement: TestWindowElement {
 }
 
 /// Performs the given action on the main thread, synchronously, regardless of the current thread.
-func performOnMainThread(action: () -> ()) {
-  if NSThread.currentThread().isMainThread {
+func performOnMainThread(_ action: () -> ()) {
+  if Thread.current.isMainThread {
     action()
   } else {
-    dispatch_sync(dispatch_get_main_queue()) {
+    DispatchQueue.main.sync {
       action()
     }
   }

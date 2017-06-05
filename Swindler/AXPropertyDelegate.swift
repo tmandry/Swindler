@@ -19,36 +19,36 @@ final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: Property
       return try traceRequest(axElement, "attribute", attribute) {
         try axElement.attribute(attribute)
       }
-    } catch AXSwift.Error.CannotComplete {
+    } catch AXSwift.AXError.cannotComplete {
       // If messaging timeout unspecified, we'll pass -1.
       let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
-      throw PropertyError.Timeout(time: NSTimeInterval(time))
-    } catch AXSwift.Error.InvalidUIElement {
-      throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
+      throw PropertyError.timeout(time: TimeInterval(time))
+    } catch AXSwift.AXError.invalidUIElement {
+      throw PropertyError.invalidObject(cause: AXSwift.AXError.invalidUIElement)
     } catch let error {
       unexpectedError(error)
-      throw PropertyError.InvalidObject(cause: error)
+      throw PropertyError.invalidObject(cause: error)
     }
   }
 
-  func writeValue(newValue: T) throws {
+  func writeValue(_ newValue: T) throws {
     do {
       return try traceRequest(axElement, "setAttribute", attribute, newValue) {
         try axElement.setAttribute(attribute, value: newValue)
       }
-    } catch AXSwift.Error.IllegalArgument {
-      throw PropertyError.IllegalValue
-    } catch AXSwift.Error.CannotComplete {
+    } catch AXSwift.AXError.illegalArgument {
+      throw PropertyError.illegalValue
+    } catch AXSwift.AXError.cannotComplete {
       // If messaging timeout unspecified, we'll pass -1.
       let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
-      throw PropertyError.Timeout(time: NSTimeInterval(time))
-    } catch AXSwift.Error.Failure {
-      throw PropertyError.Failure(cause: AXSwift.Error.Failure)
-    } catch AXSwift.Error.InvalidUIElement {
-      throw PropertyError.InvalidObject(cause: AXSwift.Error.InvalidUIElement)
+      throw PropertyError.timeout(time: TimeInterval(time))
+    } catch AXSwift.AXError.failure {
+      throw PropertyError.failure(cause: AXSwift.AXError.failure)
+    } catch AXSwift.AXError.invalidUIElement {
+      throw PropertyError.invalidObject(cause: AXSwift.AXError.invalidUIElement)
     } catch let error {
       unexpectedError(error)
-      throw PropertyError.InvalidObject(cause: error)
+      throw PropertyError.invalidObject(cause: error)
     }
   }
 
@@ -60,12 +60,12 @@ final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: Property
       return (value as! T)
     }.recover { error -> T? in
       switch error {
-      case AXSwift.Error.CannotComplete:
+      case AXSwift.AXError.cannotComplete:
         // If messaging timeout unspecified, we'll pass -1.
         let time = (UIElement.globalMessagingTimeout) != 0 ? UIElement.globalMessagingTimeout : -1.0
-        throw PropertyError.Timeout(time: NSTimeInterval(time))
+        throw PropertyError.timeout(time: TimeInterval(time))
       default:
-        throw PropertyError.InvalidObject(cause: error)
+        throw PropertyError.invalidObject(cause: error)
       }
     }
   }
@@ -85,68 +85,51 @@ protocol PropertyType {
 }
 extension Property: PropertyType {
   func refresh() {
-    let _: Promise<Type> = self.refresh()
+    let _: Promise<PropertyType> = self.refresh()
   }
 }
 
 /// Asynchronously fetches all the element attributes.
-func fetchAttributes<UIElement: UIElementType>(attributeNames: [Attribute], forElement axElement: UIElement, after: Promise<Void>, fulfill: ([Attribute: Any]) -> (), reject: (ErrorType) -> ()) {
+func fetchAttributes<UIElement: UIElementType>(_ attributeNames: [Attribute], forElement axElement: UIElement, after: Promise<Void>, fulfill: @escaping ([Attribute: Any]) -> (), reject: @escaping (Error) -> ()) {
   // Issue a request in the background.
-  after.thenInBackground { () -> () in
+  after.then(on: .global()) { () -> () in
     let attributes = try traceRequest(axElement, "getMultipleAttributes", attributeNames) {
       try axElement.getMultipleAttributes(attributeNames)
     }
     fulfill(attributes)
-  }.error { error in
+  }.catch { error in
     reject(error)
   }
 }
 
 /// Returns a promise that resolves when all the provided properties are initialized.
 /// Adds additional error information for AXPropertyDelegates.
-func initializeProperties<UIElement: UIElementType>(properties: [PropertyType], ofElement axElement: UIElement) -> Promise<Void> {
-  let propertiesInitialized = Array(properties.map({ $0.initialized }))
-  return when(propertiesInitialized).recover { (error: ErrorType) -> () in
-    switch error {
-    case PromiseKit.Error.When(let index, let wrappedError):
-      switch wrappedError {
-      case PropertyError.MissingValue, PropertyError.InvalidObject(cause: PropertyError.MissingValue):
-        // Add more information
-        if let propertyDelegate = properties[index].delegate as? AXPropertyDelegateType {
-          throw OSXDriverError.MissingAttribute(attribute: propertyDelegate.attribute, onElement: axElement)
-        } else {
-          throw wrappedError
-        }
-      default:
-        throw wrappedError
-      }
-    default:
-      throw error
-    }
-  }
+func initializeProperties<UIElement: UIElementType>(_ properties: [PropertyType], ofElement axElement: UIElement) -> Promise<Void> {
+  let propertiesInitialized: [Promise<Void>] = Array(properties.map({ $0.initialized }))
+  return when(fulfilled: propertiesInitialized)
 }
 
 /// Tracks how long `requestFunc` takes, and logs it if needed.
 /// - Parameter object: The object the request is being made on (usually, a UIElement).
 func traceRequest<T>(
-    object: Any,
+  _ object: Any,
   _ request: String,
   _ arg1: Any,
   _ arg2: Any? = nil,
-  @noescape requestFunc: () throws -> T
+  requestFunc: () throws -> T
 ) throws -> T {
   var result: T?
-  var error: ErrorType?
+  var error: Error?
 
-  let start = NSDate()
+  let start = Date()
   do {
     result = try requestFunc()
   } catch let err {
     error = err
   }
-  let end = NSDate()
+  let end = Date()
 
-  let elapsed = end.timeIntervalSinceDate(start)
+  let elapsed = end.timeIntervalSince(start)
   log.trace({ () -> String in
     // This closure won't be evaluated if tracing is disabled.
     let formatElapsed = String(format: "%.1f", elapsed * 1000)

@@ -7,24 +7,24 @@ import PromiseKit
 
 class StubApplicationObserver: ApplicationObserverType {
   var frontmostApplicationPID: pid_t? { return nil }
-  func onFrontmostApplicationChanged(handler: () -> ()) {}
-  func makeApplicationFrontmost(pid: pid_t) throws {}
+  func onFrontmostApplicationChanged(_ handler: @escaping () -> ()) {}
+  func makeApplicationFrontmost(_ pid: pid_t) throws {}
 }
 
 class FakeApplicationObserver: ApplicationObserverType {
-  private var frontmost_: pid_t? = nil
+  fileprivate var frontmost_: pid_t? = nil
   var frontmostApplicationPID: pid_t? { return frontmost_ }
 
   var handlers: [() -> ()] = []
-  func onFrontmostApplicationChanged(handler: () -> ()) {
+  func onFrontmostApplicationChanged(_ handler: @escaping () -> ()) {
     handlers.append(handler)
   }
 
-  func makeApplicationFrontmost(pid: pid_t) throws {
+  func makeApplicationFrontmost(_ pid: pid_t) throws {
     setFrontmost(pid)
   }
 
-  private func setFrontmost(pid: pid_t?) {
+  fileprivate func setFrontmost(_ pid: pid_t?) {
     frontmost_ = pid
     handlers.forEach{ handler in handler() }
   }
@@ -37,17 +37,17 @@ class OSXStateDelegateSpec: QuickSpec {
     beforeEach { FakeObserver.observers = [] }
 
     func initialize(
-      appObserver: ApplicationObserverType = StubApplicationObserver()
+      _ appObserver: ApplicationObserverType = StubApplicationObserver()
     ) -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver> {
       let stateDel = OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver>(appObserver: appObserver)
       waitUntil { done in
-        stateDel.frontmostApplication.initialized.then { done() }
+        stateDel.frontmostApplication.initialized.then { done() }.always {}
       }
       return stateDel
     }
 
     context("during initialization") {
-      func initializeUsingObserver<Obs: ObserverType>(elementObserver: Obs.Type)
+      func initializeUsingObserver<Obs: ObserverType>(_ elementObserver: Obs.Type)
           -> OSXStateDelegate<TestUIElement, TestApplicationElement, Obs> {
         return OSXStateDelegate<TestUIElement, TestApplicationElement, Obs>(appObserver: StubApplicationObserver())
       }
@@ -55,8 +55,8 @@ class OSXStateDelegateSpec: QuickSpec {
       it("observes all applications") {
         class MyTestObserver: TestObserver {
           static var numObservers: Int = 0
-          required init(processID: pid_t, callback: Callback) throws {
-            MyTestObserver.numObservers++
+          required init(processID: pid_t, callback: @escaping Callback) throws {
+            MyTestObserver.numObservers += 1
             try super.init(processID: processID, callback: callback)
           }
         }
@@ -69,8 +69,8 @@ class OSXStateDelegateSpec: QuickSpec {
 
       it("handles applications that cannot be watched") {
         class MyTestObserver: TestObserver {
-          override private func addNotification(notification: AXSwift.Notification, forElement: TestUIElement) throws {
-            throw AXSwift.Error.CannotComplete
+          override fileprivate func addNotification(_ notification: AXNotification, forElement: TestUIElement) throws {
+            throw AXError.cannotComplete
           }
         }
 
@@ -114,7 +114,7 @@ class OSXStateDelegateSpec: QuickSpec {
 
     describe("frontmostApplication") {
       func initializeWithApp(
-        appObserver appObserver: ApplicationObserverType = FakeApplicationObserver()
+        appObserver: ApplicationObserverType = FakeApplicationObserver()
       ) -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver> {
         let appElement = TestApplicationElement()
         appElement.processID = 1234
@@ -125,7 +125,7 @@ class OSXStateDelegateSpec: QuickSpec {
         return stateDelegate
       }
 
-      func getPID(app: Swindler.Application?) -> pid_t? {
+      func getPID(_ app: Swindler.Application?) -> pid_t? {
         typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, TestObserver>
         return (app?.delegate as! AppDelegate?)?.processID
       }
@@ -166,7 +166,7 @@ class OSXStateDelegateSpec: QuickSpec {
           let appObserver = FakeApplicationObserver()
           let state = State(delegate: initializeWithApp(appObserver: appObserver))
           expect(state.frontmostApplication.value).to(beNil())
-          state.frontmostApplication.set(state.runningApplications.first!)
+          state.frontmostApplication.set(state.runningApplications.first!).always {}
           expect(appObserver.frontmostApplicationPID).toEventually(equal(1234))
         }
 

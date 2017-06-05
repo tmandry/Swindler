@@ -26,7 +26,7 @@ protocol ScreenDelegate: class, CustomDebugStringConvertible {
   var frame: CGRect { get }
   var applicationFrame: CGRect { get }
 
-  func equalTo(other: ScreenDelegate) -> Bool
+  func equalTo(_ other: ScreenDelegate) -> Bool
 }
 
 // MARK: - OSXScreenDelegate
@@ -34,7 +34,7 @@ protocol ScreenDelegate: class, CustomDebugStringConvertible {
 protocol NSScreenType {
   var frame: CGRect { get }
   var visibleFrame: CGRect { get }
-  var deviceDescription: [String: AnyObject] { get }
+  var deviceDescription: [String: Any] { get }
 
   var displayName: String { get }
 }
@@ -46,7 +46,7 @@ extension NSScreen: NSScreenType {
       return "Unknown screen"
     }
     guard let localizedNames = info[kDisplayProductName] as! NSDictionary? as Dictionary?,
-      name           = localizedNames.values.first as! NSString? as String? else {
+          let name           = localizedNames.values.first as! NSString? as String? else {
         return "Unnamed screen"
     }
     return name
@@ -56,11 +56,11 @@ extension NSScreen: NSScreenType {
 private let kNSScreenNumber = "NSScreenNumber"
 
 final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
-  private let nsScreen: NSScreenT
+  fileprivate let nsScreen: NSScreenT
 
   // This ID is guaranteed to stay the same for any given display. NSScreen equality checks can fail
   // if the display switches graphics cards.
-  private let directDisplayID: CGDirectDisplayID
+  fileprivate let directDisplayID: CGDirectDisplayID
 
   init(nsScreen: NSScreenT) {
     self.nsScreen = nsScreen
@@ -68,7 +68,7 @@ final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
     self.directDisplayID = numberForScreen(nsScreen)
   }
 
-  func equalTo(other: ScreenDelegate) -> Bool {
+  func equalTo(_ other: ScreenDelegate) -> Bool {
     guard let other = other as? OSXScreenDelegate else {
       return false
     }
@@ -136,17 +136,17 @@ extension OSXScreenDelegate {
   }
 }
 
-private func numberForScreen<NSScreenT: NSScreenType>(nsScreen: NSScreenT) -> CGDirectDisplayID {
+private func numberForScreen<NSScreenT: NSScreenType>(_ nsScreen: NSScreenT) -> CGDirectDisplayID {
   // Get the direct display ID. This is documented to always exist.
   let screenNumber = nsScreen.deviceDescription[kNSScreenNumber]!
-  return CGDirectDisplayID((screenNumber as! NSNumber).integerValue)
+  return CGDirectDisplayID((screenNumber as! NSNumber).intValue)
 }
 
 /// Returns the IODisplay info dictionary for the given displayID.
 ///
 /// -Returns: The info dictionary for the first screen with the same vendor and model number as the
 ///           specified screen.
-private func infoForCGDisplay(displayID: CGDirectDisplayID, options: Int) -> [NSObject: AnyObject]? {
+private func infoForCGDisplay(_ displayID: CGDirectDisplayID, options: Int) -> [AnyHashable: Any]? {
   var iter: io_iterator_t = 0
 
   // Initialize iterator.
@@ -158,18 +158,19 @@ private func infoForCGDisplay(displayID: CGDirectDisplayID, options: Int) -> [NS
   }
 
   // Loop through all screens, looking for a vendor and model ID match.
-  for var service = IOIteratorNext(iter); service != 0; service = IOIteratorNext(iter) {
-    let info = IODisplayCreateInfoDictionary(service, IOOptionBits(options)).takeRetainedValue() as Dictionary
+  var service = IOIteratorNext(iter)
+  while service != 0 {
+    let info = IODisplayCreateInfoDictionary(service, IOOptionBits(options)).takeRetainedValue() as Dictionary as [AnyHashable: Any]
 
     guard let cfVendorID  = info[kDisplayVendorID] as! CFNumber?,
-              cfProductID = info[kDisplayProductID] as! CFNumber? else {
+          let cfProductID = info[kDisplayProductID] as! CFNumber? else {
       log.warn("Missing vendor or product ID encountered when looping through screens")
       continue
     }
 
     var vendorID: CFIndex = 0, productID: CFIndex = 0
-    guard CFNumberGetValue(cfVendorID,  .CFIndexType, &vendorID) &&
-          CFNumberGetValue(cfProductID, .CFIndexType, &productID) else {
+    guard CFNumberGetValue(cfVendorID,  .cfIndexType, &vendorID) &&
+          CFNumberGetValue(cfProductID, .cfIndexType, &productID) else {
       log.warn("Unexpected failure unwrapping vendor or product ID while looping through screens")
       continue
     }
@@ -178,6 +179,8 @@ private func infoForCGDisplay(displayID: CGDirectDisplayID, options: Int) -> [NS
        UInt32(productID) == CGDisplayModelNumber(displayID) {
       return info
     }
+
+    service = IOIteratorNext(iter)
   }
 
   return nil
