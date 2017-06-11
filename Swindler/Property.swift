@@ -146,7 +146,7 @@ open class Property<TypeSpec: PropertyTypeSpec> {
   }
 
   /// The value of the property.
-  var value: PropertyType {
+  public var value: PropertyType {
     backingStoreLock.lock()
     defer { backingStoreLock.unlock() }
     return value_

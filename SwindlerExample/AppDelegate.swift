@@ -10,16 +10,16 @@ import Cocoa
 import Swindler
 import PromiseKit
 
-func dispatchAfter(delay: NSTimeInterval, block: dispatch_block_t) {
-  let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC)))
-  dispatch_after(time, dispatch_get_main_queue(), block)
+func dispatchAfter(delay: TimeInterval, block: DispatchWorkItem) {
+  let time = DispatchTime.now() + delay
+  DispatchQueue.main.asyncAfter(deadline: time, execute: block)
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
 
   var swindler: Swindler.State!
 
-  func applicationDidFinishLaunching(aNotification: NSNotification) {
+  func applicationDidFinishLaunching(_ aNotification: Notification) {
     swindler = Swindler.state
 
     print("screens: \(swindler.screens)")
@@ -38,11 +38,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       print("window destroyed: \(event.window.title.value)")
     }
     swindler.on { (event: ApplicationMainWindowChangedEvent) in
-      print("new main window: \(event.newValue?.title.value). old: \(event.oldValue?.title.value)")
+      print("new main window: \(String(describing: event.newValue?.title.value)). old: \(String(describing: event.oldValue?.title.value))")
       self.frontmostWindowChanged()
     }
     swindler.on { (event: FrontmostApplicationChangedEvent) in
-      print("new frontmost app: \(event.newValue). old: \(event.newValue)")
+      print("new frontmost app: \(String(describing: event.newValue)). old: \(String(describing: event.oldValue))")
       self.frontmostWindowChanged()
     }
 
@@ -60,10 +60,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   private func frontmostWindowChanged() {
-    print("new frontmost window: \(swindler.frontmostApplication.value?.mainWindow.value?.title.value)")
+    print("new frontmost window: \(String(describing: swindler.frontmostApplication.value?.mainWindow.value?.title.value))")
   }
 
-  func applicationWillTerminate(aNotification: NSNotification) {
+  func applicationWillTerminate(_ aNotification: Notification) {
     // Insert code here to tear down your application
   }
 
