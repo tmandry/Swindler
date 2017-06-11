@@ -127,7 +127,7 @@ class OSXStateDelegateSpec: QuickSpec {
 
       func getPID(_ app: Swindler.Application?) -> pid_t? {
         typealias AppDelegate = OSXApplicationDelegate<TestUIElement, TestApplicationElement, TestObserver>
-        return (app?.delegate as! AppDelegate?)?.processID
+        return (app?.delegate as! AppDelegate?)?.processIdentifier
       }
 
       context("when there is no frontmost application") {

@@ -25,6 +25,9 @@ public final class Application: Equatable {
     self.init(delegate: delegate, stateDelegate: stateDelegate)
   }
 
+  public var processIdentifier: pid_t { return delegate.processIdentifier }
+  public var bundleIdentifier: String? { return delegate.bundleIdentifier }
+
   /// The global Swindler state.
   public var swindlerState: State { return state_ }
 
@@ -51,7 +54,8 @@ public func ==(lhs: Application, rhs: Application) -> Bool {
 }
 
 protocol ApplicationDelegate: class {
-  var processID: pid_t! { get }
+  var processIdentifier: pid_t! { get }
+  var bundleIdentifier: String? { get }
 
   var stateDelegate: StateDelegate? { get }
 
@@ -91,7 +95,10 @@ final class OSXApplicationDelegate<
   var focusedWindow: Property<OfOptionalType<Window>>!
   var isHidden: WriteableProperty<OfType<Bool>>!
 
-  var processID: pid_t!
+  var processIdentifier: pid_t!
+  lazy var runningApplication: NSRunningApplication = NSRunningApplication(processIdentifier: self.processIdentifier)!
+  lazy var bundleIdentifier: String? = self.runningApplication.bundleIdentifier
+
   var knownWindows: [WindowDelegate] {
     return windows.map({ $0 as WindowDelegate })
   }
@@ -101,7 +108,7 @@ final class OSXApplicationDelegate<
     self.axElement = axElement.toElement
     self.stateDelegate = stateDelegate
     self.notifier = notifier
-    self.processID = try axElement.pid()
+    self.processIdentifier = try axElement.pid()
 
     let notifications: [AXNotification] = [
       .WindowCreated,
@@ -156,7 +163,7 @@ final class OSXApplicationDelegate<
   fileprivate func watchApplicationElement(_ notifications: [AXNotification]) -> Promise<Void> {
     do {
       weak var weakSelf = self
-      observer = try Observer(processID: self.processID, callback: { o, e, n in
+      observer = try Observer(processID: self.processIdentifier, callback: { o, e, n in
         weakSelf?.handleEvent(observer: o, element: e, notification: n)
       })
     } catch {

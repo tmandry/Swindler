@@ -42,7 +42,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       self.frontmostWindowChanged()
     }
     swindler.on { (event: FrontmostApplicationChangedEvent) in
-      print("new frontmost app: \(String(describing: event.newValue)). old: \(String(describing: event.oldValue))")
+      print("new frontmost app: \(event.newValue?.bundleIdentifier ?? "unknown"). old: \(event.oldValue?.bundleIdentifier ?? "unknown")")
       self.frontmostWindowChanged()
     }
 

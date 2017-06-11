@@ -10,7 +10,8 @@ class StubStateDelegate: StateDelegate {
 }
 
 class StubApplicationDelegate: ApplicationDelegate {
-  var processID: pid_t!
+  var processIdentifier: pid_t!
+  var bundleIdentifier: String?
 
   var stateDelegate: StateDelegate? = StubStateDelegate()
 

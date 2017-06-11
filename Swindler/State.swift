@@ -258,7 +258,7 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
   }
 
   func writeValue(_ newValue: Application) throws {
-    let pid = newValue.delegate.processID
+    let pid = newValue.delegate.processIdentifier
     do {
       try appObserver.makeApplicationFrontmost(pid!)
     } catch {
