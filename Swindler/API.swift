@@ -45,9 +45,10 @@ public protocol Application {
   /// The global Swindler state.
   public var swindlerState: State { get }
 
-  // TODO
-  /// The NSRunningApplication that corresponds to this application.
-  public var runningApplication: NSRunningApplication { get }
+  /// The process ID of this application.
+  public var processIdentifier: pid_t { get }
+  /// The bundle ID of this application, if it has one.
+  public var bundleIdentifier: String? { get }
 
   /// The known windows of the application. Windows on spaces that we haven't seen yet aren't included.
   public var knownWindows: [Window] { get }
