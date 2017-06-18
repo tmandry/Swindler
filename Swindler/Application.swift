@@ -111,11 +111,11 @@ final class OSXApplicationDelegate<
     self.processIdentifier = try axElement.pid()
 
     let notifications: [AXNotification] = [
-      .WindowCreated,
-      .MainWindowChanged,
-      .FocusedWindowChanged,
-      .ApplicationHidden,
-      .ApplicationShown
+      .windowCreated,
+      .mainWindowChanged,
+      .focusedWindowChanged,
+      .applicationHidden,
+      .applicationShown
     ]
 
     // Watch for notifications on app asynchronously.
@@ -136,10 +136,10 @@ final class OSXApplicationDelegate<
         MainWindowPropertyDelegate(axElement, windowFinder: self, windowDelegate: WinDelegate.self, initProperties),
       withEvent: ApplicationMainWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
     focusedWindow = Property(
-      WindowPropertyAdapter.init(AXPropertyDelegate(axElement, .FocusedWindow, initProperties),
+      WindowPropertyAdapter.init(AXPropertyDelegate(axElement, .focusedWindow, initProperties),
         windowFinder: self, windowDelegate: WinDelegate.self),
       withEvent: ApplicationFocusedWindowChangedEvent.self, receivingObject: Application.self, notifier: self)
-    isHidden = WriteableProperty(AXPropertyDelegate(axElement, .Hidden, initProperties),
+    isHidden = WriteableProperty(AXPropertyDelegate(axElement, .hidden, initProperties),
       withEvent: ApplicationIsHiddenChangedEvent.self, receivingObject: Application.self, notifier: self)
 
     let properties: [PropertyType] = [
@@ -148,9 +148,9 @@ final class OSXApplicationDelegate<
       isHidden
     ]
     let attributes: [Attribute] = [
-      .MainWindow,
-      .FocusedWindow,
-      .Hidden
+      .mainWindow,
+      .focusedWindow,
+      .hidden
     ]
 
     // Fetch attribute values, after subscribing to notifications so there are no gaps.
@@ -183,12 +183,12 @@ final class OSXApplicationDelegate<
   fileprivate func fetchWindows(after promise: Promise<Void>) -> Promise<Void> {
     return promise.then(on: .global()) { () -> [UIElement]? in
       // Fetch the list of window elements.
-      return try traceRequest(self.axElement, "arrayAttribute", AXSwift.Attribute.Windows) {
-        return try self.axElement.arrayAttribute(.Windows)
+      return try traceRequest(self.axElement, "arrayAttribute", AXSwift.Attribute.windows) {
+        return try self.axElement.arrayAttribute(.windows)
       }
     }.then { maybeWindowElements -> Promise<Void> in
       guard let windowElements = maybeWindowElements else {
-        throw OSXDriverError.missingAttribute(attribute: .Windows, onElement: self.axElement)
+        throw OSXDriverError.missingAttribute(attribute: .windows, onElement: self.axElement)
       }
 
       // Initialize OSXWindowDelegates from the window elements.
@@ -200,7 +200,7 @@ final class OSXApplicationDelegate<
         // Log any errors we encounter, but don't fail.
         let windowElement = windowElements[index]
         log.debug({
-          let description: String = (try? windowElement.attribute(.Description) ?? "") ?? ""
+          let description: String = (try? windowElement.attribute(.description) ?? "") ?? ""
           return "Couldn't initialize window for element \(windowElement) (\(description)) of \(self): \(error)"
         }())
       }).asVoid()
@@ -250,13 +250,13 @@ final class OSXApplicationDelegate<
     log.trace("Received \(notification) on \(element)")
 
     switch notification {
-    case .WindowCreated:
+    case .windowCreated:
       onWindowCreated(element)
-    case .MainWindowChanged:
+    case .mainWindowChanged:
       onWindowTypePropertyChanged(mainWindow, element: element)
-    case .FocusedWindowChanged:
+    case .focusedWindowChanged:
       onWindowTypePropertyChanged(focusedWindow, element: element)
-    case .ApplicationShown, .ApplicationHidden:
+    case .applicationShown, .applicationHidden:
       isHidden.refresh() as ()
     default:
       onWindowLevelEvent(notification, windowElement: element)
@@ -296,10 +296,10 @@ final class OSXApplicationDelegate<
 
   fileprivate func checkIfWindowPropertyElementIsActuallyApplication(_ element: UIElement, property: Property<OfOptionalType<Window>>) {
     Promise<Void>(value: ()).then(on: .global()) { () -> Role? in
-      guard let role: String = try element.attribute(.Role) else { return nil }
+      guard let role: String = try element.attribute(.role) else { return nil }
       return Role(rawValue: role)
     }.then { role -> () in
-      if role == .Application {
+      if role == .application {
         // There is no main window; we can refresh immediately.
         property.refresh() as ()
         // Remove the handler that will never be called.
@@ -343,7 +343,7 @@ final class OSXApplicationDelegate<
     func handleEvent(_ windowDelegate: WinDelegate) {
       windowDelegate.handleEvent(notification, observer: observer)
 
-      if .UIElementDestroyed == notification {
+      if .uiElementDestroyed == notification {
         // Remove window.
         windows = windows.filter({ !$0.equalTo(windowDelegate) })
 
@@ -470,7 +470,7 @@ private final class MainWindowPropertyDelegate<
   let readDelegate: WindowPropertyAdapter<AXPropertyDelegate<UIElement, AppElement>, WinFinder, WinDelegate>
 
   init(_ appElement: AppElement, windowFinder: WinFinder, windowDelegate: WinDelegate.Type, _ initPromise: Promise<[Attribute: Any]>) {
-    readDelegate = WindowPropertyAdapter(AXPropertyDelegate(appElement, .MainWindow, initPromise), windowFinder: windowFinder, windowDelegate: windowDelegate)
+    readDelegate = WindowPropertyAdapter(AXPropertyDelegate(appElement, .mainWindow, initPromise), windowFinder: windowFinder, windowDelegate: windowDelegate)
   }
 
   func initialize() -> Promise<Window?> {
@@ -495,9 +495,9 @@ private final class MainWindowPropertyDelegate<
     // Note: This is happening on a background thread, so only properties that don't change should be
     // accessed (the axElement).
 
-    // To set the main window, we have to access the .Main attribute of the window element and set
+    // To set the main window, we have to access the .main attribute of the window element and set
     // it to true.
-    let writeDelegate = AXPropertyDelegate<Bool, UIElement>(winDelegate.axElement, .Main, Promise(value: [:]))
+    let writeDelegate = AXPropertyDelegate<Bool, UIElement>(winDelegate.axElement, .main, Promise(value: [:]))
     try writeDelegate.writeValue(true)
   }
 }

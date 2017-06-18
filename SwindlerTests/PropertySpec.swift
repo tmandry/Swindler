@@ -57,7 +57,7 @@ class PropertySpec: QuickSpec {
       windowElement.attrs = attrs
       let initPromise = Promise<[AXSwift.Attribute: Any]>(value: attrs)
       notifier = TestPropertyNotifier()
-      let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+      let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .position, initPromise)
       return WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
     }
 
@@ -74,14 +74,14 @@ class PropertySpec: QuickSpec {
     }
 
     beforeEach {
-      property = setUpWithAttributes([.Position: firstPoint])
+      property = setUpWithAttributes([.position: firstPoint])
       finishPropertyInit()
     }
 
     describe("initialization") {
 
       it("doesn't leak") {
-        weak var property = setUpWithAttributes([.Position: firstPoint])
+        weak var property = setUpWithAttributes([.position: firstPoint])
         waitUntil { done in
           if let prop = property {
             prop.initialized.then { done() }.always {}
@@ -114,7 +114,7 @@ class PropertySpec: QuickSpec {
         var optProperty: WriteableProperty<OfOptionalType<CGPoint>>!
         beforeEach {
           let initPromise = Promise<[AXSwift.Attribute: Any]>(value: [:])
-          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .position, initPromise)
           optProperty = WriteableProperty(delegate, notifier: notifier)
         }
 
@@ -134,7 +134,7 @@ class PropertySpec: QuickSpec {
     describe("refresh") {
       context("when the attribute has changed") {
         beforeEach {
-          windowElement.attrs[.Position] = secondPoint
+          windowElement.attrs[.position] = secondPoint
         }
 
         it("resolves to the new value") {
@@ -190,13 +190,13 @@ class PropertySpec: QuickSpec {
       context("when a non-optional attribute is missing") {
 
         it("reports an error") { () -> Promise<Void> in
-          windowElement.attrs[.Position] = nil
+          windowElement.attrs[.position] = nil
           let expectedError = PropertyError.invalidObject(cause: PropertyError.missingValue)
           return expectToFail(property.refresh(), with: expectedError)
         }
 
         it("marks the object as invalid", failOnError: false) { () -> Promise<Void> in
-          windowElement.attrs[.Position] = nil
+          windowElement.attrs[.position] = nil
           return property.refresh().asVoid().always {
             expect(notifier.stillValid).to(beFalse())
           }
@@ -207,8 +207,8 @@ class PropertySpec: QuickSpec {
       context("when an optional attribute is missing") {
         var optProperty: WriteableProperty<OfOptionalType<CGPoint>>!
         beforeEach {
-          let initPromise = Promise<[AXSwift.Attribute: Any]>(value: [.Position: firstPoint])
-          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+          let initPromise = Promise<[AXSwift.Attribute: Any]>(value: [.position: firstPoint])
+          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .position, initPromise)
           optProperty = WriteableProperty(delegate, notifier: notifier)
           waitUntil { done in
             optProperty.initialized.then { done() }.always {}
@@ -216,7 +216,7 @@ class PropertySpec: QuickSpec {
         }
 
         it("reports no error") { () -> Promise<Void> in
-          windowElement.attrs[.Position] = nil
+          windowElement.attrs[.position] = nil
           return optProperty.refresh().asVoid()
         }
 
@@ -263,7 +263,7 @@ class PropertySpec: QuickSpec {
         beforeEach {
           let (initPromise, fulfill, _) = Promise<[AXSwift.Attribute: Any]>.pending()
           fulfillInitPromise = fulfill
-          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .Position, initPromise)
+          let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(windowElement, .position, initPromise)
           property = WriteableProperty(delegate, withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: notifier)
         }
 
@@ -275,8 +275,8 @@ class PropertySpec: QuickSpec {
           let promise = property.refresh().then { newValue -> () in
             expect(newValue).to(equal(secondPoint))
           }
-          windowElement.attrs[.Position] = secondPoint
-          fulfillInitPromise([.Position: firstPoint])
+          windowElement.attrs[.position] = secondPoint
+          fulfillInitPromise([.position: firstPoint])
           return promise
         }
 
@@ -298,8 +298,8 @@ class PropertySpec: QuickSpec {
 
       it("sets the attribute on the UIElement") {
         return property.set(secondPoint).then { _ -> () in
-          expect(windowElement.attrs[.Position]! is CGPoint).to(beTrue())
-          expect(windowElement.attrs[.Position]! as? CGPoint).to(equal(secondPoint))
+          expect(windowElement.attrs[.position]! is CGPoint).to(beTrue())
+          expect(windowElement.attrs[.position]! as? CGPoint).to(equal(secondPoint))
         }
       }
 

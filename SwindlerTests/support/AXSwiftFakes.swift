@@ -47,7 +47,7 @@ class TestUIElement: UIElementType, Hashable {
   }
 
   var inspect: String {
-    let role = attrs[.Role] ?? "UIElement"
+    let role = attrs[.role] ?? "UIElement"
     return "\(role) (id \(id))"
   }
 }
@@ -62,28 +62,28 @@ class TestApplicationElementBase: TestUIElement {
   override init() {
     super.init()
     processID = Int32(id)
-    attrs[.Role]      = AXSwift.Role.Application.rawValue
-    attrs[.Windows]   = Array<TestUIElement>()
-    attrs[.Frontmost] = false
-    attrs[.Hidden]    = false
+    attrs[.role]      = AXSwift.Role.application.rawValue
+    attrs[.windows]   = Array<TestUIElement>()
+    attrs[.frontmost] = false
+    attrs[.hidden]    = false
   }
 
   override func setAttribute(_ attribute: Attribute, value: Any) throws {
-    // Synchronize .MainWindow with .Main on the window.
-    if attribute == .MainWindow {
-      if let oldWindowElement = attrs[.MainWindow] as! TestWindowElement? {
-        oldWindowElement.attrs[.Main] = false
+    // Synchronize .mainWindow with .main on the window.
+    if attribute == .mainWindow {
+      if let oldWindowElement = attrs[.mainWindow] as! TestWindowElement? {
+        oldWindowElement.attrs[.main] = false
       }
       let newWindowElement = value as! TestWindowElement
-      newWindowElement.attrs[.Main] = true
+      newWindowElement.attrs[.main] = true
     }
 
     try super.setAttribute(attribute, value: value)
   }
 
   internal var windows: [TestUIElement] {
-    get { return attrs[.Windows]! as! [TestUIElement] }
-    set { attrs[.Windows] = newValue }
+    get { return attrs[.windows]! as! [TestUIElement] }
+    set { attrs[.windows] = newValue }
   }
 }
 final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
@@ -97,23 +97,23 @@ class TestWindowElement: TestUIElement {
     self.app = app
     super.init()
     processID          = app.processID
-    attrs[.Role]       = AXSwift.Role.Window.rawValue
-    attrs[.Position]   = CGPoint(x: 0, y: 0)
-    attrs[.Size]       = CGSize(width: 0, height: 0)
-    attrs[.Title]      = "Window \(id)"
-    attrs[.Minimized]  = false
-    attrs[.Main]       = true
-    attrs[.Focused]    = true
-    attrs[.FullScreen] = false
+    attrs[.role]       = AXSwift.Role.window.rawValue
+    attrs[.position]   = CGPoint(x: 0, y: 0)
+    attrs[.size]       = CGSize(width: 0, height: 0)
+    attrs[.title]      = "Window \(id)"
+    attrs[.minimized]  = false
+    attrs[.main]       = true
+    attrs[.focused]    = true
+    attrs[.fullScreen] = false
   }
 
   override func setAttribute(_ attribute: Attribute, value: Any) throws {
-    // Synchronize .Main with .MainWindow on the application.
-    if attribute == .Main {
-      // Setting .Main to false does nothing.
+    // Synchronize .main with .mainWindow on the application.
+    if attribute == .main {
+      // Setting .main to false does nothing.
       guard value as! Bool == true else { return }
 
-      app.attrs[.MainWindow] = self
+      app.attrs[.mainWindow] = self
     }
 
     try super.setAttribute(attribute, value: value)
@@ -180,7 +180,7 @@ class FakeObserver: ObserverType {
   func emit(_ notification: AXNotification, forElement element: TestUIElement) {
     switch notification {
     // These notifications usually happen on a window element, but are observed on the application element.
-    case .WindowCreated, .MainWindowChanged, .FocusedWindowChanged:
+    case .windowCreated, .mainWindowChanged, .focusedWindowChanged:
       if let window = element as? TestWindowElement {
         doEmit(notification, watchedElement: window.app, passedElement: element)
       } else {

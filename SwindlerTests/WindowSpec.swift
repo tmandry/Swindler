@@ -43,11 +43,11 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
     describe("initialize") {
 
       it("initializes window properties") { () -> Promise<Void> in
-        windowElement.attrs[.Position]   = CGPoint(x: 5, y: 5)
-        windowElement.attrs[.Size]       = CGSize(width: 100, height: 100)
-        windowElement.attrs[.Title]      = "a window title"
-        windowElement.attrs[.Minimized]  = false
-        windowElement.attrs[.FullScreen] = false
+        windowElement.attrs[.position]   = CGPoint(x: 5, y: 5)
+        windowElement.attrs[.size]       = CGSize(width: 100, height: 100)
+        windowElement.attrs[.title]      = "a window title"
+        windowElement.attrs[.minimized]  = false
+        windowElement.attrs[.fullScreen] = false
 
         return initialize().then { windowDelegate -> () in
           expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 5)))
@@ -72,7 +72,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
 
       context("when called with a window that is missing attributes") {
         it("returns an error") { () -> Promise<Void> in
-          windowElement.attrs.removeValue(forKey: .Position)
+          windowElement.attrs.removeValue(forKey: .position)
 
           // TODO put the detailed error back, or take out the error class
           let expectedError = PropertyError.invalidObject(cause: PropertyError.missingValue)
@@ -82,7 +82,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
 
       context("when called with a window whose subrole is AXUnknown") {
         it("returns an error") { () -> Promise<Void> in
-          windowElement.attrs[.Subrole] = "AXUnknown"  // undocumented as a subrole, but very important
+          windowElement.attrs[.subrole] = "AXUnknown"  // undocumented as a subrole, but very important
           return expectToFail(initialize())
         }
       }
@@ -147,10 +147,10 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
 
       xcontext("when a property value changes right before observing it") {
         it("is read correctly") { () -> Promise<Void> in
-          windowElement.attrs[.Minimized] = false
+          windowElement.attrs[.minimized] = false
 
-          AdversaryObserver.onAddNotification(.WindowMiniaturized) { _ in
-            windowElement.attrs[.Minimized] = true
+          AdversaryObserver.onAddNotification(.windowMiniaturized) { _ in
+            windowElement.attrs[.minimized] = true
           }
 
           return initialize().then { winDelegate -> () in
@@ -163,12 +163,12 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
         // The difference between a property changing before or after observing is simply whether
         // an event is emitted or not.
         it("is updated correctly") { () -> Promise<Void> in
-          windowElement.attrs[.Minimized] = false
+          windowElement.attrs[.minimized] = false
 
-          AdversaryObserver.onAddNotification(.WindowMiniaturized) { observer in
-            observer.emit(.WindowMiniaturized, forElement: windowElement)
+          AdversaryObserver.onAddNotification(.windowMiniaturized) { observer in
+            observer.emit(.windowMiniaturized, forElement: windowElement)
             DispatchQueue.main.async() {
-              windowElement.attrs[.Minimized] = true
+              windowElement.attrs[.minimized] = true
             }
           }
 
@@ -180,15 +180,15 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
 
       xcontext("when a property value changes right after reading it") {
         it("is updated correctly") { () -> Promise<Void> in
-          windowElement.attrs[.Minimized] = false
+          windowElement.attrs[.minimized] = false
 
           var observer: AdversaryObserver?
-          AdversaryObserver.onAddNotification(.WindowMiniaturized) { obs in
+          AdversaryObserver.onAddNotification(.windowMiniaturized) { obs in
             observer = obs
           }
-          windowElement.onAttributeFirstRead(.Minimized) {
-            windowElement.attrs[.Minimized] = true
-            observer?.emit(.WindowMiniaturized, forElement: windowElement)
+          windowElement.onAttributeFirstRead(.minimized) {
+            windowElement.attrs[.minimized] = true
+            observer?.emit(.windowMiniaturized, forElement: windowElement)
           }
 
           return initialize().then { winDelegate -> () in
@@ -228,15 +228,15 @@ class OSXWindowDelegateSpec: QuickSpec {
 
     context("when a window is destroyed") {
       it("marks the window as invalid") {
-        windowDelegate.handleEvent(.UIElementDestroyed, observer: TestObserver())
+        windowDelegate.handleEvent(.uiElementDestroyed, observer: TestObserver())
         expect(windowDelegate.isValid).toEventually(beFalse())
       }
     }
 
     context("when the position changes") {
       beforeEach {
-        windowElement.attrs[.Position] = CGPoint(x: 500, y: 500)
-        windowDelegate.handleEvent(.Moved, observer: TestObserver())
+        windowElement.attrs[.position] = CGPoint(x: 500, y: 500)
+        windowDelegate.handleEvent(.moved, observer: TestObserver())
       }
 
       func getWindowElement(_ window: Window?) -> TestUIElement? {
@@ -261,44 +261,44 @@ class OSXWindowDelegateSpec: QuickSpec {
 
       describe("title") {
         it("updates when the title changes") {
-          windowElement.attrs[.Title] = "updated title"
-          windowDelegate.handleEvent(.TitleChanged, observer: TestObserver())
+          windowElement.attrs[.title] = "updated title"
+          windowDelegate.handleEvent(.titleChanged, observer: TestObserver())
           expect(windowDelegate.title.value).toEventually(equal("updated title"))
         }
       }
 
       describe("position") {
         it("updates when the window is moved") {
-          windowElement.attrs[.Position] = CGPoint(x: 1, y: 1)
-          windowDelegate.handleEvent(.Moved, observer: TestObserver())
+          windowElement.attrs[.position] = CGPoint(x: 1, y: 1)
+          windowDelegate.handleEvent(.moved, observer: TestObserver())
           expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
         }
       }
 
       describe("size") {
         it("updates when the window is resized") {
-          windowElement.attrs[.Size] = CGSize(width: 123, height: 123)
-          windowDelegate.handleEvent(.Resized, observer: TestObserver())
+          windowElement.attrs[.size] = CGSize(width: 123, height: 123)
+          windowDelegate.handleEvent(.resized, observer: TestObserver())
           expect(windowDelegate.size.value).toEventually(equal(CGSize(width: 123, height: 123)))
         }
       }
 
       describe("isFullscreen") {
         it("updates when the window is resized") {
-          windowElement.attrs[.FullScreen] = true
-          windowDelegate.handleEvent(.Resized, observer: TestObserver())
+          windowElement.attrs[.fullScreen] = true
+          windowDelegate.handleEvent(.resized, observer: TestObserver())
           expect(windowDelegate.isFullscreen.value).toEventually(beTrue())
         }
       }
 
       describe("isMinimized") {
         it("updates when the window is minimized and restored") {
-          windowElement.attrs[.Minimized] = true
-          windowDelegate.handleEvent(.WindowMiniaturized, observer: TestObserver())
+          windowElement.attrs[.minimized] = true
+          windowDelegate.handleEvent(.windowMiniaturized, observer: TestObserver())
           expect(windowDelegate.isMinimized.value).toEventually(beTrue())
 
-          windowElement.attrs[.Minimized] = false
-          windowDelegate.handleEvent(.WindowDeminiaturized, observer: TestObserver())
+          windowElement.attrs[.minimized] = false
+          windowDelegate.handleEvent(.windowDeminiaturized, observer: TestObserver())
           expect(windowDelegate.isMinimized.value).toEventually(beFalse())
         }
       }

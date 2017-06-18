@@ -123,15 +123,15 @@ final class OSXWindowDelegate<
     let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pending()
 
     // Initialize all properties.
-    position = WriteableProperty(AXPropertyDelegate(axElement, .Position, initPromise),
+    position = WriteableProperty(AXPropertyDelegate(axElement, .position, initPromise),
       withEvent: WindowPosChangedEvent.self, receivingObject: Window.self, notifier: self)
-    size = WriteableProperty(AXPropertyDelegate(axElement, .Size, initPromise),
+    size = WriteableProperty(AXPropertyDelegate(axElement, .size, initPromise),
       withEvent: WindowSizeChangedEvent.self, receivingObject: Window.self, notifier: self)
-    title = Property(AXPropertyDelegate(axElement, .Title, initPromise),
+    title = Property(AXPropertyDelegate(axElement, .title, initPromise),
       withEvent: WindowTitleChangedEvent.self, receivingObject: Window.self, notifier: self)
-    isMinimized = WriteableProperty(AXPropertyDelegate(axElement, .Minimized, initPromise),
+    isMinimized = WriteableProperty(AXPropertyDelegate(axElement, .minimized, initPromise),
       withEvent: WindowMinimizedChangedEvent.self, receivingObject: Window.self, notifier: self)
-    isFullscreen = WriteableProperty(AXPropertyDelegate(axElement, .FullScreen, initPromise),
+    isFullscreen = WriteableProperty(AXPropertyDelegate(axElement, .fullScreen, initPromise),
       notifier: self)
 
     axProperties = [
@@ -144,29 +144,29 @@ final class OSXWindowDelegate<
 
     // Map notifications on this element to the corresponding property.
     watchedAxProperties = [
-      .Moved:                 [position],
-      .Resized:               [size, isFullscreen],
-      .TitleChanged:          [title],
-      .WindowMiniaturized:    [isMinimized],
-      .WindowDeminiaturized:  [isMinimized]
+      .moved:                 [position],
+      .resized:               [size, isFullscreen],
+      .titleChanged:          [title],
+      .windowMiniaturized:    [isMinimized],
+      .windowDeminiaturized:  [isMinimized]
     ]
 
     // Start watching for notifications.
     let notifications = watchedAxProperties.keys + [
-      .UIElementDestroyed
+      .uiElementDestroyed
     ]
     let watched = watchWindowElement(axElement, observer: observer, notifications: notifications)
 
     // Fetch attribute values.
     let attributes = axProperties.map({ ($0.delegate as! AXPropertyDelegateType).attribute }) + [
-      .Subrole
+      .subrole
     ]
     fetchAttributes(attributes, forElement: axElement, after: watched, fulfill: fulfill, reject: reject)
 
     // Ignore windows with the "AXUnknown" role. This (undocumented) role shows up in several places,
     // including Chrome tooltips and OS X fullscreen transitions.
     let subroleChecked = initPromise.then { attributeValues -> () in
-      if attributeValues[.Subrole] as! String? == "AXUnknown" {
+      if attributeValues[.subrole] as! String? == "AXUnknown" {
         log.debug("Window \(axElement) has subrole AXUnknown, unwatching")
         self.unwatchWindowElement(axElement, observer: observer, notifications: notifications).catch { error in
           log.warn("Error while unwatching ignored window \(axElement): \(error)")
@@ -215,7 +215,7 @@ final class OSXWindowDelegate<
 
   func handleEvent(_ event: AXSwift.AXNotification, observer: Observer) {
     switch event {
-    case .UIElementDestroyed:
+    case .uiElementDestroyed:
       isValid = false
     default:
       if let properties = watchedAxProperties[event] {

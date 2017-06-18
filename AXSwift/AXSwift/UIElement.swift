@@ -585,10 +585,10 @@ extension UIElement: CustomStringConvertible {
       roleString = role?.rawValue ?? "UIElementNoRole"
 
       switch role {
-      case .some(.Application):
+      case .some(.application):
         description = pid.flatMap{NSRunningApplication(processIdentifier: $0)}.flatMap{$0.bundleIdentifier} ?? ""
-      case .some(.Window):
-        description = (try? self.attribute(.Title) ?? "") ?? ""
+      case .some(.window):
+        description = (try? self.attribute(.title) ?? "") ?? ""
       default:
         break
       }
@@ -631,7 +631,7 @@ extension UIElement {
   /// - seeAlso: [Roles](https://developer.apple.com/library/mac/documentation/AppKit/Reference/NSAccessibility_Protocol_Reference/index.html#//apple_ref/doc/constant_group/Roles)
   public func role() throws -> Role? {
     // should this be non-optional?
-    if let str: String = try self.attribute(.Role) {
+    if let str: String = try self.attribute(.role) {
       return Role(rawValue: str)
     } else {
       return nil
@@ -640,7 +640,7 @@ extension UIElement {
 
   /// - seeAlso: [Subroles](https://developer.apple.com/library/mac/documentation/AppKit/Reference/NSAccessibility_Protocol_Reference/index.html#//apple_ref/doc/constant_group/Subroles)
   public func subrole() throws -> Subrole? {
-    if let str: String = try self.attribute(.Subrole) {
+    if let str: String = try self.attribute(.subrole) {
       return Subrole(rawValue: str)
     } else {
       return nil

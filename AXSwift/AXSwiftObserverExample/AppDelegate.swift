@@ -20,18 +20,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var updated = false
     observer = app.createObserver() { (observer: Observer, element: UIElement, event: AXNotification, info: [String: AnyObject]?) in
       var elementDesc: String!
-      if let role = try? element.role()!, role == .Window {
-        elementDesc = "\(element) \"\(try! (element.attribute(.Title) as String?)!)\""
+      if let role = try? element.role()!, role == .window {
+        elementDesc = "\(element) \"\(try! (element.attribute(.title) as String?)!)\""
       } else {
         elementDesc = "\(element)"
       }
       print("\(event) on \(elementDesc); info: \(info ?? [:])")
 
       // Watch events on new windows
-      if event == .WindowCreated {
+      if event == .windowCreated {
         do {
-          try observer.addNotification(.UIElementDestroyed, forElement: element)
-          try observer.addNotification(.Moved, forElement: element)
+          try observer.addNotification(.uiElementDestroyed, forElement: element)
+          try observer.addNotification(.moved, forElement: element)
         } catch let error {
           NSLog("Error: Could not watch [\(element)]: \(error)")
         }
@@ -48,8 +48,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       }
     }
 
-    try observer.addNotification(.WindowCreated, forElement: app)
-    try observer.addNotification(.MainWindowChanged, forElement: app)
+    try observer.addNotification(.windowCreated, forElement: app)
+    try observer.addNotification(.mainWindowChanged, forElement: app)
   }
 
   func applicationWillTerminate(_ aNotification: Notification) {

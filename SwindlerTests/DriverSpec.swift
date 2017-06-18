@@ -20,15 +20,15 @@ class OSXDriverSpec: QuickSpec {
     beforeEach {
       appElement = TestApplicationElement()
       windowElement = TestWindowElement(forApp: appElement)
-      windowElement.attrs[.Position] = CGPoint(x: 5, y: 5)
-      appElement.attrs[.Windows] = [windowElement as TestUIElement]
-      appElement.attrs[.MainWindow] = windowElement
+      windowElement.attrs[.position] = CGPoint(x: 5, y: 5)
+      appElement.attrs[.windows] = [windowElement as TestUIElement]
+      appElement.attrs[.mainWindow] = windowElement
       TestApplicationElement.allApps = [appElement]
 
       state = State(delegate: OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>(
         appObserver: StubApplicationObserver()))
       observer = FakeObserver.observers.first!
-      observer.emit(.WindowCreated, forElement: windowElement)
+      observer.emit(.windowCreated, forElement: windowElement)
       expect(state.knownWindows.count).toEventually(equal(1))
     }
 
@@ -52,7 +52,7 @@ class OSXDriverSpec: QuickSpec {
           callbacks += 1
         }
         let window = TestWindowElement(forApp: appElement)
-        observer.emit(.WindowCreated, forElement: window)
+        observer.emit(.windowCreated, forElement: window)
         expect(state.knownWindows).toEventually(haveCount(2))
         expect(callbacks).to(equal(1), description: "callback should be called once")
       }
@@ -66,12 +66,12 @@ class OSXDriverSpec: QuickSpec {
         state.on { (event: WindowDestroyedEvent) in
           callbacks += 1
         }
-        observer.emit(.UIElementDestroyed, forElement: windowElement)
+        observer.emit(.uiElementDestroyed, forElement: windowElement)
         expect(callbacks).toEventually(equal(1), description: "callback should be called once")
       }
 
       it("removes the window from knownWindows") {
-        observer.emit(.UIElementDestroyed, forElement: windowElement)
+        observer.emit(.uiElementDestroyed, forElement: windowElement)
         expect(state.knownWindows).toEventually(haveCount(0))
       }
 
@@ -84,8 +84,8 @@ class OSXDriverSpec: QuickSpec {
         state.on { (event: WindowPosChangedEvent) in
           callbacks += 1
         }
-        windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
-        observer.emit(.Moved, forElement: windowElement)
+        windowElement.attrs[.position] = CGPoint(x: 100, y: 100)
+        observer.emit(.moved, forElement: windowElement)
         expect(callbacks).toEventually(equal(1), description: "callback should be called once")
       }
 
@@ -98,8 +98,8 @@ class OSXDriverSpec: QuickSpec {
         state.on { (event: WindowPosChangedEvent) in
           callbacks2 += 1
         }
-        windowElement.attrs[.Position] = CGPoint(x: 100, y: 100)
-        observer.emit(.Moved, forElement: windowElement)
+        windowElement.attrs[.position] = CGPoint(x: 100, y: 100)
+        observer.emit(.moved, forElement: windowElement)
         expect(callbacks1).toEventually(equal(1), description: "callback1 should be called once")
         expect(callbacks2).toEventually(equal(1), description: "callback2 should be called once")
       }
