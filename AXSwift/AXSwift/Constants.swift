@@ -379,6 +379,13 @@ public enum Attribute: String {
 
   // UI element identification attributes
   case identifier                             = "AXIdentifier" //(NSString *)
+
+  // System-wide attributes
+  case focusedApplication                     = "AXFocusedApplication"
+
+  // Unknown attributes
+  case functionRowTopLevelElements            = "AXFunctionRowTopLevelElements"
+  case childrenInNavigationOrder              = "AXChildrenInNavigationOrder"
 }
 
 /// All actions a `UIElement` can support.
