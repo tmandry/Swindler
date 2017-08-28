@@ -19,7 +19,7 @@ end
 
 target 'Swindler' do
   pod 'PromiseKit', '~> 4.2.0'
-  pod 'AXSwift', git: 'https://github.com/tmandry/AXSwift.git'
+  pod 'AXSwift', path: './AXSwift'
 end
 
 target 'SwindlerExample' do
