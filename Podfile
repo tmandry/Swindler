@@ -1,5 +1,6 @@
 workspace 'Swindler'
 swift_version = '3.0'
+platform :osx, '10.10'
 
 use_frameworks!
 
@@ -8,7 +9,7 @@ def testing_pods
   pod 'Nimble', '~> 7.0.0'
 end
 
-xcodeproj 'Swindler'
+project 'Swindler'
 target 'SwindlerTests' do
   testing_pods
 end
@@ -18,6 +19,7 @@ end
 
 target 'Swindler' do
   pod 'PromiseKit', '~> 4.2.0'
+  pod 'AXSwift', git: 'https://github.com/tmandry/AXSwift.git'
 end
 
 target 'SwindlerExample' do
