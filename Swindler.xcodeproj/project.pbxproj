@@ -875,7 +875,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9770BE09728506004DE2AFFE /* Pods-SwindlerTests.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
@@ -890,7 +889,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B8301D2BD952877F659DD278 /* Pods-SwindlerTests.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
@@ -905,7 +903,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1744E8DF9C3E0B18C01DC019 /* Pods-SwindlerExample.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerExample/Info.plist;
@@ -920,7 +917,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9E22E02733A76B9E05769A15 /* Pods-SwindlerExample.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerExample/Info.plist;
@@ -935,7 +931,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 88818F84587FB892B40106FC /* Pods-SwindlerTestsProfile.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -956,7 +951,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F12EBA9D87217B514ADDE0E1 /* Pods-SwindlerTestsProfile.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
