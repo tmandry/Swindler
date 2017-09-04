@@ -24,4 +24,5 @@ end
 
 target 'SwindlerExample' do
   pod 'PromiseKit/CorePromise', '~> 4.2.0'
+  pod 'AXSwift', path: './AXSwift'
 end
