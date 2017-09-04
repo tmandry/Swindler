@@ -86,8 +86,10 @@ when(allPlacedOnGrid) { _ in
 
 func gridRect(screen: Swindler.Screen, index: Int) -> CGRect {
   let gridSteps = 3
-  let position  = CGSize(width: screen.width / gridSteps, height: screen.height / gridSteps)
-  let size      = CGPoint(x: gridSize.width * (index % gridSteps), y: gridSize.height * (index / gridSteps))
+  let position  = CGSize(width: screen.width / gridSteps,
+                         height: screen.height / gridSteps)
+  let size      = CGPoint(x: gridSize.width * (index % gridSteps),
+                          y: gridSize.height * (index / gridSteps))
   return CGRect(origin: position, size: size)
 }
 ```
