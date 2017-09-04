@@ -6,6 +6,7 @@
 //  Copyright © 2015 Tyler Mandry. All rights reserved.
 //
 
+import AXSwift
 import Cocoa
 import Swindler
 import PromiseKit
@@ -16,10 +17,15 @@ func dispatchAfter(delay: TimeInterval, block: DispatchWorkItem) {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-
   var swindler: Swindler.State!
 
   func applicationDidFinishLaunching(_ aNotification: Notification) {
+    guard AXSwift.checkIsProcessTrusted(prompt: true) else {
+      print("Not trusted as an AX process; please authorize and re-launch")
+      NSApp.terminate(self)
+      return
+    }
+
     swindler = Swindler.state
 
     print("screens: \(swindler.screens)")
@@ -38,11 +44,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       print("window destroyed: \(event.window.title.value)")
     }
     swindler.on { (event: ApplicationMainWindowChangedEvent) in
-      print("new main window: \(String(describing: event.newValue?.title.value)). old: \(String(describing: event.oldValue?.title.value))")
+      print("new main window: \(String(describing: event.newValue?.title.value)).",
+            "[old: \(String(describing: event.oldValue?.title.value))]")
       self.frontmostWindowChanged()
     }
     swindler.on { (event: FrontmostApplicationChangedEvent) in
-      print("new frontmost app: \(event.newValue?.bundleIdentifier ?? "unknown"). old: \(event.oldValue?.bundleIdentifier ?? "unknown")")
+      print("new frontmost app: \(event.newValue?.bundleIdentifier ?? "unknown").",
+            "[old: \(event.oldValue?.bundleIdentifier ?? "unknown")]")
       self.frontmostWindowChanged()
     }
 
@@ -60,11 +68,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   private func frontmostWindowChanged() {
-    print("new frontmost window: \(String(describing: swindler.frontmostApplication.value?.mainWindow.value?.title.value))")
+    let window = swindler.frontmostApplication.value?.mainWindow.value
+    print("new frontmost window: \(String(describing: window?.title.value))")
   }
 
   func applicationWillTerminate(_ aNotification: Notification) {
     // Insert code here to tear down your application
   }
-
 }
