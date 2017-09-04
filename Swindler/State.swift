@@ -156,16 +156,7 @@ final class OSXStateDelegate<
 //      self.notify(event)
 //    }
 
-    let appPromises = ApplicationElement.all().map { appElement in
-      return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self).then { application in
-        self.applicationsByPID[try application.axElement.pid()] = application
-      }.asVoid().recover { error -> () in
-        let pid = try? appElement.pid()
-        let bundleID = pid.flatMap{NSRunningApplication(processIdentifier: $0)}.flatMap{$0.bundleIdentifier}
-        let pidString = (pid == nil) ? "??" : String(pid!)
-        log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): \(error)")
-      }
-    }
+    let appPromises = ApplicationElement.all().map(self.watchApplication)
 
     let (propertyInitPromise, propertyInit, propertyInitError) = Promise<Void>.pending()
     frontmostApplication = WriteableProperty(
@@ -188,6 +179,28 @@ final class OSXStateDelegate<
     }.always {
       log.debug("Done initializing")
     }
+  }
+
+  func watchApplication(appElement: ApplicationElement) -> Promise<Void> {
+    return watchApplication(appElement: appElement, retry: 0)
+  }
+
+  func watchApplication(appElement: ApplicationElement, retry: Int) -> Promise<Void> {
+      return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self).then { application in
+        self.applicationsByPID[try application.axElement.pid()] = application
+      }
+      .asVoid()
+      .recover { error -> Promise<Void> in
+        if retry < 3 {
+          return self.watchApplication(appElement: appElement, retry: retry+1)
+        }
+        throw error
+      }.recover { error -> () in
+        let pid = try? appElement.pid()
+        let bundleID = pid.flatMap{NSRunningApplication(processIdentifier: $0)}.flatMap{$0.bundleIdentifier}
+        let pidString = (pid == nil) ? "??" : String(pid!)
+        log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): \(error)")
+      }
   }
 
   func on<Event: EventType>(_ handler: @escaping (Event) -> ()) {
