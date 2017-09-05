@@ -56,6 +56,8 @@ protocol EventNotifier: class {
 protocol ApplicationObserverType {
   var frontmostApplicationPID: pid_t? { get }
   func onFrontmostApplicationChanged(_ handler: @escaping () -> ())
+  func onApplicationLaunched(_ handler: @escaping (pid_t) -> ())
+  func onApplicationTerminated(_ handler: @escaping (pid_t) -> ())
   func makeApplicationFrontmost(_ pid: pid_t) throws
 }
 
@@ -78,6 +80,40 @@ struct ApplicationObserver: ApplicationObserverType {
       forName: NSNotification.Name.NSWorkspaceDidDeactivateApplication, object: sharedWorkspace, queue: nil
     ) { _ in
       handler()
+    }
+  }
+
+  func onApplicationLaunched(_ handler: @escaping (pid_t) -> ()) {
+    let sharedWorkspace    = NSWorkspace.shared()
+    let notificationCenter = sharedWorkspace.notificationCenter
+    notificationCenter.addObserver(
+      forName: NSNotification.Name.NSWorkspaceDidLaunchApplication,
+      object:  sharedWorkspace,
+      queue:   nil
+    ) { note in
+      guard let userInfo = note.userInfo else {
+        log.warn("Missing notification info on NSWorkspaceDidLaunchApplication")
+        return
+      }
+      let runningApp = userInfo[NSWorkspaceApplicationKey] as! NSRunningApplication
+      handler(runningApp.processIdentifier)
+    }
+  }
+
+  func onApplicationTerminated(_ handler: @escaping (pid_t) -> ()) {
+    let sharedWorkspace    = NSWorkspace.shared()
+    let notificationCenter = sharedWorkspace.notificationCenter
+    notificationCenter.addObserver(
+      forName: NSNotification.Name.NSWorkspaceDidTerminateApplication,
+      object:  sharedWorkspace,
+      queue:   nil
+    ) { note in
+      guard let userInfo = note.userInfo else {
+        log.warn("Missing notification info on NSWorkspaceDidTerminateApplication")
+        return
+      }
+      let runningApp = userInfo[NSWorkspaceApplicationKey] as! NSRunningApplication
+      handler(runningApp.processIdentifier)
     }
   }
 
@@ -167,9 +203,9 @@ final class OSXStateDelegate<
       withEvent: FrontmostApplicationChangedEvent.self, receivingObject: State.self, notifier: self)
 
     // Must add the observer after configuring frontmostApplication.
-    appObserver.onFrontmostApplicationChanged {
-      self.frontmostApplication.refresh()
-    }
+    appObserver.onFrontmostApplicationChanged(self.frontmostApplication.refresh)
+    appObserver.onApplicationLaunched(self.onApplicationLaunch)
+    appObserver.onApplicationTerminated(self.onApplicationTerminate)
 
     // Must not allow frontmostApplication to initialize until the observer is in place.
     when(fulfilled: appPromises).asVoid().then(execute: propertyInit).catch(execute: propertyInitError)
@@ -201,6 +237,28 @@ final class OSXStateDelegate<
         let pidString = (pid == nil) ? "??" : String(pid!)
         log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): \(error)")
       }
+  }
+
+  func onApplicationLaunch(_ pid: pid_t) {
+    guard let appElement = ApplicationElement(forProcessID: pid) else {
+      return
+    }
+    watchApplication(appElement: appElement).then {
+      self.frontmostApplication.refresh()
+      // TODO: Send event
+    }.catch { err in
+      log.error("Error while refreshing frontmostApplication: \(String(describing: err))")
+    }
+  }
+
+  func onApplicationTerminate(_ pid: pid_t) {
+    guard let _ = self.applicationsByPID[pid] else {
+      log.debug("Saw termination for unknown pid \(pid)")
+      return
+    }
+    applicationsByPID.removeValue(forKey: pid)
+    // TODO: Send event
+    // TODO: Clean up observers?
   }
 
   func on<Event: EventType>(_ handler: @escaping (Event) -> ()) {
