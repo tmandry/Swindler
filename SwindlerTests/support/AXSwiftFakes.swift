@@ -59,9 +59,9 @@ class TestApplicationElementBase: TestUIElement {
   typealias UIElementType = TestUIElement
   var toElement: TestUIElement { return self }
 
-  override init() {
+  init(processID: pid_t?) {
     super.init()
-    processID = Int32(id)
+    self.processID    = processID ?? Int32(self.id)
     attrs[.role]      = AXSwift.Role.application.rawValue
     attrs[.windows]   = Array<TestUIElement>()
     attrs[.frontmost] = false
@@ -87,6 +87,13 @@ class TestApplicationElementBase: TestUIElement {
   }
 }
 final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
+  init() { super.init(processID: nil) }
+  init?(forProcessID processID: pid_t) {
+    guard let _ = TestApplicationElement.all().first(where: {$0.processID == processID}) else {
+      return nil
+    }
+    super.init(processID: processID)
+  }
   static var allApps: [TestApplicationElement] = []
   static func all() -> [TestApplicationElement] { return TestApplicationElement.allApps }
 }
@@ -245,6 +252,9 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
   var watchAttribute: Attribute? = nil
   var alreadyCalled = false
   var onMainThread = true
+
+  init() { super.init(processID: 0) }
+  init?(forProcessID processID: pid_t) { return nil }
 
   /// Defines code that runs on the main thread before returning the value of the attribute.
   func onFirstAttributeRead(_ attribute: Attribute, onMainThread: Bool = true, handler: @escaping (AdversaryApplicationElement) -> ()) {
