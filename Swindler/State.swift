@@ -137,7 +137,9 @@ struct ScreenObserver: ScreenObserverType {
     let notificationCenter = NSWorkspace.shared().notificationCenter
 
     notificationCenter.addObserver(
-      forName: NSNotification.Name.NSApplicationDidChangeScreenParameters, object: sharedApplication, queue: nil
+      forName: NSNotification.Name.NSApplicationDidChangeScreenParameters,
+      object:  sharedApplication,
+      queue:   nil
     ) { _ in
       handler()
     }
@@ -162,11 +164,17 @@ final class OSXStateDelegate<
   fileprivate var eventHandlers: [String: [EventHandler]] = [:]
 
   // For convenience/readability.
-  fileprivate var applications: LazyMapCollection<[pid_t: AppDelegate], AppDelegate> { return applicationsByPID.values }
+  fileprivate var applications: LazyMapCollection<[pid_t: AppDelegate], AppDelegate> {
+    return applicationsByPID.values
+  }
 
-  var runningApplications: [ApplicationDelegate] { return applications.map({ $0 as ApplicationDelegate }) }
+  var runningApplications: [ApplicationDelegate] {
+    return applications.map({ $0 as ApplicationDelegate })
+  }
   var frontmostApplication: WriteableProperty<OfOptionalType<Application>>!
-  var knownWindows: [WindowDelegate] { return applications.flatMap({ $0.knownWindows }) }
+  var knownWindows: [WindowDelegate] {
+    return applications.flatMap({ $0.knownWindows })
+  }
   var screens: [ScreenDelegate]
 
   // TODO: retry instead of ignoring an app/window when timeouts are encountered during initialization?
@@ -208,7 +216,10 @@ final class OSXStateDelegate<
     appObserver.onApplicationTerminated(self.onApplicationTerminate)
 
     // Must not allow frontmostApplication to initialize until the observer is in place.
-    when(fulfilled: appPromises).asVoid().then(execute: propertyInit).catch(execute: propertyInitError)
+    when(fulfilled: appPromises)
+      .asVoid()
+      .then(execute: propertyInit)
+      .catch(execute: propertyInitError)
 
     frontmostApplication.initialized.catch { error in
       log.error("Caught error: \(error)")
@@ -222,7 +233,8 @@ final class OSXStateDelegate<
   }
 
   func watchApplication(appElement: ApplicationElement, retry: Int) -> Promise<Void> {
-      return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self).then { application in
+      return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self)
+      .then { application in
         self.applicationsByPID[try application.axElement.pid()] = application
       }
       .asVoid()
@@ -233,7 +245,8 @@ final class OSXStateDelegate<
         throw error
       }.recover { error -> () in
         let pid = try? appElement.pid()
-        let bundleID = pid.flatMap{NSRunningApplication(processIdentifier: $0)}.flatMap{$0.bundleIdentifier}
+        let bundleID = pid.flatMap{NSRunningApplication(processIdentifier: $0)}
+                          .flatMap{$0.bundleIdentifier}
         let pidString = (pid == nil) ? "??" : String(pid!)
         log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): \(error)")
       }
@@ -266,7 +279,6 @@ final class OSXStateDelegate<
     if eventHandlers[notification] == nil {
       eventHandlers[notification] = []
     }
-
     // Wrap in a casting closure to preserve type information that gets erased in the dictionary.
     eventHandlers[notification]!.append({ handler($0 as! Event) })
   }
@@ -289,7 +301,10 @@ extension OSXStateDelegate: PropertyNotifier {
   func notify<Event: PropertyEventType>(
     _ event: Event.Type, external: Bool, oldValue: Event.PropertyType, newValue: Event.PropertyType
   ) where Event.Object == State {
-    notify(Event(external: external, object: State(delegate: self), oldValue: oldValue, newValue: newValue))
+    notify(Event(external: external,
+                 object:   State(delegate: self),
+                 oldValue: oldValue,
+                 newValue: newValue))
   }
 
   /// Called when the underlying object has become invalid.

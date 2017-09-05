@@ -198,7 +198,9 @@ class FakeObserver: ObserverType {
     }
   }
 
-  func doEmit(_ notification: AXNotification, watchedElement: TestUIElement, passedElement: TestUIElement) {
+  func doEmit(_ notification: AXNotification,
+              watchedElement: TestUIElement,
+              passedElement: TestUIElement) {
     let watched = watchedElements[watchedElement] ?? []
     if watched.contains(notification) {
       callback(self, passedElement, notification)
@@ -229,7 +231,8 @@ final class AdversaryObserver: FakeObserver {
   }
 
   /// Defines code that runs on the main thread before returning from addNotification.
-  static func onAddNotification(_ notification: AXNotification, handler: @escaping (AdversaryObserver) -> ()) {
+  static func onAddNotification(_ notification: AXNotification,
+                                handler: @escaping (AdversaryObserver) -> ()) {
     onNotification = notification
     self.handler = handler
   }
@@ -257,7 +260,9 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
   init?(forProcessID processID: pid_t) { return nil }
 
   /// Defines code that runs on the main thread before returning the value of the attribute.
-  func onFirstAttributeRead(_ attribute: Attribute, onMainThread: Bool = true, handler: @escaping (AdversaryApplicationElement) -> ()) {
+  func onFirstAttributeRead(_ attribute: Attribute,
+                            onMainThread: Bool = true,
+                            handler: @escaping (AdversaryApplicationElement) -> ()) {
     watchAttribute = attribute
     onRead = handler
     alreadyCalled = false
@@ -294,7 +299,8 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
     }
     return result
   }
-  override func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+  override func getMultipleAttributes(_ attributes: [AXSwift.Attribute])
+                throws -> [Attribute : Any] {
     let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
     if let watchAttribute = watchAttribute, attributes.contains(watchAttribute) {
       handleAttributeRead()
@@ -328,7 +334,8 @@ class AdversaryWindowElement: TestWindowElement {
     }
     return result
   }
-  override func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute : Any] {
+  override func getMultipleAttributes(_ attributes: [AXSwift.Attribute])
+                throws -> [Attribute : Any] {
     let result: [Attribute : Any] = try super.getMultipleAttributes(attributes)
     if let watchAttribute = watchAttribute, attributes.contains(watchAttribute) {
       performOnMainThread {
