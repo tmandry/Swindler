@@ -45,6 +45,16 @@ public struct FrontmostApplicationChangedEvent: StatePropertyEventType {
   public let newValue: PropertyType
 }
 
+public struct ApplicationLaunchedEvent: EventType {
+  public let external: Bool
+  public let application: Application
+}
+
+public struct ApplicationTerminatedEvent: EventType {
+  public let external: Bool
+  public let application: Application
+}
+
 public struct WindowCreatedEvent: EventType {
   public let external: Bool
   public let window: Window

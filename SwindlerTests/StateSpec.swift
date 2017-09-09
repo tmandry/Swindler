@@ -152,6 +152,23 @@ class OSXStateDelegateSpec: QuickSpec {
 
             expect(stateDelegate.runningApplications).toEventually(haveCount(2))
           }
+
+          it("emits an event") {
+
+            let appObserver = FakeApplicationObserver()
+            let stateDelegate = initializeWithApp(appObserver: appObserver)
+            waitUntil(stateDelegate.runningApplications.count == 1)
+            var count = 0
+            stateDelegate.on{ (event: ApplicationLaunchedEvent) in
+              count += 1
+            }
+
+            let newApp = TestApplicationElement()
+            TestApplicationElement.allApps.append(newApp)
+            appObserver.launch(newApp.processID)
+
+            expect(count).toEventually(equal(1))
+          }
         }
 
         context("when an application terminates") {
@@ -168,6 +185,22 @@ class OSXStateDelegateSpec: QuickSpec {
           }
         }
 
+        it("emits an event") {
+
+          let appObserver = FakeApplicationObserver()
+          let stateDelegate = initializeWithApp(appObserver: appObserver)
+          waitUntil(stateDelegate.runningApplications.count == 1)
+          var count = 0
+          stateDelegate.on{ (event: ApplicationTerminatedEvent) in
+            count += 1
+          }
+
+          let app = TestApplicationElement.allApps[0]
+          TestApplicationElement.allApps = []
+          appObserver.terminate(app.processID)
+
+          expect(count).toEventually(equal(1))
+        }
       }
     }
 

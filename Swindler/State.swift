@@ -228,27 +228,30 @@ final class OSXStateDelegate<
     }
   }
 
-  func watchApplication(appElement: ApplicationElement) -> Promise<Void> {
+  func watchApplication(appElement: ApplicationElement) -> Promise<AppDelegate> {
     return watchApplication(appElement: appElement, retry: 0)
   }
 
-  func watchApplication(appElement: ApplicationElement, retry: Int) -> Promise<Void> {
+  func watchApplication(appElement: ApplicationElement, retry: Int) -> Promise<AppDelegate> {
       return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self)
-      .then { application in
-        self.applicationsByPID[try application.axElement.pid()] = application
+      .then { appDelegate -> AppDelegate in
+        self.applicationsByPID[try appDelegate.axElement.pid()] = appDelegate
+        return appDelegate
       }
-      .asVoid()
-      .recover { error -> Promise<Void> in
+      //.asVoid()
+      .recover { error -> Promise<AppDelegate> in
         if retry < 3 {
           return self.watchApplication(appElement: appElement, retry: retry+1)
         }
         throw error
-      }.recover { error -> () in
+      }.recover { error -> Promise<AppDelegate> in
+        // Log errors
         let pid = try? appElement.pid()
         let bundleID = pid.flatMap{NSRunningApplication(processIdentifier: $0)}
                           .flatMap{$0.bundleIdentifier}
         let pidString = (pid == nil) ? "??" : String(pid!)
         log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): \(error)")
+        throw error
       }
   }
 
@@ -256,21 +259,27 @@ final class OSXStateDelegate<
     guard let appElement = ApplicationElement(forProcessID: pid) else {
       return
     }
-    watchApplication(appElement: appElement).then {
-      self.frontmostApplication.refresh()
-      // TODO: Send event
+    watchApplication(appElement: appElement).then { appDelegate -> () in
+      self.notify(
+        ApplicationLaunchedEvent(external:    true,
+                                 application: Application(delegate: appDelegate, stateDelegate: self))
+      )
+      self.frontmostApplication.refresh() as ()
     }.catch { err in
-      log.error("Error while refreshing frontmostApplication: \(String(describing: err))")
+      log.error("Error while watching new application: \(String(describing: err))")
     }
   }
 
   func onApplicationTerminate(_ pid: pid_t) {
-    guard let _ = self.applicationsByPID[pid] else {
+    guard let appDelegate = self.applicationsByPID[pid] else {
       log.debug("Saw termination for unknown pid \(pid)")
       return
     }
     applicationsByPID.removeValue(forKey: pid)
-    // TODO: Send event
+    self.notify(
+      ApplicationTerminatedEvent(external:    true,
+                                 application: Application(delegate: appDelegate, stateDelegate: self))
+    )
     // TODO: Clean up observers?
   }
 
