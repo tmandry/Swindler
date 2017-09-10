@@ -1,4 +1,4 @@
 module ASLLog {
-  header "ASLLog.h"
-  export *
+    header "ASLLog.h"
+    export *
 }
