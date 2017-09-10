@@ -5,46 +5,46 @@ import AXSwift
 
 /// Protocol that wraps AXSwift.UIElement.
 protocol UIElementType: Equatable {
-  static var globalMessagingTimeout: Float { get }
+    static var globalMessagingTimeout: Float { get }
 
-  func pid() throws -> pid_t
-  func attribute<T>(_ attribute: Attribute) throws -> T?
-  func arrayAttribute<T>(_ attribute: Attribute) throws -> [T]?
-  func setAttribute(_ attribute: Attribute, value: Any) throws
-  func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute: Any]
+    func pid() throws -> pid_t
+    func attribute<T>(_ attribute: Attribute) throws -> T?
+    func arrayAttribute<T>(_ attribute: Attribute) throws -> [T]?
+    func setAttribute(_ attribute: Attribute, value: Any) throws
+    func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute: Any]
 
-  var inspect: String { get }
+    var inspect: String { get }
 }
-extension AXSwift.UIElement: UIElementType { }
+extension AXSwift.UIElement: UIElementType {}
 
 /// Protocol that wraps AXSwift.Observer.
 protocol ObserverType {
-  associatedtype UIElement: UIElementType
-  associatedtype Context
+    associatedtype UIElement: UIElementType
+    associatedtype Context
 
-  typealias Callback = (Context, UIElement, AXSwift.AXNotification) -> Void
+    typealias Callback = (Context, UIElement, AXSwift.AXNotification) -> Void
 
-  init(processID: pid_t, callback: @escaping Callback) throws
-  func addNotification(_ notification: AXSwift.AXNotification, forElement: UIElement) throws
-  func removeNotification(_ notification: AXSwift.AXNotification, forElement: UIElement) throws
+    init(processID: pid_t, callback: @escaping Callback) throws
+    func addNotification(_ notification: AXSwift.AXNotification, forElement: UIElement) throws
+    func removeNotification(_ notification: AXSwift.AXNotification, forElement: UIElement) throws
 }
 extension AXSwift.Observer: ObserverType {
-  typealias UIElement = AXSwift.UIElement
-  typealias Context = AXSwift.Observer
+    typealias UIElement = AXSwift.UIElement
+    typealias Context = AXSwift.Observer
 }
 
 /// Protocol that wraps AXSwift.Application.
 protocol ApplicationElementType: UIElementType {
-  associatedtype UIElement: UIElementType
+    associatedtype UIElement: UIElementType
 
-  init?(forProcessID processID: pid_t)
+    init?(forProcessID processID: pid_t)
 
-  static func all() -> [Self]
+    static func all() -> [Self]
 
-  // Until the Swift type system improves, I don't see a way around this.
-  var toElement: UIElement { get }
+    // Until the Swift type system improves, I don't see a way around this.
+    var toElement: UIElement { get }
 }
 extension AXSwift.Application: ApplicationElementType {
-  typealias UIElement = AXSwift.UIElement
-  var toElement: UIElement { return self }
+    typealias UIElement = AXSwift.UIElement
+    var toElement: UIElement { return self }
 }

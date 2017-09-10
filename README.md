@@ -76,21 +76,21 @@ promise-based API. Requests are dispatched concurrently and in the background, n
 ```swift
 let screen = Swindler.state.screens.first!
 let allPlacedOnGrid = screen.knownWindows.enumerate().map { index, window in
-  let rect = gridRect(screen, index)
-  return window.position.set(rect.origin).then { window.size.set(rect.size) }
+    let rect = gridRect(screen, index)
+    return window.position.set(rect.origin).then { window.size.set(rect.size) }
 }
 
 when(allPlacedOnGrid) { _ in
-  print("all done!")
+    print("all done!")
 }
 
 func gridRect(screen: Swindler.Screen, index: Int) -> CGRect {
-  let gridSteps = 3
-  let position  = CGSize(width: screen.width / gridSteps,
-                         height: screen.height / gridSteps)
-  let size      = CGPoint(x: gridSize.width * (index % gridSteps),
-                          y: gridSize.height * (index / gridSteps))
-  return CGRect(origin: position, size: size)
+    let gridSteps = 3
+    let position  = CGSize(width: screen.width / gridSteps,
+                           height: screen.height / gridSteps)
+    let size      = CGPoint(x: gridSize.width * (index % gridSteps),
+                            y: gridSize.height * (index / gridSteps))
+    return CGRect(origin: position, size: size)
 }
 ```
 
@@ -98,12 +98,12 @@ Watching for events is simple. Here's how you would implement snap-to-grid:
 
 ```swift
 swindler.on { (event: WindowMovedEvent) in
-  guard event.external == true else {
-    // Ignore events that were caused by us.
-    return
-  }
-  let snapped = closestGridPosition(event.window.position.value)
-  event.window.position.set(snapped)
+    guard event.external == true else {
+        // Ignore events that were caused by us.
+        return
+    }
+    let snapped = closestGridPosition(event.window.position.value)
+    event.window.position.set(snapped)
 }
 ```
 
