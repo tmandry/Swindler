@@ -107,6 +107,40 @@ swindler.on { (event: WindowMovedEvent) in
 }
 ```
 
+### Requesting permission
+
+Your application must request access to the trusted AX API. To do this, simply use
+this code in your AppDelegate:
+
+```swift
+func applicationDidFinishLaunching(_ aNotification: Notification) {
+    guard AXSwift.checkIsProcessTrusted(prompt: true) else {
+        print("Not trusted as an AX process; please authorize and re-launch")
+        NSApp.terminate(self)
+        return
+    }
+
+    // your code here
+}
+```
+
+### A note on error messages
+
+Many helper or otherwise "special"  app components don't respond to the AX requests
+or respond with an error. As a result, it's expected to see a number of messages
+like this:
+
+```
+<Debug>: Window <AXUnknown "<AXUIElement 0x610000054eb0> {pid=464}" (pid=464)> has subrole AXUnknown, unwatching
+<Debug>: Application invalidated: com.apple.dock
+<Debug>: Couldn't initialize window for element <AXUnknown "<AXUIElement 0x610000054eb0> {pid=464}" (pid=464)> () of com.google.Chrome: windowIgnored(<AXUnknown "<AXUIElement 0x610000054eb0> {pid=464}" (pid=464)>)
+<Notice>: Could not watch application com.apple.dock (pid=308): invalidObject(AXError.NotificationUnsupported)
+<Debug>: Couldn't initialize window for element <AXScrollArea "<AXUIElement 0x61800004ed90> {pid=312}" (pid=312)> (desktop) of com.apple.finder: AXError.NotificationUnsupported
+```
+
+Currently these are logged because it's hard to determine if an app "should" fail
+(especially on timeouts). As long as things appear to be working, you can ignore them.
+
 ## Project Status
 
 Swindler is in development and is in **alpha**. Here is the state of its major features:
