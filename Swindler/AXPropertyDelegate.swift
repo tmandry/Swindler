@@ -78,6 +78,8 @@ final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: Property
                 }
                 throw PropertyError.timeout(time: TimeInterval(time))
             default:
+                log.debug("Got error while initializing attribute \(self.attribute) "
+                        + "for element \(self.axElement)")
                 throw PropertyError.invalidObject(cause: error)
             }
         }
