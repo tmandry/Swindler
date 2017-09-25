@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                   "external: \(event.external)")
         }
         swindler.on { (event: WindowSizeChangedEvent) in
-            print("Size changed from \(event.oldValue) to \(event.newValue),"
+            print("Size changed from \(event.oldValue) to \(event.newValue),",
                   "external: \(event.external)")
         }
         swindler.on { (event: WindowDestroyedEvent) in
