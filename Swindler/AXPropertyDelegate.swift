@@ -27,6 +27,8 @@ final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: Property
             }
             throw PropertyError.timeout(time: TimeInterval(time))
         } catch AXSwift.AXError.invalidUIElement {
+            log.debug("Got invalidUIElement for element \(axElement) "
+                    + "when attempting to read \(attribute)")
             throw PropertyError.invalidObject(cause: AXSwift.AXError.invalidUIElement)
         } catch let error {
             unexpectedError(error)
@@ -51,6 +53,8 @@ final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: Property
         } catch AXSwift.AXError.failure {
             throw PropertyError.failure(cause: AXSwift.AXError.failure)
         } catch AXSwift.AXError.invalidUIElement {
+            log.debug("Got invalidUIElement for element \(axElement) "
+                    + "when attempting to write \(attribute)")
             throw PropertyError.invalidObject(cause: AXSwift.AXError.invalidUIElement)
         } catch let error {
             unexpectedError(error)

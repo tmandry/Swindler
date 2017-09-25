@@ -380,6 +380,7 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
         do {
             try appObserver.makeApplicationFrontmost(pid!)
         } catch {
+            log.debug("Failed to make application PID \(pid!) frontmost: \(error)")
             throw PropertyError.invalidObject(cause: error)
         }
     }
