@@ -216,7 +216,13 @@ final class OSXStateDelegate<
         //      self.notify(event)
         //    }
 
-        let appPromises = ApplicationElement.all().map(watchApplication)
+        let appPromises = ApplicationElement.all().map { appElement in
+            watchApplication(appElement: appElement)
+            .asVoid()
+            .recover { error -> Void in
+                // drop errors
+            }
+        }
 
         let (propertyInitPromise, propertyInit, propertyInitError) = Promise<Void>.pending()
         frontmostApplication = WriteableProperty(
@@ -235,7 +241,7 @@ final class OSXStateDelegate<
 
         // Must not allow frontmostApplication to initialize until the observer is in place.
         when(fulfilled: appPromises)
-            .asVoid()
+            //.asVoid()
             .then(execute: propertyInit)
             .catch(execute: propertyInitError)
 
@@ -262,7 +268,8 @@ final class OSXStateDelegate<
                     return self.watchApplication(appElement: appElement, retry: retry + 1)
                 }
                 throw error
-            }.recover { error -> Promise<AppDelegate> in
+            }
+            .recover { error -> Promise<AppDelegate> in
                 // Log errors
                 let pid = try? appElement.pid()
                 let bundleID = pid.flatMap { NSRunningApplication(processIdentifier: $0) }
