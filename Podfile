@@ -5,8 +5,8 @@ platform :osx, '10.10'
 use_frameworks!
 
 def testing_pods
-  pod 'Quick',  '~> 1.1.0'
-  pod 'Nimble', '~> 7.0.0'
+  pod 'Quick',  '~> 1.2.0'
+  pod 'Nimble', '~> 7.0.2'
 end
 
 project 'Swindler'
@@ -15,11 +15,11 @@ target 'SwindlerTests' do
 end
 
 target 'Swindler' do
-  pod 'PromiseKit', '~> 4.2.0'
+  pod 'PromiseKit', '4.4.0'
   pod 'AXSwift', path: './AXSwift'
 end
 
 target 'SwindlerExample' do
-  pod 'PromiseKit/CorePromise', '~> 4.2.0'
+  pod 'PromiseKit/CorePromise', '4.4.0'
   pod 'AXSwift', path: './AXSwift'
 end

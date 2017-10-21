@@ -77,7 +77,7 @@ public struct OfType<T: Equatable>: PropertyTypeSpec {
     public static func toPropertyType(_ from: T?) throws -> T {
         guard let to: T = from else {
             // TODO: unexpected error
-            log.error("Cannot convert property value \(from) to type \(T.self)")
+            log.error("Cannot convert property value \(String(describing: from)) to type \(T.self)")
             throw PropertyError.invalidObject(cause: PropertyError.missingValue)
         }
         return to
@@ -138,7 +138,7 @@ open class Property<TypeSpec: PropertyTypeSpec> {
 
         delegate.initialize().then { (value: OptionalType) -> Void in
             self.value_ = try TypeSpec.toPropertyType(value)
-            fulfill()
+            fulfill(())
         }.catch { error in
             do {
                 try self.handleError(error)

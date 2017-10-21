@@ -77,7 +77,7 @@ protocol ApplicationDelegate: class {
 
 /// Implements ApplicationDelegate using the AXUIElement API.
 final class OSXApplicationDelegate<
-    UIElement: UIElementType,
+    UIElement,
     ApplicationElement: ApplicationElementType,
     Observer: ObserverType
 >: ApplicationDelegate, PropertyNotifier

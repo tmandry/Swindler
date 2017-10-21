@@ -93,7 +93,7 @@ protocol WindowDelegate: class {
 
 /// Implements WindowDelegate using the AXUIElement API.
 final class OSXWindowDelegate<
-    UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+    UIElement, ApplicationElement: ApplicationElementType, Observer: ObserverType
 >: WindowDelegate, PropertyNotifier
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement {
     typealias Object = Window

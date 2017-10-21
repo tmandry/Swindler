@@ -6,9 +6,9 @@ import Nimble
 struct StubNSScreen: NSScreenType {
     var frame: CGRect
     var visibleFrame: CGRect { return frame }
-    var deviceDescription: [String: Any] {
+    var deviceDescription: [NSDeviceDescriptionKey: Any] {
         return [
-            "NSScreenNumber": NSNumber(value: number as Int32)
+            NSDeviceDescriptionKey("NSScreenNumber"): NSNumber(value: number as Int32)
         ]
     }
 

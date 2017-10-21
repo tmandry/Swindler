@@ -35,7 +35,7 @@ protocol ScreenDelegate: class, CustomDebugStringConvertible {
 protocol NSScreenType {
     var frame: CGRect { get }
     var visibleFrame: CGRect { get }
-    var deviceDescription: [String: Any] { get }
+    var deviceDescription: [NSDeviceDescriptionKey: Any] { get }
 
     var displayName: String { get }
 }
@@ -141,7 +141,7 @@ extension OSXScreenDelegate {
 
 private func numberForScreen<NSScreenT: NSScreenType>(_ nsScreen: NSScreenT) -> CGDirectDisplayID {
     // Get the direct display ID. This is documented to always exist.
-    let screenNumber = nsScreen.deviceDescription[kNSScreenNumber]!
+    let screenNumber = nsScreen.deviceDescription[NSDeviceDescriptionKey(kNSScreenNumber)]!
     return CGDirectDisplayID((screenNumber as! NSNumber).intValue)
 }
 

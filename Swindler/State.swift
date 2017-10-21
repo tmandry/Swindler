@@ -75,23 +75,23 @@ protocol ApplicationObserverType {
 
 struct ApplicationObserver: ApplicationObserverType {
     var frontmostApplicationPID: pid_t? {
-        return NSWorkspace.shared().frontmostApplication?.processIdentifier
+        return NSWorkspace.shared.frontmostApplication?.processIdentifier
     }
 
     func onFrontmostApplicationChanged(_ handler: @escaping () -> Void) {
-        let sharedWorkspace = NSWorkspace.shared()
+        let sharedWorkspace = NSWorkspace.shared
         let notificationCenter = sharedWorkspace.notificationCenter
 
         // Err on the side of updating too often; watch both activate and deactivate notifications.
         notificationCenter.addObserver(
-            forName: NSNotification.Name.NSWorkspaceDidActivateApplication,
+            forName: NSWorkspace.didActivateApplicationNotification,
             object: sharedWorkspace,
             queue: nil
         ) { _ in
             handler()
         }
         notificationCenter.addObserver(
-            forName: NSNotification.Name.NSWorkspaceDidDeactivateApplication,
+            forName: NSWorkspace.didDeactivateApplicationNotification,
             object: sharedWorkspace,
             queue: nil
         ) { _ in
@@ -100,10 +100,10 @@ struct ApplicationObserver: ApplicationObserverType {
     }
 
     func onApplicationLaunched(_ handler: @escaping (pid_t) -> Void) {
-        let sharedWorkspace = NSWorkspace.shared()
+        let sharedWorkspace = NSWorkspace.shared
         let notificationCenter = sharedWorkspace.notificationCenter
         notificationCenter.addObserver(
-            forName: NSNotification.Name.NSWorkspaceDidLaunchApplication,
+            forName: NSWorkspace.didLaunchApplicationNotification,
             object: sharedWorkspace,
             queue: nil
         ) { note in
@@ -111,16 +111,16 @@ struct ApplicationObserver: ApplicationObserverType {
                 log.warn("Missing notification info on NSWorkspaceDidLaunchApplication")
                 return
             }
-            let runningApp = userInfo[NSWorkspaceApplicationKey] as! NSRunningApplication
+            let runningApp = userInfo[NSWorkspace.applicationUserInfoKey] as! NSRunningApplication
             handler(runningApp.processIdentifier)
         }
     }
 
     func onApplicationTerminated(_ handler: @escaping (pid_t) -> Void) {
-        let sharedWorkspace = NSWorkspace.shared()
+        let sharedWorkspace = NSWorkspace.shared
         let notificationCenter = sharedWorkspace.notificationCenter
         notificationCenter.addObserver(
-            forName: NSNotification.Name.NSWorkspaceDidTerminateApplication,
+            forName: NSWorkspace.didTerminateApplicationNotification,
             object: sharedWorkspace,
             queue: nil
         ) { note in
@@ -128,7 +128,7 @@ struct ApplicationObserver: ApplicationObserverType {
                 log.warn("Missing notification info on NSWorkspaceDidTerminateApplication")
                 return
             }
-            let runningApp = userInfo[NSWorkspaceApplicationKey] as! NSRunningApplication
+            let runningApp = userInfo[NSWorkspace.applicationUserInfoKey] as! NSRunningApplication
             handler(runningApp.processIdentifier)
         }
     }
@@ -149,11 +149,11 @@ protocol ScreenObserverType {
 
 struct ScreenObserver: ScreenObserverType {
     func onScreenLayoutChanged(_ handler: @escaping () -> Void) {
-        let sharedApplication = NSApplication.shared()
-        let notificationCenter = NSWorkspace.shared().notificationCenter
+        let sharedApplication = NSApplication.shared
+        let notificationCenter = NSWorkspace.shared.notificationCenter
 
         notificationCenter.addObserver(
-            forName: NSNotification.Name.NSApplicationDidChangeScreenParameters,
+            forName: NSApplication.didChangeScreenParametersNotification,
             object: sharedApplication,
             queue: nil
         ) { _ in
@@ -162,13 +162,13 @@ struct ScreenObserver: ScreenObserverType {
     }
 
     func allScreens() -> [NSScreen]? {
-        return NSScreen.screens()
+        return NSScreen.screens
     }
 }
 
 /// Implements StateDelegate using the AXUIElement API.
 final class OSXStateDelegate<
-    UIElement: UIElementType, ApplicationElement: ApplicationElementType, Observer: ObserverType
+    UIElement, ApplicationElement: ApplicationElementType, Observer: ObserverType
 >: StateDelegate, EventNotifier
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement {
     typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
@@ -179,7 +179,7 @@ final class OSXStateDelegate<
     fileprivate var eventHandlers: [String: [EventHandler]] = [:]
 
     // For convenience/readability.
-    fileprivate var applications: LazyMapCollection<[pid_t: AppDelegate], AppDelegate> {
+    fileprivate var applications: Dictionary<pid_t, AppDelegate>.Values {
         return applicationsByPID.values
     }
 
@@ -197,14 +197,7 @@ final class OSXStateDelegate<
 
     init(appObserver: ApplicationObserverType) {
         log.debug("Initializing Swindler")
-
-        guard let nsScreens = NSScreen.screens() else {
-            // TODO: fail
-            screens = []
-            log.error("Could not initialize Swindler: NSScreen could not obtain screen information")
-            return
-        }
-        screens = nsScreens.map { OSXScreenDelegate(nsScreen: $0) }
+        screens = NSScreen.screens.map { OSXScreenDelegate(nsScreen: $0) }
 
         //    screenObserver.onScreenLayoutChanged {
         //      let (screens, event) = OSXScreenDelegate<NSScreen>.handleScreenChange(
