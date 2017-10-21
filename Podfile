@@ -13,9 +13,6 @@ project 'Swindler'
 target 'SwindlerTests' do
   testing_pods
 end
-target 'SwindlerTestsProfile' do
-  testing_pods
-end
 
 target 'Swindler' do
   pod 'PromiseKit', '~> 4.2.0'
