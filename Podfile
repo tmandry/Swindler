@@ -1,5 +1,5 @@
 workspace 'Swindler'
-swift_version = '3.0'
+swift_version = '4.0'
 platform :osx, '10.10'
 
 use_frameworks!
