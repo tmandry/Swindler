@@ -166,7 +166,7 @@
 		2F86CEBC1BD60117007E8C29 = {
 			isa = PBXGroup;
 			children = (
-				2F86CEC81BD60117007E8C29 /* Swindler */,
+				2F86CEC81BD60117007E8C29 /* Sources */,
 				2F86CED41BD60117007E8C29 /* SwindlerTests */,
 				2F86CEEA1BD6EC32007E8C29 /* SwindlerExample */,
 				2F86CEC71BD60117007E8C29 /* Products */,
@@ -188,7 +188,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		2F86CEC81BD60117007E8C29 /* Swindler */ = {
+		2F86CEC81BD60117007E8C29 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
 				2F86CEC91BD60117007E8C29 /* Swindler.h */,
@@ -207,7 +207,7 @@
 				2FEEA2E21C1E6E9200CD515E /* Log.swift */,
 				2F3961B61C1E76BD000C28AE /* ASLLog */,
 			);
-			path = Swindler;
+			path = Sources;
 			sourceTree = "<group>";
 		};
 		2F86CED41BD60117007E8C29 /* SwindlerTests */ = {
@@ -710,7 +710,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = Swindler/Info.plist;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -718,7 +718,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.Swindler;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Swindler";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
 			};
@@ -734,7 +734,7 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = Swindler/Info.plist;
+				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
@@ -742,7 +742,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.Swindler;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Swindler";
+				SWIFT_INCLUDE_PATHS = "$(SRCROOT)/Sources";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
 			};
