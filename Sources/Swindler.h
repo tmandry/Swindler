@@ -16,4 +16,4 @@ FOUNDATION_EXPORT const unsigned char SwindlerVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like
 // #import <Swindler/PublicHeader.h>
-#import <Swindler/ASLLog/ASLLog.h>
+//#import <Swindler/ASLLog/ASLLog.h>
