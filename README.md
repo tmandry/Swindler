@@ -1,5 +1,5 @@
 # Swindler
-_A Swift window management framework for OS X_
+_A Swift window management framework for macOS_
 
 [![Build Status](https://travis-ci.org/tmandry/Swindler.svg?branch=master)](https://travis-ci.org/tmandry/Swindler)
 [![Join the chat at https://gitter.im/tmandry/Swindler](https://badges.gitter.im/tmandry/Swindler.svg)](https://gitter.im/tmandry/Swindler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -13,8 +13,8 @@ But along the way we gave up something dear to us: control over our desktop envi
 
 ## What Swindler Does
 
-Writing window managers for OS X is hard. There are a lot of systemic challenges, including limited
-and poorly-documented APIs. All window managers on OS X must use the C-based accessibility APIs, which
+Writing window managers for macOS is hard. There are a lot of systemic challenges, including limited
+and poorly-documented APIs. All window managers on macOS must use the C-based accessibility APIs, which
 are difficult to use and are surprisingly buggy themselves.
 
 As a result, the selection of window managers is pretty limited, and many of the ones out there have
@@ -25,15 +25,15 @@ the more these bugs start to show up.
 Swindler's job is to make it easy to write powerful window managers using a well-documented Swift
 API and abstraction layer. It addresses the problems of the accessibility API with these features:
 
-#### Type safety
+### Type safety
 
 [Swindler's API](https://github.com/tmandry/Swindler/blob/master/Swindler/API.swift) is
 fully documented and type-safe thanks to Swift. It's much easier and safer to use than the C-based
 accessibility APIs. (See the example below.)
 
-#### In-memory model
+### In-memory model
 
-Window managers on OS X rely on IPC: you _ask_ an application for a window's position, _wait_ for it
+Window managers on macOS rely on IPC: you _ask_ an application for a window's position, _wait_ for it
 to respond, _request_ that it be moved or focused, then _wait_ for the application to comply (or
 not). Most of the time this works okay, but it works at the mercy of the remote application's event
 loop, which can lead to long, multi-second delays.
@@ -43,14 +43,14 @@ about the windows on the screen. **Reads are instantaneous**, because all state 
 application's process and stays up to date. Swindler is extensively tested to ensure it stays
 consistent with the system in any situation.
 
-#### Asynchronous writes and refreshes
+### Asynchronous writes and refreshes
 
 If you need to resize a lot of windows simultaneously, for example, you can do so without fear of
 one unresponsive application holding everything else up. Write requests are dispatched
 asynchronously and concurrently, and Swindler's promise-based API makes it easy to keep up with the
 state of operations.
 
-#### Friendly events
+### Friendly events
 
 More sophisticated window managers have to observe events on windows, but the observer API is
 not well documented and often leaves out events you might expect, or delivers them in the wrong order.
