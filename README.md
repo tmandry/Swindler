@@ -165,3 +165,5 @@ Follow me on Twitter: [@tmandry](https://twitter.com/tmandry)
 - [Silica](https://github.com/ianyh/Silica)
 - [Mjolnir](https://github.com/sdegutis/mjolnir)
 - [Hammerspoon](https://github.com/Hammerspoon/hammerspoon), a fork of Mjolnir
+
+Swindler is built on [AXSwift](https://github.com/tmandry/AXSwift).
