@@ -27,7 +27,7 @@ API and abstraction layer. It addresses the problems of the accessibility API wi
 
 ### Type safety
 
-[Swindler's API](https://github.com/tmandry/Swindler/blob/master/Swindler/API.swift) is
+[Swindler's API](https://github.com/tmandry/Swindler/blob/master/API.swift) is
 fully documented and type-safe thanks to Swift. It's much easier and safer to use than the C-based
 accessibility APIs. (See the example below.)
 
@@ -152,7 +152,7 @@ Swindler is in development and is in **alpha**. Here is the state of its major f
 - Screen API: **90% complete**
 - Spaces API: **0% complete**
 
-You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/Swindler/API.swift).
+You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/API.swift).
 
 ## Contact
 
