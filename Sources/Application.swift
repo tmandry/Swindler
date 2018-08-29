@@ -35,7 +35,7 @@ public final class Application: Equatable {
     /// The known windows of the application. Windows on spaces that we haven't seen yet aren't
     /// included.
     public var knownWindows: [Window] {
-        return delegate.knownWindows.flatMap({ Window(delegate: $0) })
+        return delegate.knownWindows.compactMap({ Window(delegate: $0) })
     }
 
     /// The main window of the application.

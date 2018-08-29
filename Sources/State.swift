@@ -30,7 +30,7 @@ public final class State {
 
     /// All windows that we know about. Windows on spaces that we haven't seen yet aren't included.
     public var knownWindows: [Window] {
-        return delegate.knownWindows.flatMap {Window(delegate: $0)}
+        return delegate.knownWindows.compactMap {Window(delegate: $0)}
     }
 
     /// The physical screens in the current display configuration.
