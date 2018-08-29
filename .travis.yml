@@ -6,5 +6,4 @@ cache: cocoapods
 xcode_workspace: Swindler.xcworkspace
 xcode_scheme: Swindler
 
-osx_image: xcode9
 script: xcodebuild -workspace Swindler.xcworkspace -scheme Swindler build test
