@@ -160,10 +160,10 @@ final class OSXWindowDelegate<
             isFullscreen
         ]
 
-        // Map notifications on this element to the corresponding property.
+            // Map notifications on this element to the corresponding property.
         watchedAxProperties = [
             .moved: [position],
-            .resized: [size, isFullscreen],
+            .resized: [position, size, isFullscreen],
             .titleChanged: [title],
             .windowMiniaturized: [isMinimized],
             .windowDeminiaturized: [isMinimized]

@@ -231,6 +231,10 @@ class OSXWindowDelegateSpec: QuickSpec {
         var notifier: TestNotifier!
         beforeEach {
             windowElement = TestWindowElement(forApp: TestApplicationElement())
+            windowElement.attrs[.position] = CGPoint(x: 0, y: 0)
+            windowElement.attrs[.size]     = CGSize(width: 100, height: 100)
+            windowElement.attrs[.title]    = "a window"
+
             notifier = TestNotifier()
             waitUntil { done in
                 WinDelegate.initialize(
@@ -291,6 +295,13 @@ class OSXWindowDelegateSpec: QuickSpec {
                     windowElement.attrs[.position] = CGPoint(x: 1, y: 1)
                     windowDelegate.handleEvent(.moved, observer: TestObserver())
                     expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
+                }
+
+                it("updates when the window is resized from the top or left") {
+                    windowElement.attrs[.position] = CGPoint(x: 0, y: 25)
+                    windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
+                    windowDelegate.handleEvent(.resized, observer: TestObserver())
+                    expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 0, y: 25)))
                 }
             }
 

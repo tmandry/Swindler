@@ -85,7 +85,6 @@
 		2F9E31A81BF050AF00EAD248 /* Property.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
 		2FD2D0651C5493F500D0355D /* DelegateStubs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DelegateStubs.swift; sourceTree = "<group>"; };
 		2FD2D0671C67EC8700D0355D /* ScreenSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenSpec.swift; sourceTree = "<group>"; };
-		2FEEA29A1C1AB70E00CD515E /* API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		2FEEA2AC1C1E041200CD515E /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		2FEEA2C41C1E09A300CD515E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		2FEEA2E21C1E6E9200CD515E /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -203,7 +202,6 @@
 				2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */,
 				2F86CECB1BD60117007E8C29 /* Info.plist */,
 				2F9E31A81BF050AF00EAD248 /* Property.swift */,
-				2FEEA29A1C1AB70E00CD515E /* API.swift */,
 				2FEEA2E21C1E6E9200CD515E /* Log.swift */,
 				2F3961B61C1E76BD000C28AE /* ASLLog */,
 			);

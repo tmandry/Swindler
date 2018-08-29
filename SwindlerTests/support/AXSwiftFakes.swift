@@ -106,7 +106,7 @@ class TestWindowElement: TestUIElement {
         processID = app.processID
         attrs[.role] = AXSwift.Role.window.rawValue
         attrs[.position] = CGPoint(x: 0, y: 0)
-        attrs[.size] = CGSize(width: 0, height: 0)
+        attrs[.size] = CGSize(width: 100, height: 100)
         attrs[.title] = "Window \(id)"
         attrs[.minimized] = false
         attrs[.main] = true
