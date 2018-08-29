@@ -21,16 +21,22 @@ DEPENDENCIES:
   - PromiseKit/CorePromise (= 4.4.0)
   - Quick (~> 1.2.0)
 
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - Nimble
+    - PromiseKit
+    - Quick
+
 EXTERNAL SOURCES:
   AXSwift:
-    :path: ./AXSwift
+    :path: "./AXSwift"
 
 SPEC CHECKSUMS:
-  AXSwift: 380a837bd1358b1dff284acc1bb3b369c72c9c1c
+  AXSwift: 6312924c77b6f5ce128f3e0c1ffcddab2ad8beaf
   Nimble: bfe1f814edabba69ff145cb1283e04ed636a67f2
   PromiseKit: ecf5fe92275d57ee77c9ede858af47a162e9b97e
   Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08
 
-PODFILE CHECKSUM: f57fe185c97fd2163860e680117807ea2df92ffd
+PODFILE CHECKSUM: 176f46d51ac4213c7d28c17f3ff9d95f81f97f38
 
-COCOAPODS: 1.3.1
+COCOAPODS: 1.5.3
