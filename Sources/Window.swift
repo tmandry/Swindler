@@ -189,7 +189,7 @@ final class OSXWindowDelegate<
         // places, including Chrome tooltips and OS X fullscreen transitions.
         let subroleChecked = initPromise.then { attributeValues -> Void in
             if attributeValues[.subrole] as! String? == "AXUnknown" {
-                log.debug("Window \(axElement) has subrole AXUnknown, unwatching")
+                log.trace("Window \(axElement) has subrole AXUnknown, unwatching")
                 self.unwatchWindowElement(
                     axElement, observer: observer, notifications: notifications
                 ).catch { error in

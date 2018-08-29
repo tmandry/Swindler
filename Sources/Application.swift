@@ -308,7 +308,7 @@ final class OSXApplicationDelegate<
 
             self.notifier?.notify(WindowCreatedEvent(external: true, window: window))
         }.catch { error in
-            log.debug("Could not watch \(windowElement): \(error)")
+            log.debug("Could not watch window element on \(self): \(error)")
         }
     }
 
