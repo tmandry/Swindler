@@ -3,7 +3,7 @@
 /// Internal logger.
 internal private(set) var log = Log()
 
-private var xcodeColorsEnabled = (ProcessInfo().environment["XcodeColors"] == "YES")
+private let COLOR_ENABLED = (ProcessInfo().environment["SWINDLER_COLOR"] == "1")
 
 struct StderrOutputStream: TextOutputStream {
   public mutating func write(_ string: String) {
@@ -36,29 +36,29 @@ struct Log {
 
     /// Log that something has failed.
     func error(_ out: @autoclosure () -> String) {
-        log(out(), level: .error, withColor: Color.red)
+        log(out(), level: .error, withColor: .red)
     }
     /// Log that something is amiss which might result in a failure.
     func warn(_ out: @autoclosure () -> String) {
-        log(out(), level: .warn, withColor: Color.yellow)
+        log(out(), level: .warn, withColor: .yellow)
     }
 
     /// Log something of moderate interest to the user or administrator.
     func notice(_ out: @autoclosure () -> String) {
-        log(out(), level: .notice, withColor: Color.purple)
+        log(out(), level: .notice, withColor: .purple)
     }
 
     /// Log something purely informational (not visible in production).
     func info(_ out: @autoclosure () -> String) {
 #if SWINDLER_DEBUG
-        log(out(), level: .info, withColor: Color.cyan)
+        log(out(), level: .info, withColor: .cyan)
 #endif
     }
 
     /// Log debug info (not visible in production).
     func debug(_ out: @autoclosure () -> String) {
 #if SWINDLER_DEBUG
-        log(out(), level: .debug, withColor: Color.blue)
+        log(out(), level: .debug, withColor: .blue)
 #endif
     }
 
@@ -69,27 +69,22 @@ struct Log {
 #endif
     }
 
-    struct Color {
-        let red: UInt8
-        let green: UInt8
-        let blue: UInt8
-
-        static let red = Color(red: 255, green: 0, blue: 0)
-        static let green = Color(red: 0, green: 255, blue: 0)
-        static let blue = Color(red: 80, green: 80, blue: 230)
-        static let yellow = Color(red: 255, green: 255, blue: 0)
-        static let purple = Color(red: 200, green: 50, blue: 200)
-        static let cyan = Color(red: 50, green: 200, blue: 200)
-        static let gray = Color(red: 120, green: 120, blue: 120)
+    enum Color: Int8 {
+        case red = 31
+        case green = 32
+        case yellow = 33
+        case blue = 34
+        case purple = 35
+        case cyan = 36
     }
 
     // Log on the given log level, using the given color if XcodeColors is enabled.
     fileprivate func log(_ string: String, level: Level, withColor: Color? = nil) {
         var output = ""
-        if let color = withColor, xcodeColorsEnabled {
+        if let color = withColor, COLOR_ENABLED {
             let escape = "\u{001b}["
-            let reset = "\(escape);"
-            output = "\(escape)fg\(color.red),\(color.green),\(color.blue);\(string)\(reset)"
+            let reset = "\(escape)0m"
+            output = "\(escape)\(color.rawValue)m\(string)\(reset)"
         } else {
             output = string
         }
