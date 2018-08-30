@@ -250,7 +250,7 @@ final class OSXWindowDelegate<
             isValid = false
         default:
             if let properties = watchedAxProperties[event] {
-                properties.forEach { $0.refresh() }
+                properties.forEach { $0.issueRefresh() }
             } else {
                 log.debug("Unknown event on \(self): \(event)")
             }

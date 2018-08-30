@@ -294,7 +294,7 @@ final class OSXApplicationDelegate<
         case .focusedWindowChanged:
             onWindowTypePropertyChanged(focusedWindow, element: element)
         case .applicationShown, .applicationHidden:
-            isHidden.refresh() as ()
+            isHidden.refresh()
         default:
             onWindowLevelEvent(notification, windowElement: element)
         }
@@ -319,10 +319,10 @@ final class OSXApplicationDelegate<
         if element == axElement {
             // Was passed the application (this means there is no main/focused window); we can
             // refresh immediately.
-            property.refresh() as ()
+            property.refresh()
         } else if windows.contains(where: { $0.axElement == element }) {
             // Was passed an already-initialized window; we can refresh immediately.
-            property.refresh() as ()
+            property.refresh()
         } else {
             // We don't know about the element that has been passed. Wait until the window is
             // initialized.
@@ -346,7 +346,7 @@ final class OSXApplicationDelegate<
         }.then { role -> Void in
             if role == .application {
                 // There is no main window; we can refresh immediately.
-                property.refresh() as ()
+                property.refresh()
                 // Remove the handler that will never be called.
                 self.newWindowHandler.removeAllForUIElement(element)
             }
@@ -354,13 +354,13 @@ final class OSXApplicationDelegate<
             switch error {
             case AXSwift.AXError.invalidUIElement:
                 // The window is already gone.
-                property.refresh() as ()
+                property.refresh()
                 self.newWindowHandler.removeAllForUIElement(element)
             default:
                 // TODO: Retry on timeout
                 // Just refresh and hope for the best. Leave the handler in case the element does
                 // show up again.
-                property.refresh() as ()
+                property.refresh()
                 log.warn("Received MainWindowChanged on unknown element \(element), then \(error) "
                        + "when trying to read its role")
             }

@@ -228,7 +228,7 @@ final class OSXStateDelegate<
             notifier: self)
 
         // Must add the observer after configuring frontmostApplication.
-        appObserver.onFrontmostApplicationChanged(frontmostApplication.refresh)
+        appObserver.onFrontmostApplicationChanged(frontmostApplication.issueRefresh)
         appObserver.onApplicationLaunched(onApplicationLaunch)
         appObserver.onApplicationTerminated(onApplicationTerminate)
 
@@ -283,7 +283,7 @@ final class OSXStateDelegate<
                 external: true,
                 application: Application(delegate: appDelegate, stateDelegate: self)
             ))
-            self.frontmostApplication.refresh() as ()
+            self.frontmostApplication.refresh()
         }.catch { err in
             log.error("Error while watching new application: \(String(describing: err))")
         }

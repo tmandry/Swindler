@@ -176,6 +176,7 @@ open class Property<TypeSpec: PropertyTypeSpec> {
 
     /// Forces the value of the property to refresh. Most properties are watched so you don't need
     /// to call this yourself.
+    @discardableResult
     public final func refresh() -> Promise<PropertyType> {
         // Allow queueing up a refresh before initialization is complete, which means "assume the
         // value you will be initialized with is going to be stale". This is useful if an event is
