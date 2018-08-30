@@ -1,5 +1,3 @@
-//import ASLLog
-
 /// Internal logger.
 internal private(set) var log = Log()
 
@@ -12,17 +10,8 @@ struct StderrOutputStream: TextOutputStream {
 }
 var stderrStream = StderrOutputStream()
 
-/// Internal logging methods. Uses ASL to log to system console at correct log levels.
+/// Internal logging methods.
 struct Log {
-    private static var __once: () = {
-        //asl_add_log_file(nil, STDERR_FILENO)
-        //asl_set_filter(nil, aslFilterMaskUpTo(ASL_LEVEL_DEBUG))
-    }()
-    static var token: Int = 0
-    init() {
-        _ = Log.__once
-    }
-
     enum Level {
         case error
         case warn
@@ -31,8 +20,6 @@ struct Log {
         case debug
         case trace
     }
-
-    // TODO: filter out logs depending on build settings.
 
     /// Log that something has failed.
     func error(_ out: @autoclosure () -> String) {
@@ -88,17 +75,7 @@ struct Log {
         } else {
             output = string
         }
-        //aslLog(output, level)
         print(output, to: &stderrStream)
     }
 
-}
-
-/*
-#define	ASL_FILTER_MASK(level) (1 << (level))
-#define	ASL_FILTER_MASK_UPTO(level) ((1 << ((level) + 1)) - 1)
-*/
-
-private func aslFilterMaskUpTo(_ level: Int32) -> Int32 {
-    return ((1 << (level + 1)) - 1)
 }
