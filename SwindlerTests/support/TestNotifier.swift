@@ -9,7 +9,7 @@ class TestNotifier: EventNotifier {
     }
 
     func getEventsOfType<T: EventType>(_ type: T.Type) -> [T] {
-        return events.flatMap({ $0 as? T })
+        return events.compactMap({ $0 as? T })
     }
     func getEventOfType<T: EventType>(_ type: T.Type) -> T? {
         return getEventsOfType(type).first

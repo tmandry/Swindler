@@ -169,7 +169,7 @@ struct ScreenObserver: ScreenObserverType {
 /// Implements StateDelegate using the AXUIElement API.
 final class OSXStateDelegate<
     UIElement, ApplicationElement: ApplicationElementType, Observer: ObserverType
->: StateDelegate, EventNotifier
+>: StateDelegate
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement {
     typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
     typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
@@ -274,7 +274,19 @@ final class OSXStateDelegate<
             }
     }
 
-    func onApplicationLaunch(_ pid: pid_t) {
+    func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
+        let notification = Event.typeName
+        if eventHandlers[notification] == nil {
+            eventHandlers[notification] = []
+        }
+        // Wrap in a casting closure to preserve type information that gets erased in the
+        // dictionary.
+        eventHandlers[notification]!.append({ handler($0 as! Event) })
+    }
+}
+
+extension OSXStateDelegate {
+    fileprivate func onApplicationLaunch(_ pid: pid_t) {
         guard let appElement = ApplicationElement(forProcessID: pid) else {
             return
         }
@@ -289,7 +301,7 @@ final class OSXStateDelegate<
         }
     }
 
-    func onApplicationTerminate(_ pid: pid_t) {
+    fileprivate func onApplicationTerminate(_ pid: pid_t) {
         guard let appDelegate = self.applicationsByPID[pid] else {
             log.debug("Saw termination for unknown pid \(pid)")
             return
@@ -301,17 +313,9 @@ final class OSXStateDelegate<
         ))
         // TODO: Clean up observers?
     }
+}
 
-    func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
-        let notification = Event.typeName
-        if eventHandlers[notification] == nil {
-            eventHandlers[notification] = []
-        }
-        // Wrap in a casting closure to preserve type information that gets erased in the
-        // dictionary.
-        eventHandlers[notification]!.append({ handler($0 as! Event) })
-    }
-
+extension OSXStateDelegate: EventNotifier {
     // TODO: extract this behavior to a self-contained Notifier struct
     func notify<Event: EventType>(_ event: Event) {
         assert(Thread.current.isMainThread)
