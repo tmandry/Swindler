@@ -89,6 +89,112 @@ protocol WindowDelegate: class {
     func equalTo(_ other: WindowDelegate) -> Bool
 }
 
+class TestWindowDelegate: WindowDelegate {
+    typealias Object = Window
+
+    var isValid: Bool
+
+    weak var appDelegate: ApplicationDelegate?
+
+    var position: WriteableProperty<OfType<CGPoint>>!
+    var size: WriteableProperty<OfType<CGSize>>!
+    var title: Property<OfType<String>>!
+    var isMinimized: WriteableProperty<OfType<Bool>>!
+    var isFullscreen: WriteableProperty<OfType<Bool>>!
+
+    weak var notifier: EventNotifier?
+    private var initialized: Promise<Void>!
+
+    // The source of truth
+    weak var testWindow: TestWindow?
+    var id: Int
+
+    static func initialize(appDelegate: ApplicationDelegate,
+                           notifier: EventNotifier?,
+                           testWindow: TestWindow) -> Promise<TestWindowDelegate> {
+        return firstly {
+            let delegate = try TestWindowDelegate(
+                appDelegate: appDelegate, notifier: notifier, testWindow: testWindow)
+            return delegate.initialized.then { delegate }
+        }
+    }
+
+    private init(appDelegate: ApplicationDelegate,
+                 notifier: EventNotifier?,
+                 testWindow: TestWindow) throws {
+        self.appDelegate = appDelegate
+        self.notifier = notifier
+        self.testWindow = testWindow
+        self.id = testWindow.id
+
+        isValid = true
+
+        testWindow.delegate = self
+
+        position = WriteableProperty(
+            TestPropertyDelegate(testWindow, {$0.rect.origin}, {$0.rect.origin = $1}),
+            withEvent: WindowPosChangedEvent.self,
+            receivingObject: Window.self,
+            notifier: self)
+        size = WriteableProperty(
+            TestPropertyDelegate(testWindow, {$0.rect.size}, {$0.rect.size = $1}),
+            withEvent: WindowSizeChangedEvent.self,
+            receivingObject: Window.self,
+            notifier: self)
+        title = Property(
+            TestPropertyDelegate(testWindow, {$0.title}, {_,_ in }),
+            withEvent: WindowTitleChangedEvent.self,
+            receivingObject: Window.self,
+            notifier: self)
+        isMinimized = WriteableProperty(
+            TestPropertyDelegate(testWindow, {$0.isMinimized}, {$0.isMinimized = $1}),
+            withEvent: WindowMinimizedChangedEvent.self,
+            receivingObject: Window.self,
+            notifier: self)
+        isFullscreen = WriteableProperty(
+            TestPropertyDelegate(testWindow, {$0.isFullscreen}, {$0.isFullscreen = $1}),
+            notifier: self)
+
+        let properties: [PropertyType] = [
+            position,
+            size,
+            title,
+            isMinimized,
+            isFullscreen
+        ]
+        initialized = when(fulfilled: properties.map({$0.initialized})).asVoid();
+    }
+
+    func equalTo(_ rhs: WindowDelegate) -> Bool {
+        if let other = rhs as? TestWindowDelegate {
+            return other.id == id
+        } else {
+            return false
+        }
+    }
+}
+
+extension TestWindowDelegate: PropertyNotifier {
+    func notify<Event: PropertyEventType>(
+        _ event: Event.Type,
+        external: Bool,
+        oldValue: Event.PropertyType,
+        newValue: Event.PropertyType
+    ) where Event.Object == Window {
+        guard let window = Window(delegate: self) else {
+            // Application terminated already; shouldn't send events.
+            return
+        }
+        notifier?.notify(
+            Event(external: external, object: window, oldValue: oldValue, newValue: newValue)
+        )
+    }
+
+    func notifyInvalid() {
+        isValid = false
+    }
+}
+
 // MARK: - OSXWindowDelegate
 
 /// Implements WindowDelegate using the AXUIElement API.

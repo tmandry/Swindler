@@ -73,6 +73,38 @@ protocol ApplicationDelegate: class {
     func equalTo(_ other: ApplicationDelegate) -> Bool
 }
 
+class TestApplicationDelegate: ApplicationDelegate {
+    var processIdentifier: pid_t!
+    var bundleIdentifier: String?
+
+    var stateDelegate: StateDelegate?
+
+    var knownWindows: [WindowDelegate]
+
+    var mainWindow: WriteableProperty<OfOptionalType<Window>>!
+    var focusedWindow: Property<OfOptionalType<Window>>!
+    var isHidden: WriteableProperty<OfType<Bool>>!
+
+    weak var testApplication: TestApplication?
+    var id: Int
+
+    init(_ testApplication: TestApplication, stateDelegate: StateDelegate) {
+        self.testApplication = testApplication
+        self.stateDelegate = stateDelegate
+
+        id = testApplication.id
+        knownWindows = []
+    }
+
+    func equalTo(_ rhs: ApplicationDelegate) -> Bool {
+        if let other = rhs as? TestApplicationDelegate {
+            return other.id == id
+        } else {
+            return false
+        }
+    }
+}
+
 // MARK: - OSXApplicationDelegate
 
 /// Implements ApplicationDelegate using the AXUIElement API.

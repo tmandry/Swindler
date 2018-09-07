@@ -57,6 +57,30 @@ protocol StateDelegate: class {
     func on<Event: EventType>(_ handler: @escaping (Event) -> Void)
 }
 
+class TestStateDelegate: StateDelegate {
+    var runningApplications: [ApplicationDelegate]
+    var frontmostApplication: WriteableProperty<OfOptionalType<Application>>!
+    var knownWindows: [WindowDelegate]
+    var screens: [ScreenDelegate]
+
+    init() {
+        // TODO: implement these
+        runningApplications = []
+        knownWindows = []
+        screens = []
+    }
+
+    func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {}
+
+    //var runningApplications: [ApplicationDelegate] {
+    //    return applications.map({ $0 as ApplicationDelegate })
+    //}
+    //var frontmostApplication: WriteableProperty<OfOptionalType<Application>>!
+    //var knownWindows: [WindowDelegate] {
+    //    return applications.flatMap({ $0.knownWindows })
+    //}
+}
+
 // MARK: - OSXStateDelegate
 
 /// An object responsible for propagating the given event. Used internally by the OSX delegates.

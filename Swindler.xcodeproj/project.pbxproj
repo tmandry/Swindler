@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2F00BBD721379CF600457FB2 /* Fakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F00BBD621379CF600457FB2 /* Fakes.swift */; };
+		2F00BBD92142F32700457FB2 /* FakeSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F00BBD82142F32700457FB2 /* FakeSpec.swift */; };
 		2F55343D1C0AC86500B87C42 /* Successes+PromiseKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */; };
 		2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */; };
 		2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898C1C22718E00C422C0 /* StateSpec.swift */; };
@@ -51,6 +53,8 @@
 
 /* Begin PBXFileReference section */
 		1744E8DF9C3E0B18C01DC019 /* Pods-SwindlerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample.debug.xcconfig"; sourceTree = "<group>"; };
+		2F00BBD621379CF600457FB2 /* Fakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Fakes.swift; sourceTree = "<group>"; };
+		2F00BBD82142F32700457FB2 /* FakeSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FakeSpec.swift; sourceTree = "<group>"; };
 		2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Successes+PromiseKit.swift"; sourceTree = "<group>"; };
 		2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationSpec.swift; sourceTree = "<group>"; };
 		2F61898C1C22718E00C422C0 /* StateSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateSpec.swift; sourceTree = "<group>"; };
@@ -178,6 +182,7 @@
 		2F86CEC81BD60117007E8C29 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				2F00BBD621379CF600457FB2 /* Fakes.swift */,
 				2F86CEC91BD60117007E8C29 /* Swindler.h */,
 				2F86CEE31BD6DAD7007E8C29 /* State.swift */,
 				2F7F00FB1C1152F600C97949 /* Application.swift */,
@@ -198,6 +203,7 @@
 		2F86CED41BD60117007E8C29 /* SwindlerTests */ = {
 			isa = PBXGroup;
 			children = (
+				2F00BBD82142F32700457FB2 /* FakeSpec.swift */,
 				2F6189961C22736800C422C0 /* support */,
 				2F61898C1C22718E00C422C0 /* StateSpec.swift */,
 				2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */,
@@ -490,6 +496,7 @@
 				2F6314291C49C0DD001D1E24 /* Screen.swift in Sources */,
 				2F55343D1C0AC86500B87C42 /* Successes+PromiseKit.swift in Sources */,
 				2F7F01021C11570D00C97949 /* Errors.swift in Sources */,
+				2F00BBD721379CF600457FB2 /* Fakes.swift in Sources */,
 				2F86CEE41BD6DAD7007E8C29 /* State.swift in Sources */,
 				2F86CEE21BD6D9E1007E8C29 /* Events.swift in Sources */,
 				2F7F00FC1C1152F600C97949 /* Application.swift in Sources */,
@@ -501,6 +508,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */,
+				2F00BBD92142F32700457FB2 /* FakeSpec.swift in Sources */,
 				2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */,
 				2FD2D0681C67EC8700D0355D /* ScreenSpec.swift in Sources */,
 				2F61899E1C27A8DD00C422C0 /* DriverSpec.swift in Sources */,
