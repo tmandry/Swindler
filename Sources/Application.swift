@@ -80,7 +80,7 @@ final class OSXApplicationDelegate<
     UIElement,
     ApplicationElement: ApplicationElementType,
     Observer: ObserverType
->: ApplicationDelegate, PropertyNotifier
+>: ApplicationDelegate
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement {
     typealias Object = Application
     typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
@@ -110,6 +110,20 @@ final class OSXApplicationDelegate<
 
     var knownWindows: [WindowDelegate] {
         return windows.map({ $0 as WindowDelegate })
+    }
+
+    /// Initializes the object and returns it as a Promise that resolves once it's ready.
+    static func initialize(
+        axElement: ApplicationElement,
+        stateDelegate: StateDelegate,
+        notifier: EventNotifier
+    ) -> Promise<OSXApplicationDelegate> {
+        return firstly { // capture thrown errors in promise chain
+            let appDelegate = try OSXApplicationDelegate(axElement: axElement,
+                                                         stateDelegate: stateDelegate,
+                                                         notifier: notifier)
+            return appDelegate.initialized.then { appDelegate }
+        }
     }
 
     fileprivate init(axElement: ApplicationElement,
@@ -266,20 +280,17 @@ final class OSXApplicationDelegate<
         }
     }
 
-    /// Initializes the object and returns it as a Promise that resolves once it's ready.
-    static func initialize(
-        axElement: ApplicationElement,
-        stateDelegate: StateDelegate,
-        notifier: EventNotifier
-    ) -> Promise<OSXApplicationDelegate> {
-        return firstly { // capture thrown errors in promise chain
-            let appDelegate = try OSXApplicationDelegate(axElement: axElement,
-                                                         stateDelegate: stateDelegate,
-                                                         notifier: notifier)
-            return appDelegate.initialized.then { appDelegate }
+    func equalTo(_ rhs: ApplicationDelegate) -> Bool {
+        if let other = rhs as? OSXApplicationDelegate {
+            return axElement == other.axElement
+        } else {
+            return false
         }
     }
+}
 
+/// Event handlers
+extension OSXApplicationDelegate {
     fileprivate func handleEvent(observer: Observer.Context,
                                  element: UIElement,
                                  notification: AXSwift.AXNotification) {
@@ -415,6 +426,12 @@ final class OSXApplicationDelegate<
         }
     }
 
+    fileprivate func findWindowDelegateByElement(_ axElement: UIElement) -> WinDelegate? {
+        return windows.filter({ $0.axElement == axElement }).first
+    }
+}
+
+extension OSXApplicationDelegate: PropertyNotifier {
     func notify<Event: PropertyEventType>(_ event: Event.Type,
                                           external: Bool,
                                           oldValue: Event.PropertyType,
@@ -429,18 +446,6 @@ final class OSXApplicationDelegate<
     func notifyInvalid() {
         log.debug("Application invalidated: \(self)")
         // TODO:
-    }
-
-    fileprivate func findWindowDelegateByElement(_ axElement: UIElement) -> WinDelegate? {
-        return windows.filter({ $0.axElement == axElement }).first
-    }
-
-    func equalTo(_ rhs: ApplicationDelegate) -> Bool {
-        if let other = rhs as? OSXApplicationDelegate {
-            return axElement == other.axElement
-        } else {
-            return false
-        }
     }
 }
 

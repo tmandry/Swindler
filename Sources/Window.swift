@@ -94,7 +94,7 @@ protocol WindowDelegate: class {
 /// Implements WindowDelegate using the AXUIElement API.
 final class OSXWindowDelegate<
     UIElement, ApplicationElement: ApplicationElementType, Observer: ObserverType
->: WindowDelegate, PropertyNotifier
+>: WindowDelegate
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement {
     typealias Object = Window
 
@@ -116,10 +116,10 @@ final class OSXWindowDelegate<
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!
 
-    fileprivate init(appDelegate: ApplicationDelegate,
-                     notifier: EventNotifier?,
-                     axElement: UIElement,
-                     observer: Observer) throws {
+    private init(appDelegate: ApplicationDelegate,
+                 notifier: EventNotifier?,
+                 axElement: UIElement,
+                 observer: Observer) throws {
         self.appDelegate = appDelegate
         self.notifier = notifier
         self.axElement = axElement
@@ -160,7 +160,7 @@ final class OSXWindowDelegate<
             isFullscreen
         ]
 
-            // Map notifications on this element to the corresponding property.
+        // Map notifications on this element to the corresponding property.
         watchedAxProperties = [
             .moved: [position],
             .resized: [position, size, isFullscreen],
@@ -204,9 +204,9 @@ final class OSXWindowDelegate<
                  subroleChecked)
     }
 
-    fileprivate func watchWindowElement(_ element: UIElement,
-                                        observer: Observer,
-                                        notifications: [AXNotification]) -> Promise<Void> {
+    private func watchWindowElement(_ element: UIElement,
+                                    observer: Observer,
+                                    notifications: [AXNotification]) -> Promise<Void> {
         return Promise<Void>(value: ()).then(on: .global()) { () -> Void in
             for notification in notifications {
                 try traceRequest(self.axElement, "addNotification", notification) {
@@ -216,9 +216,9 @@ final class OSXWindowDelegate<
         }
     }
 
-    fileprivate func unwatchWindowElement(_ element: UIElement,
-                                          observer: Observer,
-                                          notifications: [AXNotification]) -> Promise<Void> {
+    private func unwatchWindowElement(_ element: UIElement,
+                                      observer: Observer,
+                                      notifications: [AXNotification]) -> Promise<Void> {
         return Promise<Void>(value: ()).then(on: .global()) { () -> Void in
             for notification in notifications {
                 try traceRequest(self.axElement, "removeNotification", notification) {
@@ -228,7 +228,18 @@ final class OSXWindowDelegate<
         }
     }
 
-    // Initializes the window and returns it as a Promise once it's ready.
+    func equalTo(_ rhs: WindowDelegate) -> Bool {
+        if let other = rhs as? OSXWindowDelegate {
+            return axElement == other.axElement
+        } else {
+            return false
+        }
+    }
+}
+
+/// Interface used by OSXApplicationDelegate.
+extension OSXWindowDelegate {
+    /// Initializes the window, and returns it in a Promise once it's ready.
     static func initialize(
         appDelegate: ApplicationDelegate,
         notifier: EventNotifier?,
@@ -256,7 +267,9 @@ final class OSXWindowDelegate<
             }
         }
     }
+}
 
+extension OSXWindowDelegate: PropertyNotifier {
     func notify<Event: PropertyEventType>(
         _ event: Event.Type,
         external: Bool,
@@ -274,13 +287,5 @@ final class OSXWindowDelegate<
 
     func notifyInvalid() {
         isValid = false
-    }
-
-    func equalTo(_ rhs: WindowDelegate) -> Bool {
-        if let other = rhs as? OSXWindowDelegate {
-            return axElement == other.axElement
-        } else {
-            return false
-        }
     }
 }
