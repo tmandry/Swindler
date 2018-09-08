@@ -73,38 +73,6 @@ protocol ApplicationDelegate: class {
     func equalTo(_ other: ApplicationDelegate) -> Bool
 }
 
-class TestApplicationDelegate: ApplicationDelegate {
-    var processIdentifier: pid_t!
-    var bundleIdentifier: String?
-
-    var stateDelegate: StateDelegate?
-
-    var knownWindows: [WindowDelegate]
-
-    var mainWindow: WriteableProperty<OfOptionalType<Window>>!
-    var focusedWindow: Property<OfOptionalType<Window>>!
-    var isHidden: WriteableProperty<OfType<Bool>>!
-
-    weak var testApplication: TestApplication?
-    var id: Int
-
-    init(_ testApplication: TestApplication, stateDelegate: StateDelegate) {
-        self.testApplication = testApplication
-        self.stateDelegate = stateDelegate
-
-        id = testApplication.id
-        knownWindows = []
-    }
-
-    func equalTo(_ rhs: ApplicationDelegate) -> Bool {
-        if let other = rhs as? TestApplicationDelegate {
-            return other.id == id
-        } else {
-            return false
-        }
-    }
-}
-
 // MARK: - OSXApplicationDelegate
 
 /// Implements ApplicationDelegate using the AXUIElement API.
@@ -158,7 +126,7 @@ final class OSXApplicationDelegate<
         }
     }
 
-    fileprivate init(axElement: ApplicationElement,
+    init(axElement: ApplicationElement,
                      stateDelegate: StateDelegate,
                      notifier: EventNotifier) throws {
         // TODO: filter out applications by activation policy
@@ -344,14 +312,21 @@ extension OSXApplicationDelegate {
     }
 
     fileprivate func onWindowCreated(_ windowElement: UIElement) {
-        createWindowForElementIfNotExists(windowElement).then { windowDelegate -> Void in
+        addWindowElement(windowElement).catch { error in
+            log.debug("Could not watch window element on \(self): \(error)")
+        }
+    }
+
+    internal func addWindowElement(_ windowElement: UIElement) -> Promise<WinDelegate?> {
+        return firstly {
+            createWindowForElementIfNotExists(windowElement)
+        }.then { windowDelegate -> WinDelegate? in
             guard let windowDelegate = windowDelegate,
-                let window = Window(delegate: windowDelegate)
-            else { return }
+                  let window = Window(delegate: windowDelegate)
+            else { return nil }
 
             self.notifier?.notify(WindowCreatedEvent(external: true, window: window))
-        }.catch { error in
-            log.debug("Could not watch window element on \(self): \(error)")
+            return windowDelegate
         }
     }
 

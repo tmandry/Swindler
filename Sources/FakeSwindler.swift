@@ -2,11 +2,16 @@ import AXSwift
 import PromiseKit
 
 public class TestState {
-    var delegate: TestStateDelegate
+    typealias Delegate =
+        OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>;
+
+    var delegate: Delegate
     var state: State
+    var appObserver: FakeApplicationObserver
 
     init() {
-        delegate = TestStateDelegate()
+        appObserver = FakeApplicationObserver()
+        delegate = Delegate(appObserver: appObserver)
         state = State(delegate: delegate)
     }
 }
@@ -32,13 +37,10 @@ public struct TestApplicationBuilder {
 }
  */
 
-private var _curId: Int = 0
-private func nextId() -> Int {
-    _curId += 1
-    return _curId
-}
-
 public class TestApplication {
+    typealias Delegate =
+        OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>;
+
     let parent: TestState
 
     public var application: Application {
@@ -51,16 +53,17 @@ public class TestApplication {
     var mainWindow: TestWindow?
     var focusedWindow: TestWindow?
 
-    var delegate: ApplicationDelegate!
+    let element: TestApplicationElement
 
-    private(set) internal var id: Int
+    var delegate: Delegate!
 
     init(parent: TestState) {
         self.parent = parent
-        id = nextId()
         processid = 0
         hidden = false
-        delegate = TestApplicationDelegate(self, stateDelegate: parent.delegate)
+        element = TestApplicationElement()
+        delegate = try! Delegate(
+            axElement: element, stateDelegate: parent.delegate, notifier: parent.delegate)
     }
 
     public func createWindow() -> TestWindowBuilder {
@@ -91,9 +94,7 @@ public class TestWindowBuilder {
     func build() -> Promise<TestWindow> {
         // TODO schedule new window event
         //w.parent.delegate!...
-        let initialized = TestWindowDelegate.initialize(
-            appDelegate: w.parent.delegate, notifier: nil, testWindow: w)
-        return initialized.then { delegate -> TestWindow in
+        return w.parent.delegate.addWindowElement(w.element).then { delegate -> TestWindow in
             self.w.delegate = delegate
             return self.w
         }
@@ -101,30 +102,40 @@ public class TestWindowBuilder {
 }
 
 public class TestWindow: TestObject {
+    typealias Delegate =
+        OSXWindowDelegate<TestUIElement, TestApplicationElement, FakeObserver>
+
     public let parent: TestApplication
     public var window: Window {
         get { return Window(delegate: delegate!)! }
     }
 
+    let element: TestWindowElement
+
+    public var title: String {
+        get { return try! element.attribute(.title)! }
+        set { try! element.setAttribute(.title, value: newValue) }
+    }
     public var rect: CGRect {
-        didSet {
-            delegate?.position.refresh()
-            delegate?.size.refresh()
+        get {
+            return CGRect(origin: try! element.attribute(.position)!,
+                          size: try! element.attribute(.size)!)
+        }
+        set {
+            try! element.setAttribute(.position, value: newValue.origin)
+            try! element.setAttribute(.size, value: newValue.size)
         }
     }
-    public var title: String {
-        didSet { delegate?.title.refresh() }
-    }
     public var isMinimized: Bool {
-        didSet { delegate?.isMinimized.refresh() }
+        get { return try! element.attribute(.minimized)! }
+        set { try! element.setAttribute(.minimized, value: newValue) }
     }
     public var isFullscreen: Bool {
-        didSet { delegate?.isFullscreen.refresh() }
+        get { return try! element.attribute(.fullScreen)! }
+        set { try! element.setAttribute(.fullScreen, value: newValue) }
     }
 
-    var delegate: TestWindowDelegate?
-
-    private(set) internal var id: Int
+    var delegate: Delegate?
 
     // TODO public?
     var isValid: Bool
@@ -134,14 +145,14 @@ public class TestWindow: TestObject {
     // that snap to certain sizes, for instance.
 
     init(parent: TestApplication) {
-        id = nextId()
+        element = TestWindowElement(forApp: parent.element)
         self.parent = parent
-        self.rect = CGRect(x: 300, y: 300, width: 600, height: 800)
-        self.title = "TestWindow"
-        self.isMinimized = false
-        self.isFullscreen = false
-
         isValid = true
+
+        title = "TestWindow"
+        rect = CGRect(x: 300, y: 300, width: 600, height: 800)
+        isMinimized = false
+        isFullscreen = false
     }
 }
 
