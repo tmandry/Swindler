@@ -9,10 +9,10 @@ class FakeSpec: QuickSpec {
     override func spec() {
         describe("FakeWindow") {
             it("works") { () -> Promise<Void> in
-                return firstly { () -> Promise<TestWindow> in
-                    let state = TestState()
-                    let app = TestApplication(parent: state)
-                    return TestWindowBuilder(parent: app)
+                return firstly { () -> Promise<FakeWindow> in
+                    let state = FakeState()
+                    let app = FakeApplication(parent: state)
+                    return FakeWindowBuilder(parent: app)
                         .setTitle("I'm a test window")
                         .setPosition(CGPoint(x: 100, y: 100))
                         .build()
