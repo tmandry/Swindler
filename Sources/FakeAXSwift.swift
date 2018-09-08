@@ -2,6 +2,8 @@
 ///
 /// This gets used both in the public testing harness and in Swindler's own tests.
 
+// TODO: Rename TestXyz classes to FakeXyz.
+
 import AXSwift
 
 class TestUIElement: UIElementType, Hashable {

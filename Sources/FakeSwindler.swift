@@ -1,7 +1,7 @@
 import AXSwift
 import PromiseKit
 
-public class TestState {
+public class FakeState {
     typealias Delegate =
         OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>;
 
@@ -17,31 +17,31 @@ public class TestState {
 }
 
 /*
-public struct TestApplicationBuilder {
-    private var app: TestApplication
+public struct FakeApplicationBuilder {
+    private var app: FakeApplication
 
-    func setProcessid(_ pid: pid_t) -> TestApplicationBuilder {
+    func setProcessid(_ pid: pid_t) -> FakeApplicationBuilder {
         app.processid = pid
         return self
     }
-    func setBundleid(_ bundleID: String?) -> TestApplicationBuilder {
+    func setBundleid(_ bundleID: String?) -> FakeApplicationBuilder {
         app.bundleid = bundleID
         return self
     }
-    func setHidden(_ hidden: Bool) -> TestApplicationBuilder { app.hidden = hidden; return self }
+    func setHidden(_ hidden: Bool) -> FakeApplicationBuilder { app.hidden = hidden; return self }
 
-    func build() -> TestApplication {
+    func build() -> FakeApplication {
         // TODO do registration, event firing
         return app
     }
 }
  */
 
-public class TestApplication {
+public class FakeApplication {
     typealias Delegate =
         OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>;
 
-    let parent: TestState
+    let parent: FakeState
 
     public var application: Application {
         get { return Application(delegate: delegate!)! }
@@ -50,14 +50,14 @@ public class TestApplication {
     fileprivate(set) var processid: pid_t
     fileprivate(set) var bundleid: String?
     fileprivate(set) var hidden: Bool
-    var mainWindow: TestWindow?
-    var focusedWindow: TestWindow?
+    var mainWindow: FakeWindow?
+    var focusedWindow: FakeWindow?
 
     let element: TestApplicationElement
 
     var delegate: Delegate!
 
-    init(parent: TestState) {
+    init(parent: FakeState) {
         self.parent = parent
         processid = 0
         hidden = false
@@ -66,46 +66,46 @@ public class TestApplication {
             axElement: element, stateDelegate: parent.delegate, notifier: parent.delegate)
     }
 
-    public func createWindow() -> TestWindowBuilder {
-        return TestWindowBuilder(parent: self)
+    public func createWindow() -> FakeWindowBuilder {
+        return FakeWindowBuilder(parent: self)
     }
 }
 
-public class TestWindowBuilder {
-    private let w: TestWindow
+public class FakeWindowBuilder {
+    private let w: FakeWindow
 
-    init(parent: TestApplication) {
-        w = TestWindow(parent: parent)
+    init(parent: FakeApplication) {
+        w = FakeWindow(parent: parent)
     }
 
-    func setTitle(_ title: String) -> TestWindowBuilder { w.title = title; return self }
-    func setRect(_ rect: CGRect) -> TestWindowBuilder { w.rect = rect; return self }
-    func setPosition(_ pos: CGPoint) -> TestWindowBuilder { w.rect.origin = pos; return self }
-    func setSize(_ size: CGSize) -> TestWindowBuilder { w.rect.size = size; return self }
-    func setMinimized(_ isMinimized: Bool = true) -> TestWindowBuilder {
+    func setTitle(_ title: String) -> FakeWindowBuilder { w.title = title; return self }
+    func setRect(_ rect: CGRect) -> FakeWindowBuilder { w.rect = rect; return self }
+    func setPosition(_ pos: CGPoint) -> FakeWindowBuilder { w.rect.origin = pos; return self }
+    func setSize(_ size: CGSize) -> FakeWindowBuilder { w.rect.size = size; return self }
+    func setMinimized(_ isMinimized: Bool = true) -> FakeWindowBuilder {
         w.isMinimized = isMinimized
         return self
     }
-    func setFullscreen(_ isFullscreen: Bool = true) -> TestWindowBuilder {
+    func setFullscreen(_ isFullscreen: Bool = true) -> FakeWindowBuilder {
         w.isFullscreen = isFullscreen
         return self
     }
 
-    func build() -> Promise<TestWindow> {
+    func build() -> Promise<FakeWindow> {
         // TODO schedule new window event
         //w.parent.delegate!...
-        return w.parent.delegate.addWindowElement(w.element).then { delegate -> TestWindow in
+        return w.parent.delegate.addWindowElement(w.element).then { delegate -> FakeWindow in
             self.w.delegate = delegate
             return self.w
         }
     }
 }
 
-public class TestWindow: TestObject {
+public class FakeWindow: TestObject {
     typealias Delegate =
         OSXWindowDelegate<TestUIElement, TestApplicationElement, FakeObserver>
 
-    public let parent: TestApplication
+    public let parent: FakeApplication
     public var window: Window {
         get { return Window(delegate: delegate!)! }
     }
@@ -144,12 +144,12 @@ public class TestWindow: TestObject {
     // This can be used to simulate non-resizable windows, or windows (like terminals)
     // that snap to certain sizes, for instance.
 
-    init(parent: TestApplication) {
+    init(parent: FakeApplication) {
         element = TestWindowElement(forApp: parent.element)
         self.parent = parent
         isValid = true
 
-        title = "TestWindow"
+        title = "FakeWindow"
         rect = CGRect(x: 300, y: 300, width: 600, height: 800)
         isMinimized = false
         isFullscreen = false
