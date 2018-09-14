@@ -3,7 +3,7 @@ import PromiseKit
 
 public class FakeState {
     typealias Delegate =
-        OSXStateDelegate<TestUIElement, TestApplicationElement, FakeObserver>;
+        OSXStateDelegate<TestUIElement, EmittingTestApplicationElement, FakeObserver>;
 
     var delegate: Delegate
     var state: State
@@ -39,7 +39,7 @@ public struct FakeApplicationBuilder {
 
 public class FakeApplication {
     typealias Delegate =
-        OSXApplicationDelegate<TestUIElement, TestApplicationElement, FakeObserver>;
+        OSXApplicationDelegate<TestUIElement, EmittingTestApplicationElement, FakeObserver>;
 
     let parent: FakeState
 
@@ -47,21 +47,47 @@ public class FakeApplication {
         get { return Application(delegate: delegate!)! }
     }
 
-    fileprivate(set) var processid: pid_t
-    fileprivate(set) var bundleid: String?
-    fileprivate(set) var hidden: Bool
-    var mainWindow: FakeWindow?
-    var focusedWindow: FakeWindow?
+    fileprivate(set) var processId: pid_t
+    fileprivate(set) var bundleId: String?
 
-    let element: TestApplicationElement
+    public var isHidden: Bool {
+        get { return try! element.attribute(.hidden)! }
+        set { try! element.setAttribute(.hidden, value: newValue) }
+    }
+    public var mainWindow: FakeWindow? {
+        get {
+            guard let windowElement: EmittingTestWindowElement =
+                      try! element.attribute(.mainWindow) else {
+                return nil
+            }
+            return (windowElement.companion) as! FakeWindow?
+        }
+        set {
+            try! element.setAttribute(.mainWindow, value: newValue?.element as Any)
+        }
+    }
+    public var focusedWindow: FakeWindow? {
+        get {
+            guard let windowElement: EmittingTestWindowElement =
+                      try! element.attribute(.focusedWindow) else {
+                return nil
+            }
+            return (windowElement.companion) as! FakeWindow?
+        }
+        set {
+            try! element.setAttribute(.focusedWindow, value: newValue?.element as Any)
+        }
+    }
+
+    let element: EmittingTestApplicationElement
 
     var delegate: Delegate!
 
     init(parent: FakeState) {
         self.parent = parent
-        processid = 0
-        hidden = false
-        element = TestApplicationElement()
+        processId = 0
+        element = EmittingTestApplicationElement()
+        isHidden = false
         delegate = try! Delegate(
             axElement: element, stateDelegate: parent.delegate, notifier: parent.delegate)
     }
@@ -103,7 +129,7 @@ public class FakeWindowBuilder {
 
 public class FakeWindow: TestObject {
     typealias Delegate =
-        OSXWindowDelegate<TestUIElement, TestApplicationElement, FakeObserver>
+        OSXWindowDelegate<TestUIElement, EmittingTestApplicationElement, FakeObserver>
 
     public let parent: FakeApplication
     public var window: Window {
@@ -149,12 +175,19 @@ public class FakeWindow: TestObject {
         self.parent = parent
         isValid = true
 
+        element.companion = self
+
         title = "FakeWindow"
         rect = CGRect(x: 300, y: 300, width: 600, height: 800)
         isMinimized = false
         isFullscreen = false
     }
 }
+
+public func ==(lhs: FakeWindow, rhs: FakeWindow) -> Bool {
+    return lhs.element == rhs.element
+}
+extension FakeWindow: Equatable {}
 
 protocol TestObject: class {
     var isValid: Bool { get }

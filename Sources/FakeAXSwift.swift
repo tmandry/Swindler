@@ -93,6 +93,9 @@ class TestApplicationElementBase: TestUIElement {
         set { attrs[.windows] = newValue }
     }
 }
+
+// ApplicationElementType requires static func all() -> [Self], which must be handled in each
+// (final) leaf class.
 final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
     init() { super.init(processID: nil) }
     init?(forProcessID processID: pid_t) {
@@ -103,6 +106,55 @@ final class TestApplicationElement: TestApplicationElementBase, ApplicationEleme
     }
     static var allApps: [TestApplicationElement] = []
     static func all() -> [TestApplicationElement] { return TestApplicationElement.allApps }
+}
+
+final class EmittingTestApplicationElement: TestApplicationElementBase, ApplicationElementType {
+    init() {
+        observers = []
+        super.init(processID: nil)
+    }
+    init?(forProcessID processID: pid_t) {
+        observers = []
+        let apps = EmittingTestApplicationElement.all()
+        guard let _ = apps.first(where: {$0.processID == processID}) else {
+            return nil
+        }
+        super.init(processID: processID)
+    }
+    static var allApps: [EmittingTestApplicationElement] = []
+    static func all() -> [EmittingTestApplicationElement] {
+        return EmittingTestApplicationElement.allApps
+    }
+
+    override func setAttribute(_ attribute: Attribute, value: Any) throws {
+        try super.setAttribute(attribute, value: value)
+        let notification = { () -> AXNotification? in
+            switch attribute {
+            case .mainWindow:
+                return .mainWindowChanged
+            case .focusedWindow:
+                return .focusedWindowChanged
+            case .hidden:
+                return (value as? Bool == true) ? .applicationHidden : .applicationShown
+            default:
+                return nil
+            }
+        }()
+        if let notification = notification {
+            for observer in observers {
+                observer.unbox?.emit(notification, forElement: self)
+            }
+        }
+    }
+
+    private var observers: [WeakBox<FakeObserver>]
+
+    override func addObserver(_ observer: FakeObserver) {
+        observers.append(WeakBox(observer))
+    }
+
+    // Useful hack to store companion objects (like FakeWindow).
+    weak var companion: AnyObject?
 }
 
 class TestWindowElement: TestUIElement {
@@ -135,7 +187,6 @@ class TestWindowElement: TestUIElement {
 
 class EmittingTestWindowElement: TestWindowElement {
     override init(forApp app: TestApplicationElementBase) {
-        print("hello world")
         observers = []
         super.init(forApp: app)
     }
@@ -166,6 +217,9 @@ class EmittingTestWindowElement: TestWindowElement {
     override func addObserver(_ observer: FakeObserver) {
         observers.append(WeakBox(observer))
     }
+
+    // Useful hack to store companion objects (like FakeWindow).
+    weak var companion: AnyObject?
 }
 
 class FakeObserver: ObserverType {
@@ -179,7 +233,6 @@ class FakeObserver: ObserverType {
     //static var observers: [FakeObserverBase] = []
 
     required init(processID: pid_t, callback: @escaping Callback) throws {
-        print("FakeObserver")
         self.callback = callback
         //try ObserverType.init(processID: processID, callback: callback)
         FakeObserver.observers.append(self)

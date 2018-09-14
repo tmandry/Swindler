@@ -4,7 +4,7 @@ import PromiseKit
 // MARK: - Window
 
 /// A window.
-public final class Window: Equatable {
+public final class Window {
     internal let delegate: WindowDelegate
 
     // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.
@@ -69,9 +69,11 @@ public final class Window: Equatable {
     /// Whether the window is fullscreen or not.
     public var isFullscreen: WriteableProperty<OfType<Bool>> { return delegate.isFullscreen }
 }
+
 public func ==(lhs: Window, rhs: Window) -> Bool {
     return lhs.delegate.equalTo(rhs.delegate)
 }
+extension Window: Equatable {}
 
 protocol WindowDelegate: class {
     var isValid: Bool { get }
