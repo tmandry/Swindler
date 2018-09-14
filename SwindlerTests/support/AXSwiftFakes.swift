@@ -18,7 +18,7 @@ class TestObserver: ObserverType {
 /// Allows defining adversarial actions when a property is observed.
 final class AdversaryObserver: FakeObserver {
     static var onNotification: AXNotification?
-    static var handler: Optional < (AdversaryObserver) -> Void> = nil
+    static var handler: Optional<(AdversaryObserver) -> Void> = nil
 
     /// Call this in beforeEach for any tests that use this class.
     static func reset() {
