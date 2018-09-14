@@ -110,7 +110,7 @@ public class FakeWindow: TestObject {
         get { return Window(delegate: delegate!)! }
     }
 
-    let element: TestWindowElement
+    let element: EmittingTestWindowElement
 
     public var title: String {
         get { return try! element.attribute(.title)! }
@@ -145,7 +145,7 @@ public class FakeWindow: TestObject {
     // that snap to certain sizes, for instance.
 
     init(parent: FakeApplication) {
-        element = TestWindowElement(forApp: parent.element)
+        element = EmittingTestWindowElement(forApp: parent.element)
         self.parent = parent
         isValid = true
 

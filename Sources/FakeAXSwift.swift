@@ -51,6 +51,8 @@ class TestUIElement: UIElementType, Hashable {
         attrs[attribute] = value
     }
 
+    func addObserver(_: FakeObserver) { }
+
     var inspect: String {
         let role = attrs[.role] ?? "UIElement"
         return "\(role) (id \(id))"
@@ -124,11 +126,45 @@ class TestWindowElement: TestUIElement {
         if attribute == .main {
             // Setting .main to false does nothing.
             guard value as! Bool == true else { return }
-
-            app.attrs[.mainWindow] = self
+            try app.setAttribute(.mainWindow, value: self)
         }
 
         try super.setAttribute(attribute, value: value)
+    }
+}
+
+class EmittingTestWindowElement: TestWindowElement {
+    override init(forApp app: TestApplicationElementBase) {
+        print("hello world")
+        observers = []
+        super.init(forApp: app)
+    }
+
+    override func setAttribute(_ attribute: Attribute, value: Any) throws {
+        try super.setAttribute(attribute, value: value)
+        let notification = { () -> AXNotification? in
+            switch attribute {
+            case .position:   return .moved
+            case .size:       return .resized
+            case .fullScreen: return .resized
+            case .title:      return .titleChanged
+            case .minimized:
+                return (value as? Bool == true) ? .windowDeminiaturized : .windowMiniaturized
+            default:
+                return nil
+            }
+        }()
+        if let notification = notification {
+            for observer in observers {
+                observer.unbox?.emit(notification, forElement: self)
+            }
+        }
+    }
+
+    private var observers: [WeakBox<FakeObserver>]
+
+    override func addObserver(_ observer: FakeObserver) {
+        observers.append(WeakBox(observer))
     }
 }
 
@@ -143,6 +179,7 @@ class FakeObserver: ObserverType {
     //static var observers: [FakeObserverBase] = []
 
     required init(processID: pid_t, callback: @escaping Callback) throws {
+        print("FakeObserver")
         self.callback = callback
         //try ObserverType.init(processID: processID, callback: callback)
         FakeObserver.observers.append(self)
@@ -156,6 +193,7 @@ class FakeObserver: ObserverType {
             watchedElements[element] = []
         }
         watchedElements[element]!.append(notification)
+        element.addObserver(self)
     }
 
     func removeNotification(_ notification: AXNotification,
@@ -188,7 +226,9 @@ class FakeObserver: ObserverType {
                 passedElement: TestUIElement) {
         let watched = watchedElements[watchedElement] ?? []
         if watched.contains(notification) {
-            callback(self, passedElement, notification)
+            performOnMainThread {
+                callback(self, passedElement, notification)
+            }
         }
     }
 }
@@ -226,5 +266,23 @@ class FakeApplicationObserver: ApplicationObserverType {
     }
     fileprivate func terminate(_ pid: pid_t) {
         terminateHandlers.forEach { $0(pid) }
+    }
+}
+
+final private class WeakBox<A: AnyObject> {
+    weak var unbox: A?
+    init(_ value: A) {
+        unbox = value
+    }
+}
+
+/// Performs the given action on the main thread, synchronously, regardless of the current thread.
+private func performOnMainThread(_ action: () -> Void) {
+    if Thread.current.isMainThread {
+        action()
+    } else {
+        DispatchQueue.main.sync {
+            action()
+        }
     }
 }
