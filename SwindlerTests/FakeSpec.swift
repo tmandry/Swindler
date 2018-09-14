@@ -8,29 +8,9 @@ import PromiseKit
 class FakeSpec: QuickSpec {
     override func spec() {
         describe("FakeWindow") {
-            it("sees changes from Swindler") { () -> Promise<Void> in
-                return firstly { () -> Promise<FakeWindow> in
-                    let state = FakeState()
-                    let app = FakeApplication(parent: state)
-                    return FakeWindowBuilder(parent: app)
-                        .setTitle("I'm a test window")
-                        .setPosition(CGPoint(x: 100, y: 100))
-                        .build()
-                }.then { tw in
-                    expect(tw.title).to(equal("I'm a test window"))
-                    expect(tw.window.title.value).to(equal("I'm a test window"))
-                    //expect(tw.rect).to(equal(CGRect(x: 100, y: 100, width: 600, height: 800)))
-                    expect(try? tw.element.attribute(.position)).to(equal(CGPoint(x:
-                        100, y: 100)))
+            var fake: FakeWindow!
 
-                    return tw.window.position.set(CGPoint(x: 99, y: 100)).then { _ in
-                        expect(tw.rect.origin).to(equal(CGPoint(x: 99, y: 100)))
-                    }
-                }
-            }
-
-            it("publishes changes to Swindler") {
-                var fake: FakeWindow!
+            beforeEach {
                 waitUntil { done in
                     firstly { () -> Promise<FakeWindow> in
                         let state = FakeState()
@@ -44,10 +24,51 @@ class FakeSpec: QuickSpec {
                         done()
                     }.always {}
                 }
-                fake.rect.origin = CGPoint(x: 200, y: 200)
-                fake.title       = "My title changes"
-                expect(fake.window.position.value).toEventually(equal(CGPoint(x: 200, y: 200)))
+            }
+
+            it("builds with the requested properties") {
+                expect(fake.title).to(equal("I'm a test window"))
+                expect(fake.rect.origin).to(equal(CGPoint(x: 100, y: 100)))
+                expect(fake.window.title.value).to(equal("I'm a test window"))
+                expect(fake.window.position.value).to(equal(CGPoint(x: 100, y: 100)))
+
+                expect(fake.isMinimized).to(beFalse())
+                expect(fake.isFullscreen).to(beFalse())
+            }
+
+            it("sees changes from Swindler") {
+                fake.window.position.value = CGPoint(x: 99, y: 100)
+                expect(fake.rect.origin).toEventually(equal(CGPoint(x: 99, y: 100)))
+
+                fake.window.size.value = CGSize(width: 1111, height: 2222)
+                expect(fake.rect.size).toEventually(equal(CGSize(width: 1111, height: 2222)))
+
+                fake.window.isMinimized.value = true
+                expect(fake.isMinimized).toEventually(beTrue())
+                fake.window.isMinimized.value = false
+                expect(fake.isMinimized).toEventually(beFalse())
+
+                fake.window.isFullscreen.value = true
+                expect(fake.isFullscreen).toEventually(beTrue())
+            }
+
+            it("publishes changes to Swindler") {
+                fake.title = "My title changes"
                 expect(fake.window.title.value).toEventually(equal("My title changes"))
+
+                fake.rect.origin = CGPoint(x: 200, y: 200)
+                expect(fake.window.position.value).toEventually(equal(CGPoint(x: 200, y: 200)))
+
+                fake.rect.size = CGSize(width: 3333, height: 4444)
+                expect(fake.window.size.value).toEventually(equal(CGSize(width: 3333, height: 4444)))
+
+                fake.isMinimized = true
+                expect(fake.window.isMinimized.value).toEventually(beTrue())
+                fake.isMinimized = false
+                expect(fake.window.isMinimized.value).toEventually(beFalse())
+
+                fake.isFullscreen = true
+                expect(fake.window.isFullscreen.value).toEventually(beTrue())
             }
         }
 
