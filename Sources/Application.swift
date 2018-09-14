@@ -4,7 +4,7 @@ import PromiseKit
 // MARK: - Application
 
 /// A running application.
-public final class Application: Equatable {
+public final class Application {
     internal let delegate: ApplicationDelegate
 
     // An Application holds a strong reference to the State (and therefore the StateDelegate).
@@ -54,9 +54,11 @@ public final class Application: Equatable {
     /// Whether the application is hidden.
     public var isHidden: WriteableProperty<OfType<Bool>> { return delegate.isHidden }
 }
+
 public func ==(lhs: Application, rhs: Application) -> Bool {
     return lhs.delegate.equalTo(rhs.delegate)
 }
+extension Application: Equatable {}
 
 protocol ApplicationDelegate: class {
     var processIdentifier: pid_t! { get }

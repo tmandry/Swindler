@@ -52,8 +52,56 @@ class FakeSpec: QuickSpec {
         }
 
         describe("FakeApplication") {
-            it("works") {
-                // TODO
+            var fakeApp: FakeApplication!
+            var fakeWindow1: FakeWindow!
+            var fakeWindow2: FakeWindow!
+
+            beforeEach {
+                waitUntil { done in
+                    firstly { () -> Promise<(FakeWindow, FakeWindow)> in
+                        let state = FakeState()
+                        fakeApp = FakeApplication(parent: state)
+                        return when(fulfilled:
+                            FakeWindowBuilder(parent: fakeApp).build(),
+                            FakeWindowBuilder(parent: fakeApp).build()
+                        )
+                    }.then { (fw1, fw2) -> () in
+                        fakeWindow1 = fw1
+                        fakeWindow2 = fw2
+                        done()
+                    }.always {}
+                }
+            }
+
+            it("sees changes from Swindler") {
+                fakeApp.application.mainWindow.value = fakeWindow1.window
+                expect(fakeApp.mainWindow).toEventually(equal(fakeWindow1))
+                fakeApp.application.mainWindow.value = fakeWindow2.window
+                expect(fakeApp.mainWindow).toEventually(equal(fakeWindow2))
+
+                assert(fakeApp.isHidden == false)
+                fakeApp.application.isHidden.value = true
+                expect(fakeApp.isHidden).toEventually(equal(true))
+            }
+
+            it("publishes changes to Swindler") {
+                fakeApp.mainWindow = fakeWindow1
+                expect(fakeApp.application.mainWindow.value).toEventually(equal(fakeWindow1.window))
+                fakeApp.mainWindow = fakeWindow2
+                expect(fakeApp.application.mainWindow.value).toEventually(equal(fakeWindow2.window))
+
+                fakeApp.focusedWindow = fakeWindow1
+                expect(
+                    fakeApp.application.focusedWindow.value
+                ).toEventually(equal(fakeWindow1.window))
+                fakeApp.focusedWindow = fakeWindow2
+                expect(
+                    fakeApp.application.focusedWindow.value
+                ).toEventually(equal(fakeWindow2.window))
+
+                assert(fakeApp.application.isHidden.value == false)
+                fakeApp.isHidden = true
+                expect(fakeApp.application.isHidden.value).toEventually(equal(true))
             }
         }
     }
