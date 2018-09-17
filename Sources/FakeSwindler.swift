@@ -9,7 +9,7 @@ public class FakeState {
     var state: State
     var appObserver: FakeApplicationObserver
 
-    init() {
+    public init() {
         appObserver = FakeApplicationObserver()
         delegate = Delegate(appObserver: appObserver)
         state = State(delegate: delegate)
@@ -83,7 +83,7 @@ public class FakeApplication {
 
     var delegate: Delegate!
 
-    init(parent: FakeState) {
+    public init(parent: FakeState) {
         self.parent = parent
         processId = 0
         element = EmittingTestApplicationElement()
@@ -100,24 +100,24 @@ public class FakeApplication {
 public class FakeWindowBuilder {
     private let w: FakeWindow
 
-    init(parent: FakeApplication) {
+    public init(parent: FakeApplication) {
         w = FakeWindow(parent: parent)
     }
 
-    func setTitle(_ title: String) -> FakeWindowBuilder { w.title = title; return self }
-    func setRect(_ rect: CGRect) -> FakeWindowBuilder { w.rect = rect; return self }
-    func setPosition(_ pos: CGPoint) -> FakeWindowBuilder { w.rect.origin = pos; return self }
-    func setSize(_ size: CGSize) -> FakeWindowBuilder { w.rect.size = size; return self }
-    func setMinimized(_ isMinimized: Bool = true) -> FakeWindowBuilder {
+    public func setTitle(_ title: String) -> FakeWindowBuilder { w.title = title; return self }
+    public func setRect(_ rect: CGRect) -> FakeWindowBuilder { w.rect = rect; return self }
+    public func setPosition(_ pos: CGPoint) -> FakeWindowBuilder { w.rect.origin = pos; return self }
+    public func setSize(_ size: CGSize) -> FakeWindowBuilder { w.rect.size = size; return self }
+    public func setMinimized(_ isMinimized: Bool = true) -> FakeWindowBuilder {
         w.isMinimized = isMinimized
         return self
     }
-    func setFullscreen(_ isFullscreen: Bool = true) -> FakeWindowBuilder {
+    public func setFullscreen(_ isFullscreen: Bool = true) -> FakeWindowBuilder {
         w.isFullscreen = isFullscreen
         return self
     }
 
-    func build() -> Promise<FakeWindow> {
+    public func build() -> Promise<FakeWindow> {
         // TODO schedule new window event
         //w.parent.delegate!...
         return w.parent.delegate.addWindowElement(w.element).then { delegate -> FakeWindow in
