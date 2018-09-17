@@ -189,6 +189,33 @@ public func ==(lhs: FakeWindow, rhs: FakeWindow) -> Bool {
 }
 extension FakeWindow: Equatable {}
 
+public class FakeScreen {
+    public var screen: Screen {
+        get {
+            return Screen(delegate: delegate)
+        }
+    }
+
+    public init(frame: CGRect, applicationFrame: CGRect) {
+        delegate = FakeScreenDelegate(frame: frame, applicationFrame: applicationFrame)
+    }
+    public convenience init(frame: CGRect, menuBarHeight: Int, dockHeight: Int) {
+        let af = CGRect(x: frame.origin.x,
+                        y: frame.origin.y + CGFloat(menuBarHeight),
+                        width: frame.width,
+                        height: frame.height - CGFloat(menuBarHeight + dockHeight))
+        self.init(frame: frame, applicationFrame: af)
+    }
+    public convenience init(frame: CGRect) {
+        self.init(frame: frame, menuBarHeight: 10, dockHeight: 50)
+    }
+    public convenience init() {
+        self.init(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080))
+    }
+
+    let delegate: FakeScreenDelegate
+}
+
 protocol TestObject: class {
     var isValid: Bool { get }
 }

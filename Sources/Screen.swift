@@ -30,6 +30,22 @@ protocol ScreenDelegate: class, CustomDebugStringConvertible {
     func equalTo(_ other: ScreenDelegate) -> Bool
 }
 
+class FakeScreenDelegate: ScreenDelegate {
+    let frame: CGRect
+    let applicationFrame: CGRect
+
+    init(frame: CGRect, applicationFrame: CGRect) {
+        self.frame = frame
+        self.applicationFrame = applicationFrame
+    }
+
+    func equalTo(_ other: ScreenDelegate) -> Bool { return false }
+
+    var debugDescription: String {
+        return "FakeScreen(frame: \(frame), applicationFrame: \(applicationFrame))"
+    }
+}
+
 // MARK: - OSXScreenDelegate
 
 protocol NSScreenType {
