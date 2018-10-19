@@ -75,6 +75,23 @@ public func ==(lhs: Window, rhs: Window) -> Bool {
 }
 extension Window: Equatable {}
 
+extension Window: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        return "Window(\"\(title.value.truncate(length: 30))\")"
+        //+ "app=\(application.bundleIdentifier ?? "<unknown>"))"
+    }
+}
+
+extension String {
+    func truncate(length: Int, trailing: String = "…") -> String {
+        if self.count > length {
+            return String(self.prefix(length)) + trailing
+        } else {
+            return self
+        }
+    }
+}
+
 protocol WindowDelegate: class {
     var isValid: Bool { get }
 
