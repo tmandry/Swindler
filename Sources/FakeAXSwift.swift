@@ -244,9 +244,9 @@ class FakeObserver: ObserverType {
 
         if watchedElements[element] == nil {
             watchedElements[element] = []
+            element.addObserver(self)
         }
         watchedElements[element]!.append(notification)
-        element.addObserver(self)
     }
 
     func removeNotification(_ notification: AXNotification,
