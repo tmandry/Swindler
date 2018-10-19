@@ -190,6 +190,12 @@ public func ==(lhs: FakeWindow, rhs: FakeWindow) -> Bool {
 }
 extension FakeWindow: Equatable {}
 
+extension FakeWindow: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        return "FakeWindow(\"\(title.truncate(length: 30))\")"
+    }
+}
+
 public class FakeScreen {
     public var screen: Screen {
         get {
