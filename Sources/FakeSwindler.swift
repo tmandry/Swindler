@@ -1,3 +1,14 @@
+/// Experimental fake implementation of Swindler for testing code that uses
+/// Swindler.
+///
+/// Each Swindler object has (or will have) a corresponding Fake class that
+/// allows you to create the objects and control them. Changes made to Fake
+/// objects appear to ordinary code as coming from the operating system.
+///
+/// This is currenty an experimental API, and may change a lot.
+
+// TODO: Document API
+
 import AXSwift
 import PromiseKit
 
