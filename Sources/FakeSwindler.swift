@@ -5,8 +5,9 @@ public class FakeState {
     typealias Delegate =
         OSXStateDelegate<TestUIElement, EmittingTestApplicationElement, FakeObserver>;
 
+    public var state: State
+
     var delegate: Delegate
-    var state: State
     var appObserver: FakeApplicationObserver
 
     public init() {
