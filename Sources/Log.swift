@@ -63,6 +63,7 @@ struct Log {
         case blue = 34
         case purple = 35
         case cyan = 36
+        case gray = 37
     }
 
     // Log on the given log level, using the given color if XcodeColors is enabled.

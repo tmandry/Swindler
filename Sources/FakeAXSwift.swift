@@ -185,6 +185,13 @@ class TestWindowElement: TestUIElement {
     }
 }
 
+extension TestWindowElement: CustomDebugStringConvertible {
+    var debugDescription: String {
+        let title = self.attrs[.title].map{"\"\($0)\""}
+        return "TestWindowElement(\(title ?? "<none>"))"
+    }
+}
+
 class EmittingTestWindowElement: TestWindowElement {
     override init(forApp app: TestApplicationElementBase) {
         observers = []
