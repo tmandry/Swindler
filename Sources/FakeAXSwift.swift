@@ -86,6 +86,13 @@ class TestApplicationElementBase: TestUIElement {
         }
 
         try super.setAttribute(attribute, value: value)
+
+        // Propagate .mainWindow changes to .focusedWindow also.
+        // This is what happens 99% of the time, but it is still possible to set
+        // .focusedWindow only.
+        if attribute == .mainWindow {
+            try self.setAttribute(.focusedWindow, value: value)
+        }
     }
 
     internal var windows: [TestUIElement] {
