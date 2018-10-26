@@ -66,9 +66,12 @@ class TestApplicationElementBase: TestUIElement {
     typealias UIElementType = TestUIElement
     var toElement: TestUIElement { return self }
 
-    init(processID: pid_t?) {
+    init(processID: pid_t?, id: Int? = nil) {
         super.init()
-        self.processID = processID ?? Int32(id)
+        if let id = id {
+            self.id = id
+        }
+        self.processID = processID ?? Int32(self.id)
         attrs[.role] = AXSwift.Role.application.rawValue
         attrs[.windows] = Array<TestUIElement>()
         attrs[.frontmost] = false
@@ -118,15 +121,19 @@ final class TestApplicationElement: TestApplicationElementBase, ApplicationEleme
 final class EmittingTestApplicationElement: TestApplicationElementBase, ApplicationElementType {
     init() {
         observers = []
-        super.init(processID: nil)
+        super.init(processID: EmittingTestApplicationElement.nextPID)
+        EmittingTestApplicationElement.nextPID += 1
+        EmittingTestApplicationElement.allApps.append(self)
     }
+    static var nextPID: pid_t = 1
+
     init?(forProcessID processID: pid_t) {
         observers = []
         let apps = EmittingTestApplicationElement.all()
-        guard let _ = apps.first(where: {$0.processID == processID}) else {
+        guard let other = apps.first(where: {$0.processID == processID}) else {
             return nil
         }
-        super.init(processID: processID)
+        super.init(processID: processID, id: other.id)
     }
     static var allApps: [EmittingTestApplicationElement] = []
     static func all() -> [EmittingTestApplicationElement] {
@@ -160,7 +167,7 @@ final class EmittingTestApplicationElement: TestApplicationElementBase, Applicat
         observers.append(WeakBox(observer))
     }
 
-    // Useful hack to store companion objects (like FakeWindow).
+    // Useful hack to store companion objects (like FakeApplication).
     weak var companion: AnyObject?
 }
 
@@ -323,15 +330,17 @@ class FakeApplicationObserver: ApplicationObserverType {
     func makeApplicationFrontmost(_ pid: pid_t) throws {
         setFrontmost(pid)
     }
+}
 
-    fileprivate func setFrontmost(_ pid: pid_t?) {
+extension FakeApplicationObserver {
+    func setFrontmost(_ pid: pid_t?) {
         frontmost_ = pid
         frontmostHandlers.forEach { $0() }
     }
-    fileprivate func launch(_ pid: pid_t) {
+    func launch(_ pid: pid_t) {
         launchHandlers.forEach { $0(pid) }
     }
-    fileprivate func terminate(_ pid: pid_t) {
+    func terminate(_ pid: pid_t) {
         terminateHandlers.forEach { $0(pid) }
     }
 }
