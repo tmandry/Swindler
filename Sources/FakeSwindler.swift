@@ -16,7 +16,7 @@ fileprivate typealias AppElement = EmittingTestApplicationElement
 
 public class FakeState {
     fileprivate typealias Delegate =
-        OSXStateDelegate<TestUIElement, AppElement, FakeObserver>;
+        OSXStateDelegate<TestUIElement, AppElement, FakeObserver>
 
     public var state: State
 
@@ -29,9 +29,11 @@ public class FakeState {
     fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
 
-    public init() {
+    public init(screens: [FakeScreen] = [FakeScreen()]) {
+        let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+
         appObserver = FakeApplicationObserver()
-        delegate = Delegate(appObserver: appObserver)
+        delegate = Delegate(appObserver: appObserver, screens: screens)
         state = State(delegate: delegate)
     }
 }

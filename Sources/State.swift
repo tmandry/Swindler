@@ -4,7 +4,8 @@ import PromiseKit
 /// The global Swindler state, lazily initialized.
 public var state = State(
     delegate: OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>(
-        appObserver: ApplicationObserver()
+        appObserver: ApplicationObserver(),
+        screens: OSXSystemScreenDelegate()
     )
 )
 
@@ -195,9 +196,9 @@ final class OSXStateDelegate<
     // TODO: retry instead of ignoring an app/window when timeouts are encountered during
     // initialization?
 
-    init(appObserver: ApplicationObserverType) {
+    init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens: S) {
         log.debug("Initializing Swindler")
-        screens = NSScreen.screens.map { OSXScreenDelegate(nsScreen: $0) }
+        self.screens = screens.createForAll().map{ $0 as ScreenDelegate }
 
         //    screenObserver.onScreenLayoutChanged {
         //      let (screens, event) = OSXScreenDelegate<NSScreen>.handleScreenChange(

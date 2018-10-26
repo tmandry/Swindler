@@ -23,6 +23,11 @@ public func ==(lhs: Screen, rhs: Screen) -> Bool {
     return lhs.delegate.equalTo(rhs.delegate)
 }
 
+protocol SystemScreenDelegate {
+    associatedtype Delegate: ScreenDelegate
+    func createForAll() -> [Delegate]
+}
+
 protocol ScreenDelegate: class, CustomDebugStringConvertible {
     var frame: CGRect { get }
     var applicationFrame: CGRect { get }
@@ -30,7 +35,15 @@ protocol ScreenDelegate: class, CustomDebugStringConvertible {
     func equalTo(_ other: ScreenDelegate) -> Bool
 }
 
-class FakeScreenDelegate: ScreenDelegate {
+struct FakeSystemScreenDelegate: SystemScreenDelegate {
+    typealias Delegate = FakeScreenDelegate
+    var screens: [Delegate]
+    func createForAll() -> [Delegate] {
+        return screens
+    }
+}
+
+final class FakeScreenDelegate: ScreenDelegate {
     let frame: CGRect
     let applicationFrame: CGRect
 
@@ -68,6 +81,13 @@ extension NSScreen: NSScreenType {
             return "Unnamed screen"
         }
         return name
+    }
+}
+
+struct OSXSystemScreenDelegate: SystemScreenDelegate {
+    typealias ScreenDelegate = OSXScreenDelegate<NSScreen>
+    func createForAll() -> [ScreenDelegate] {
+        return NSScreen.screens.map{ OSXScreenDelegate(nsScreen: $0) }
     }
 }
 
