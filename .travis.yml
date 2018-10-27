@@ -1,7 +1,6 @@
 language: objective-c
 cache: cocoapods
-#before_install:
-#- pod repo --silent update
+install: pod install || pod install --repo-update
 
 xcode_workspace: Swindler.xcworkspace
 xcode_scheme: Swindler
