@@ -218,9 +218,7 @@ final class OSXWindowDelegate<
             }
         }
 
-        initialized =
-            when(fulfilled: initializeProperties(axProperties, ofElement: axElement).asVoid(),
-                 subroleChecked)
+        initialized = when(fulfilled: initializeProperties(axProperties).asVoid(), subroleChecked)
     }
 
     private func watchWindowElement(_ element: UIElement,

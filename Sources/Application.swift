@@ -135,8 +135,8 @@ final class OSXApplicationDelegate<
     }
 
     init(axElement: ApplicationElement,
-                     stateDelegate: StateDelegate,
-                     notifier: EventNotifier) throws {
+         stateDelegate: StateDelegate,
+         notifier: EventNotifier) throws {
         // TODO: filter out applications by activation policy
         self.axElement = axElement.toElement
         self.stateDelegate = stateDelegate
@@ -205,7 +205,7 @@ final class OSXApplicationDelegate<
                         fulfill: fulfillAttrs,
                         reject: rejectAttrs)
 
-        initialized = initializeProperties(properties, ofElement: axElement).asVoid()
+        initialized = initializeProperties(properties).asVoid()
     }
 
     /// Called during initialization to set up an observer on the application element.

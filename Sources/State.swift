@@ -2,12 +2,14 @@ import AXSwift
 import PromiseKit
 
 /// The global Swindler state, lazily initialized.
-public var state = State(
-    delegate: OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>(
+public func initialize() -> Promise<State> {
+    return OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>.initialize(
         appObserver: ApplicationObserver(),
         screens: OSXSystemScreenDelegate()
-    )
-)
+    ).then { delegate in
+       return State(delegate: delegate)
+    }
+}
 
 // MARK: - State
 
@@ -193,9 +195,22 @@ final class OSXStateDelegate<
     }
     var screens: [ScreenDelegate]
 
+    fileprivate var initialized: Promise<Void>!
+
     // TODO: retry instead of ignoring an app/window when timeouts are encountered during
     // initialization?
 
+    static func initialize<S: SystemScreenDelegate>(
+        appObserver: ApplicationObserverType,
+        screens: S
+    ) -> Promise<OSXStateDelegate> {
+        return firstly {
+            let delegate = OSXStateDelegate(appObserver: appObserver, screens: screens)
+            return delegate.initialized.then { delegate }
+        }
+    }
+
+    // TODO make private
     init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens: S) {
         log.debug("Initializing Swindler")
         self.screens = screens.createForAll().map{ $0 as ScreenDelegate }
@@ -227,6 +242,9 @@ final class OSXStateDelegate<
             withEvent: FrontmostApplicationChangedEvent.self,
             receivingObject: State.self,
             notifier: self)
+        let properties: [PropertyType] = [
+            frontmostApplication
+        ]
 
         // Must add the observer after configuring frontmostApplication.
         appObserver.onFrontmostApplicationChanged(frontmostApplication.issueRefresh)
@@ -240,10 +258,12 @@ final class OSXStateDelegate<
             .catch(execute: propertyInitError)
 
         frontmostApplication.initialized.catch { error in
-            log.error("Caught error: \(error)")
+            log.error("Caught error initializing frontmostApplication: \(error)")
         }.always {
             log.debug("Done initializing")
         }
+
+        initialized = initializeProperties(properties).asVoid()
     }
 
     func watchApplication(appElement: ApplicationElement) -> Promise<AppDelegate> {
