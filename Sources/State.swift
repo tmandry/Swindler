@@ -138,9 +138,15 @@ struct ApplicationObserver: ApplicationObserverType {
 
     func makeApplicationFrontmost(_ pid: pid_t) throws {
         guard let app = NSRunningApplication(processIdentifier: pid) else {
+            log.info("Could not find requested application to make frontmost with pid \(pid)")
             throw OSXDriverError.runningApplicationNotFound(processID: pid)
         }
-        app.activate(options: [])
+        let success = try traceRequest(app, "activate", "") {
+            app.activate(options: [NSApplication.ActivationOptions.activateIgnoringOtherApps])
+        }
+        if !success {
+            log.debug("Failed to activate application \(app), it probably quit")
+        }
     }
 }
 
