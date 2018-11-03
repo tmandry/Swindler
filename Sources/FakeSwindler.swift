@@ -18,23 +18,39 @@ public class FakeState {
     fileprivate typealias Delegate =
         OSXStateDelegate<TestUIElement, AppElement, FakeObserver>
 
+    public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
+        return firstly { () -> (Promise<Delegate>, Promise<FakeApplicationObserver>) in
+            let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+            let appObserver = FakeApplicationObserver()
+            return (Delegate.initialize(appObserver: appObserver, screens: screens),
+                    Promise(value: appObserver))
+        }.then { data in
+            return FakeState(data.0, data.1)
+        }
+    }
+
     public var state: State
 
     public var frontmostApplication: FakeApplication? {
-        didSet {
-            appObserver.setFrontmost(frontmostApplication?.processId)
+        get {
+            guard let pid = appObserver.frontmostApplicationPID else { return nil }
+            guard let elem = try! AppElement.all().first(where: { try $0.pid() == pid }) else {
+                return nil
+            }
+            return Optional(elem.companion as! FakeApplication)
+        }
+        set {
+            appObserver.setFrontmost(newValue?.processId)
         }
     }
 
     fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
 
-    public init(screens: [FakeScreen] = [FakeScreen()]) {
-        let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
-
-        appObserver = FakeApplicationObserver()
-        delegate = Delegate(appObserver: appObserver, screens: screens)
-        state = State(delegate: delegate)
+    private init(_ delegate: Delegate, _ appObserver: FakeApplicationObserver) {
+        self.state = State(delegate: delegate)
+        self.delegate = delegate
+        self.appObserver = appObserver
     }
 }
 
@@ -113,6 +129,7 @@ public class FakeApplication {
         delegate = try! Delegate(
             axElement: element, stateDelegate: parent.delegate, notifier: parent.delegate)
 
+        element.companion = self
         parent.appObserver.launch(processId)
     }
 
@@ -120,6 +137,11 @@ public class FakeApplication {
         return FakeWindowBuilder(parent: self)
     }
 }
+
+public func ==(lhs: FakeApplication, rhs: FakeApplication) -> Bool {
+    return lhs.element == rhs.element
+}
+extension FakeApplication: Equatable {}
 
 public class FakeWindowBuilder {
     private let w: FakeWindow
