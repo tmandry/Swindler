@@ -24,8 +24,8 @@ public func ==(lhs: Screen, rhs: Screen) -> Bool {
 }
 
 protocol SystemScreenDelegate {
-    associatedtype Delegate: ScreenDelegate
-    func createForAll() -> [Delegate]
+    var screens: [ScreenDelegate] { get }
+    func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void)
 }
 
 protocol ScreenDelegate: class, CustomDebugStringConvertible {
@@ -37,10 +37,8 @@ protocol ScreenDelegate: class, CustomDebugStringConvertible {
 
 struct FakeSystemScreenDelegate: SystemScreenDelegate {
     typealias Delegate = FakeScreenDelegate
-    var screens: [Delegate]
-    func createForAll() -> [Delegate] {
-        return screens
-    }
+    var screens: [ScreenDelegate]
+    func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void) {}
 }
 
 final class FakeScreenDelegate: ScreenDelegate {
@@ -84,11 +82,89 @@ extension NSScreen: NSScreenType {
     }
 }
 
-struct OSXSystemScreenDelegate: SystemScreenDelegate {
-    typealias ScreenDelegate = OSXScreenDelegate<NSScreen>
-    func createForAll() -> [ScreenDelegate] {
-        return NSScreen.screens.map{ OSXScreenDelegate(nsScreen: $0) }
+private func createDelegates() -> [OSXScreenDelegate<NSScreen>] {
+    return NSScreen.screens.map{ OSXScreenDelegate(nsScreen: $0) }
+}
+
+class OSXSystemScreenDelegate: SystemScreenDelegate {
+    typealias Delegate = OSXScreenDelegate<NSScreen>
+
+    var screens: [ScreenDelegate]
+    var delegates: [Delegate]
+
+    private var handler: Optional<(ScreenLayoutChangedEvent) -> Void>
+
+    init() {
+        delegates = createDelegates()
+        screens = delegates.map{ $0 as ScreenDelegate }
+
+        let notificationCenter = NSWorkspace.shared.notificationCenter
+        notificationCenter.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: NSApplication.shared,
+            queue: nil
+        ) { _ in
+            // Make a new screen delegate for every screen, because NSScreen objects can become
+            // stale.
+            let newScreens = createDelegates()
+
+            let event = handleScreenChange(newScreens: newScreens, oldScreens: self.delegates)
+            self.delegates = newScreens
+            self.screens = newScreens.map{ $0 as ScreenDelegate }
+
+            self.handler?(event)
+        }
     }
+
+    func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void) {
+        self.handler = handler
+    }
+
+}
+
+func handleScreenChange<NSScreenT: NSScreenType>(newScreens: [OSXScreenDelegate<NSScreenT>],
+                                                 oldScreens: [OSXScreenDelegate<NSScreenT>])
+-> ScreenLayoutChangedEvent {
+    var oldScreensById: [CGDirectDisplayID: OSXScreenDelegate<NSScreenT>] = Dictionary()
+    for oldScreen in oldScreens {
+        oldScreensById[oldScreen.directDisplayID] = oldScreen
+    }
+
+    var addedScreens: [Screen] = []
+    var changedScreens: [Screen] = []
+    var unchangedScreens: [Screen] = []
+
+    for newScreen in newScreens {
+        let newScreenWrapped = Screen(delegate: newScreen)
+
+        guard let oldScreen = oldScreensById[newScreen.directDisplayID] else {
+            addedScreens.append(newScreenWrapped)
+            continue
+        }
+
+        // Remove from dict to signifiy that we've seen it.
+        oldScreensById[newScreen.directDisplayID] = nil
+
+        if newScreen.frame != oldScreen.frame
+        || newScreen.applicationFrame != oldScreen.applicationFrame {
+            changedScreens.append(newScreenWrapped)
+        } else {
+            unchangedScreens.append(newScreenWrapped)
+        }
+    }
+
+    // All old screens that match a new screen were removed from oldScreensById.
+    let removedScreens = Array(oldScreensById.values.map { Screen(delegate: $0) })
+
+    let event = ScreenLayoutChangedEvent(
+        external: false,
+        addedScreens: addedScreens,
+        removedScreens: removedScreens,
+        changedScreens: changedScreens,
+        unchangedScreens: unchangedScreens
+    )
+
+    return event
 }
 
 private let kNSScreenNumber = "NSScreenNumber"
@@ -127,52 +203,6 @@ final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
 }
 
 extension OSXScreenDelegate {
-    static func handleScreenChange(
-        newScreens nsScreens: [NSScreenT], oldScreens: [OSXScreenDelegate], state: State
-    ) -> ([OSXScreenDelegate], ScreenLayoutChangedEvent) {
-        // Make a new screen delegate for every screen, because NSScreen objects can become stale.
-        let newScreens = nsScreens.map { OSXScreenDelegate(nsScreen: $0) }
-
-        var oldScreensById: [CGDirectDisplayID: OSXScreenDelegate] = [:]
-        for oldScreen in oldScreens {
-            oldScreensById[oldScreen.directDisplayID] = oldScreen
-        }
-
-        var addedScreens: [Screen] = []
-        var changedScreens: [Screen] = []
-        var unchangedScreens: [Screen] = []
-
-        for newScreen in newScreens {
-            let newScreenWrapped = Screen(delegate: newScreen)
-
-            guard let oldScreen = oldScreensById[newScreen.directDisplayID] else {
-                addedScreens.append(newScreenWrapped)
-                continue
-            }
-
-            // Remove from dict to signifiy that we've seen it.
-            oldScreensById[newScreen.directDisplayID] = nil
-
-            if newScreen.frame != oldScreen.frame
-            || newScreen.applicationFrame != oldScreen.applicationFrame {
-                changedScreens.append(newScreenWrapped)
-            } else {
-                unchangedScreens.append(newScreenWrapped)
-            }
-        }
-
-        // All old screens that match a new screen were removed from oldScreensById.
-        let removedScreens = Array(oldScreensById.values.map { Screen(delegate: $0) })
-
-        let event = ScreenLayoutChangedEvent(
-            external: false,
-            addedScreens: addedScreens,
-            removedScreens: removedScreens,
-            changedScreens: changedScreens,
-            unchangedScreens: unchangedScreens
-        )
-        return (newScreens, event)
-    }
 }
 
 private func numberForScreen<NSScreenT: NSScreenType>(_ nsScreen: NSScreenT) -> CGDirectDisplayID {

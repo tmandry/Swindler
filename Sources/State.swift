@@ -150,31 +150,6 @@ struct ApplicationObserver: ApplicationObserverType {
     }
 }
 
-/// Wraps behavior needed to track screen layout changes.
-protocol ScreenObserverType {
-    func onScreenLayoutChanged(_ handler: @escaping () -> Void)
-    func allScreens() -> [NSScreen]?
-}
-
-struct ScreenObserver: ScreenObserverType {
-    func onScreenLayoutChanged(_ handler: @escaping () -> Void) {
-        let sharedApplication = NSApplication.shared
-        let notificationCenter = NSWorkspace.shared.notificationCenter
-
-        notificationCenter.addObserver(
-            forName: NSApplication.didChangeScreenParametersNotification,
-            object: sharedApplication,
-            queue: nil
-        ) { _ in
-            handler()
-        }
-    }
-
-    func allScreens() -> [NSScreen]? {
-        return NSScreen.screens
-    }
-}
-
 /// Implements StateDelegate using the AXUIElement API.
 final class OSXStateDelegate<
     UIElement, ApplicationElement: ApplicationElementType, Observer: ObserverType
@@ -199,7 +174,8 @@ final class OSXStateDelegate<
     var knownWindows: [WindowDelegate] {
         return applications.flatMap({ $0.knownWindows })
     }
-    var screens: [ScreenDelegate]
+    var systemScreenDelegate: SystemScreenDelegate
+    var screens: [ScreenDelegate] { return systemScreenDelegate.screens }
 
     fileprivate var initialized: Promise<Void>!
 
@@ -217,19 +193,13 @@ final class OSXStateDelegate<
     }
 
     // TODO make private
-    init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens: S) {
+    init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens ssd: S) {
         log.debug("Initializing Swindler")
-        self.screens = screens.createForAll().map{ $0 as ScreenDelegate }
 
-        //    screenObserver.onScreenLayoutChanged {
-        //      let (screens, event) = OSXScreenDelegate<NSScreen>.handleScreenChange(
-        //        newScreens: screenObserver.allScreens()!,
-        //        oldScreens: self.screens.map{ $0 as! OSXScreenDelegate<NSScreen> },
-        //        state: State(delegate: self)
-        //      )
-        //      self.screens = screens
-        //      self.notify(event)
-        //    }
+        systemScreenDelegate = ssd
+        ssd.onScreenLayoutChanged { event in
+            self.notify(event)
+        }
 
         let appPromises = ApplicationElement.all().map { appElement in
             watchApplication(appElement: appElement)
