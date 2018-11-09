@@ -12,19 +12,45 @@
 import AXSwift
 import PromiseKit
 
+fileprivate typealias AppElement = EmittingTestApplicationElement
+
 public class FakeState {
-    typealias Delegate =
-        OSXStateDelegate<TestUIElement, EmittingTestApplicationElement, FakeObserver>;
+    fileprivate typealias Delegate =
+        OSXStateDelegate<TestUIElement, AppElement, FakeObserver>
+
+    public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
+        return firstly { () -> (Promise<Delegate>, Promise<FakeApplicationObserver>) in
+            let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+            let appObserver = FakeApplicationObserver()
+            return (Delegate.initialize(appObserver: appObserver, screens: screens),
+                    Promise(value: appObserver))
+        }.then { data in
+            return FakeState(data.0, data.1)
+        }
+    }
 
     public var state: State
 
-    var delegate: Delegate
+    public var frontmostApplication: FakeApplication? {
+        get {
+            guard let pid = appObserver.frontmostApplicationPID else { return nil }
+            guard let elem = try! AppElement.all().first(where: { try $0.pid() == pid }) else {
+                return nil
+            }
+            return Optional(elem.companion as! FakeApplication)
+        }
+        set {
+            appObserver.setFrontmost(newValue?.processId)
+        }
+    }
+
+    fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
 
-    public init() {
-        appObserver = FakeApplicationObserver()
-        delegate = Delegate(appObserver: appObserver)
-        state = State(delegate: delegate)
+    private init(_ delegate: Delegate, _ appObserver: FakeApplicationObserver) {
+        self.state = State(delegate: delegate)
+        self.delegate = delegate
+        self.appObserver = appObserver
     }
 }
 
@@ -50,8 +76,8 @@ public struct FakeApplicationBuilder {
  */
 
 public class FakeApplication {
-    typealias Delegate =
-        OSXApplicationDelegate<TestUIElement, EmittingTestApplicationElement, FakeObserver>;
+    fileprivate typealias Delegate =
+        OSXApplicationDelegate<TestUIElement, AppElement, FakeObserver>;
 
     let parent: FakeState
 
@@ -91,23 +117,31 @@ public class FakeApplication {
         }
     }
 
-    let element: EmittingTestApplicationElement
+    fileprivate let element: AppElement
 
-    var delegate: Delegate!
+    fileprivate var delegate: Delegate!
 
     public init(parent: FakeState) {
         self.parent = parent
-        processId = 0
-        element = EmittingTestApplicationElement()
+        element = AppElement()
+        processId = element.processID
         isHidden = false
         delegate = try! Delegate(
             axElement: element, stateDelegate: parent.delegate, notifier: parent.delegate)
+
+        element.companion = self
+        parent.appObserver.launch(processId)
     }
 
     public func createWindow() -> FakeWindowBuilder {
         return FakeWindowBuilder(parent: self)
     }
 }
+
+public func ==(lhs: FakeApplication, rhs: FakeApplication) -> Bool {
+    return lhs.element == rhs.element
+}
+extension FakeApplication: Equatable {}
 
 public class FakeWindowBuilder {
     private let w: FakeWindow
@@ -140,8 +174,8 @@ public class FakeWindowBuilder {
 }
 
 public class FakeWindow: TestObject {
-    typealias Delegate =
-        OSXWindowDelegate<TestUIElement, EmittingTestApplicationElement, FakeObserver>
+    fileprivate typealias Delegate =
+        OSXWindowDelegate<TestUIElement, AppElement, FakeObserver>
 
     public let parent: FakeApplication
     public var window: Window {
@@ -173,7 +207,7 @@ public class FakeWindow: TestObject {
         set { try! element.setAttribute(.fullScreen, value: newValue) }
     }
 
-    var delegate: Delegate?
+    fileprivate var delegate: Delegate?
 
     // TODO public?
     var isValid: Bool

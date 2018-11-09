@@ -12,8 +12,7 @@ class FakeSpec: QuickSpec {
 
             beforeEach {
                 waitUntil { done in
-                    firstly { () -> Promise<FakeWindow> in
-                        let state = FakeState()
+                    FakeState.initialize().then { state -> Promise<FakeWindow> in
                         let app = FakeApplication(parent: state)
                         return FakeWindowBuilder(parent: app)
                             .setTitle("I'm a test window")
@@ -79,8 +78,7 @@ class FakeSpec: QuickSpec {
 
             beforeEach {
                 waitUntil { done in
-                    firstly { () -> Promise<(FakeWindow, FakeWindow)> in
-                        let state = FakeState()
+                    FakeState.initialize().then { state -> Promise<(FakeWindow, FakeWindow)> in
                         fakeApp = FakeApplication(parent: state)
                         return when(fulfilled:
                             FakeWindowBuilder(parent: fakeApp).build(),
@@ -123,6 +121,39 @@ class FakeSpec: QuickSpec {
                 assert(fakeApp.application.isHidden.value == false)
                 fakeApp.isHidden = true
                 expect(fakeApp.application.isHidden.value).toEventually(equal(true))
+            }
+        }
+
+        describe("FakeState") {
+            var fakeState: FakeState!
+            var fakeApp1: FakeApplication!
+            var fakeApp2: FakeApplication!
+
+            beforeEach {
+                waitUntil { done in
+                    FakeState.initialize().then { fs -> () in
+                        fakeState = fs
+                        fakeApp1 = FakeApplication(parent: fakeState)
+                        fakeApp2 = FakeApplication(parent: fakeState)
+                        done()
+                    }.always {}
+                }
+            }
+
+            it("sees changes from Swindler") {
+                fakeState.state.frontmostApplication.value = fakeApp1.application
+                expect(fakeState.frontmostApplication).toEventually(equal(fakeApp1))
+                fakeState.state.frontmostApplication.value = fakeApp2.application
+                expect(fakeState.frontmostApplication).toEventually(equal(fakeApp2))
+            }
+
+            it("publishes changes to Swindler") {
+                fakeState.frontmostApplication = fakeApp1
+                expect(fakeState.state.frontmostApplication.value).toEventually(
+                    equal(fakeApp1.application))
+                fakeState.frontmostApplication = fakeApp2
+                expect(fakeState.state.frontmostApplication.value).toEventually(
+                    equal(fakeApp2.application))
             }
         }
     }

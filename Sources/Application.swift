@@ -60,6 +60,12 @@ public func ==(lhs: Application, rhs: Application) -> Bool {
 }
 extension Application: Equatable {}
 
+extension Application: CustomStringConvertible {
+    public var description: String {
+        return "Application(\(String(describing: delegate)))"
+    }
+}
+
 protocol ApplicationDelegate: class {
     var processIdentifier: pid_t! { get }
     var bundleIdentifier: String? { get }
@@ -129,8 +135,8 @@ final class OSXApplicationDelegate<
     }
 
     init(axElement: ApplicationElement,
-                     stateDelegate: StateDelegate,
-                     notifier: EventNotifier) throws {
+         stateDelegate: StateDelegate,
+         notifier: EventNotifier) throws {
         // TODO: filter out applications by activation policy
         self.axElement = axElement.toElement
         self.stateDelegate = stateDelegate
@@ -199,7 +205,7 @@ final class OSXApplicationDelegate<
                         fulfill: fulfillAttrs,
                         reject: rejectAttrs)
 
-        initialized = initializeProperties(properties, ofElement: axElement).asVoid()
+        initialized = initializeProperties(properties).asVoid()
     }
 
     /// Called during initialization to set up an observer on the application element.
@@ -461,10 +467,12 @@ extension OSXApplicationDelegate: PropertyNotifier {
 extension OSXApplicationDelegate: CustomStringConvertible {
     var description: String {
         do {
-            guard let app = NSRunningApplication(processIdentifier: try self.axElement.pid()) else {
-                return "Unknown"
+            let pid = try self.axElement.pid()
+            if let app = NSRunningApplication(processIdentifier: pid),
+               let bundle = app.bundleIdentifier {
+                return bundle
             }
-            return app.bundleIdentifier ?? "Unknown"
+            return "pid=\(pid)"
         } catch {
             return "Invalid"
         }

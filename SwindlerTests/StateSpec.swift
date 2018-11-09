@@ -57,9 +57,10 @@ class OSXStateDelegateSpec: QuickSpec {
         func initialize(
             _ appObserver: ApplicationObserverType = StubApplicationObserver()
         ) -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver> {
+            let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
             let stateDel = OSXStateDelegate<
                 TestUIElement, TestApplicationElement, TestObserver
-            >(appObserver: appObserver)
+            >(appObserver: appObserver, screens: screenDel)
             waitUntil { done in
                 stateDel.frontmostApplication.initialized.then { done() }.always {}
             }
@@ -81,8 +82,10 @@ class OSXStateDelegateSpec: QuickSpec {
         context("during initialization") {
             func initializeUsingObserver<Obs: ObserverType>(_ elementObserver: Obs.Type)
                 -> OSXStateDelegate<TestUIElement, TestApplicationElement, Obs> {
+                let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
                 return OSXStateDelegate<TestUIElement, TestApplicationElement, Obs>(
-                    appObserver: StubApplicationObserver()
+                    appObserver: StubApplicationObserver(),
+                    screens: screenDel
                 )
             }
 

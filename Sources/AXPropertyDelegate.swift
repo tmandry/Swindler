@@ -123,9 +123,7 @@ func fetchAttributes<UIElement: UIElementType>(_ attributeNames: [Attribute],
 
 /// Returns a promise that resolves when all the provided properties are initialized.
 /// Adds additional error information for AXPropertyDelegates.
-func initializeProperties<UIElement: UIElementType>(_ properties: [PropertyType],
-                                                    ofElement axElement: UIElement)
--> Promise<Void> {
+func initializeProperties(_ properties: [PropertyType]) -> Promise<Void> {
     let propertiesInitialized: [Promise<Void>] = Array(properties.map({ $0.initialized }))
     return when(fulfilled: propertiesInitialized)
 }

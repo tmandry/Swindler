@@ -2,11 +2,14 @@ import AXSwift
 import PromiseKit
 
 /// The global Swindler state, lazily initialized.
-public var state = State(
-    delegate: OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>(
-        appObserver: ApplicationObserver()
-    )
-)
+public func initialize() -> Promise<State> {
+    return OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>.initialize(
+        appObserver: ApplicationObserver(),
+        screens: OSXSystemScreenDelegate()
+    ).then { delegate in
+       return State(delegate: delegate)
+    }
+}
 
 // MARK: - State
 
@@ -135,9 +138,15 @@ struct ApplicationObserver: ApplicationObserverType {
 
     func makeApplicationFrontmost(_ pid: pid_t) throws {
         guard let app = NSRunningApplication(processIdentifier: pid) else {
+            log.info("Could not find requested application to make frontmost with pid \(pid)")
             throw OSXDriverError.runningApplicationNotFound(processID: pid)
         }
-        app.activate(options: [])
+        let success = try traceRequest(app, "activate", "") {
+            app.activate(options: [NSApplication.ActivationOptions.activateIgnoringOtherApps])
+        }
+        if !success {
+            log.debug("Failed to activate application \(app), it probably quit")
+        }
     }
 }
 
@@ -192,12 +201,25 @@ final class OSXStateDelegate<
     }
     var screens: [ScreenDelegate]
 
+    fileprivate var initialized: Promise<Void>!
+
     // TODO: retry instead of ignoring an app/window when timeouts are encountered during
     // initialization?
 
-    init(appObserver: ApplicationObserverType) {
+    static func initialize<S: SystemScreenDelegate>(
+        appObserver: ApplicationObserverType,
+        screens: S
+    ) -> Promise<OSXStateDelegate> {
+        return firstly {
+            let delegate = OSXStateDelegate(appObserver: appObserver, screens: screens)
+            return delegate.initialized.then { delegate }
+        }
+    }
+
+    // TODO make private
+    init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens: S) {
         log.debug("Initializing Swindler")
-        screens = NSScreen.screens.map { OSXScreenDelegate(nsScreen: $0) }
+        self.screens = screens.createForAll().map{ $0 as ScreenDelegate }
 
         //    screenObserver.onScreenLayoutChanged {
         //      let (screens, event) = OSXScreenDelegate<NSScreen>.handleScreenChange(
@@ -226,6 +248,9 @@ final class OSXStateDelegate<
             withEvent: FrontmostApplicationChangedEvent.self,
             receivingObject: State.self,
             notifier: self)
+        let properties: [PropertyType] = [
+            frontmostApplication
+        ]
 
         // Must add the observer after configuring frontmostApplication.
         appObserver.onFrontmostApplicationChanged(frontmostApplication.issueRefresh)
@@ -239,10 +264,12 @@ final class OSXStateDelegate<
             .catch(execute: propertyInitError)
 
         frontmostApplication.initialized.catch { error in
-            log.error("Caught error: \(error)")
+            log.error("Caught error initializing frontmostApplication: \(error)")
         }.always {
             log.debug("Done initializing")
         }
+
+        initialized = initializeProperties(properties).asVoid()
     }
 
     func watchApplication(appElement: ApplicationElement) -> Promise<AppDelegate> {
