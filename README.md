@@ -157,12 +157,6 @@ Swindler is in development and is in **alpha**. Here is the state of its major f
 
 You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/API.swift).
 
-## Contact
-
-You can chat with us on [Gitter](https://gitter.im/tmandry/Swindler).
-
-Follow me on Twitter: [@tmandry](https://twitter.com/tmandry)
-
 ## Getting Started
 
 Swindler uses `pod` for Dependency management, so first you need to get that.
@@ -184,6 +178,12 @@ In that directory, run the following commands:
 ```
 
 At this point you should be able to build Swindler in XCode and start on your way!
+
+## Contact
+
+You can chat with us on [Gitter](https://gitter.im/tmandry/Swindler).
+
+Follow me on Twitter: [@tmandry](https://twitter.com/tmandry)
 
 ## Related Projects
 
