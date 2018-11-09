@@ -160,6 +160,28 @@ You can chat with us on [Gitter](https://gitter.im/tmandry/Swindler).
 
 Follow me on Twitter: [@tmandry](https://twitter.com/tmandry)
 
+## Getting Started
+
+Swindler uses `pod` for Dependency management, so first you need to get that.
+[Follow the instructions](https://guides.cocoapods.org/using/getting-started.html) on the cocoapods web site.
+This should give you the `pod` command for use in the shell.
+
+With that, the simplest way to get started is to run XCode and start with the "Clone an
+existing project" button. Give it the URL to Swindler (presumably
+https://github.com/tmandry/Swindler.git). It will download the repository to
+your local disk and start it up.
+
+Now, in a Terminal window, cd to the directory where you downloaded Swindler.
+In that directory, run the following commands:
+
+```
+% git submodule init
+% git submodule update
+% pod install
+```
+
+At this point you should be able to build Swindler in XCode and start on your way!
+
 ## Related Projects
 
 - [Silica](https://github.com/ianyh/Silica)
