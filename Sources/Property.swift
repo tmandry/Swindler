@@ -249,7 +249,10 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
                        + "effect.")
                 return
             }
-            set(value).always {}
+            set(value).catch { error in
+                log.error("Error while writing to property (of type \(PropertyType.self)): "
+                        + String(describing: error))
+            }
         }
     }
 
