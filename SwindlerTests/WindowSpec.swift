@@ -57,7 +57,9 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
                 windowElement.attrs[.fullScreen] = false
 
                 return initialize().then { windowDelegate -> Void in
-                    expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 995)))
+                    // In inverted (AX) coordinates, top-left is (5, 5) and bottom-left is (5, 105)
+                    // In Cocoa coordinates, the bottom-left would be (5, 1000 - 105) = (5, 895)
+                    expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 895)))
                     expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
                     expect(windowDelegate.title.value).to(equal("a window title"))
                     expect(windowDelegate.isMinimized.value).to(beFalse())
@@ -298,16 +300,30 @@ class OSXWindowDelegateSpec: QuickSpec {
 
             describe("position") {
                 it("updates when the window is moved") {
-                    windowElement.attrs[.position] = CGPoint(x: 1, y: 999)
+                    expect(windowDelegate.position.value).to(equal(CGPoint(x: 0, y: 900)))
+                    windowElement.attrs[.position] = CGPoint(x: 1, y: 1)
                     windowDelegate.handleEvent(.moved, observer: TestObserver())
-                    expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
+                    expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 1, y: 899)))
                 }
 
-                it("updates when the window is resized from the top or left") {
-                    windowElement.attrs[.position] = CGPoint(x: 0, y: 975)
+                it("updates when the window is resized from the top") {
+                    windowElement.attrs[.position] = CGPoint(x: 0, y: 25)
                     windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
                     windowDelegate.handleEvent(.resized, observer: TestObserver())
-                    expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 0, y: 25)))
+                    expect(windowDelegate.size.value).toEventually(equal(
+                        CGSize(width: 100, height: 75)))
+                    expect(windowDelegate.position.value).toEventually(equal(
+                        CGPoint(x: 0, y: 900)))  // no change
+                }
+
+                it("updates when the window is resized from the bottom") {
+                    windowElement.attrs[.position] = CGPoint(x: 0, y: 0)
+                    windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
+                    windowDelegate.handleEvent(.resized, observer: TestObserver())
+                    expect(windowDelegate.position.value).toEventually(equal(
+                        CGPoint(x: 0, y: 925)))
+                    expect(windowDelegate.size.value).toEventually(equal(
+                        CGSize(width: 100, height: 75)))
                 }
             }
 

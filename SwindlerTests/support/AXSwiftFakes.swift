@@ -109,7 +109,7 @@ final class AdversaryApplicationElement: TestApplicationElementBase, Application
 
 /// Allows defining adversarial actions when an attribute is read.
 class AdversaryWindowElement: TestWindowElement {
-    var onRead: Optional < () -> Void> = nil
+    var onRead: Optional<() -> Void> = nil
     var watchAttribute: Attribute?
     var alreadyCalled = false
 

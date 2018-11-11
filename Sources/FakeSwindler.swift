@@ -188,14 +188,8 @@ public class FakeWindow: TestObject {
         set { try! element.setAttribute(.title, value: newValue) }
     }
     public var rect: CGRect {
-        get {
-            return CGRect(origin: invert(try! element.attribute(.position)!),
-                          size: try! element.attribute(.size)!)
-        }
-        set {
-            try! element.setAttribute(.position, value: invert(newValue.origin))
-            try! element.setAttribute(.size, value: newValue.size)
-        }
+        get { return invert(try! element.attribute(.frame)!) }
+        set { try! element.setAttribute(.frame, value: invert(newValue)) }
     }
     public var isMinimized: Bool {
         get { return try! element.attribute(.minimized)! }
@@ -228,8 +222,10 @@ public class FakeWindow: TestObject {
         isFullscreen = false
     }
 
-    private func invert(_ point: CGPoint) -> CGPoint {
-        return CGPoint(x: point.x, y: parent.parent.delegate.systemScreens.maxY - point.y)
+    private func invert(_ rect: CGRect) -> CGRect {
+        let inverted = CGPoint(x: rect.minX,
+                               y: parent.parent.delegate.systemScreens.maxY - rect.maxY)
+        return CGRect(origin: inverted, size: rect.size)
     }
 }
 
@@ -256,7 +252,7 @@ public class FakeScreen {
     }
     public convenience init(frame: CGRect, menuBarHeight: Int, dockHeight: Int) {
         let af = CGRect(x: frame.origin.x,
-                        y: frame.origin.y + CGFloat(menuBarHeight),
+                        y: frame.origin.y + CGFloat(dockHeight),
                         width: frame.width,
                         height: frame.height - CGFloat(menuBarHeight + dockHeight))
         self.init(frame: frame, applicationFrame: af)
