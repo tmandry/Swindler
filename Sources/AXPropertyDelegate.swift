@@ -2,7 +2,7 @@ import AXSwift
 import PromiseKit
 
 /// Implements PropertyDelegate using the AXUIElement API.
-final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelegate {
+class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelegate {
     typealias InitDict = [AXSwift.Attribute: Any]
     let axElement: UIElement
     let attribute: AXSwift.Attribute
@@ -14,11 +14,16 @@ final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: Property
         self.initPromise = initPromise
     }
 
+    func readFilter(_ value: T?) -> T? {
+        return value
+    }
+
     func readValue() throws -> T? {
         do {
-            return try traceRequest(axElement, "attribute", attribute) {
+            let value: T? = try traceRequest(axElement, "attribute", attribute) {
                 try axElement.attribute(attribute)
             }
+            return readFilter(value)
         } catch AXSwift.AXError.cannotComplete {
             // If messaging timeout unspecified, we'll pass -1.
             var time = UIElement.globalMessagingTimeout
@@ -67,7 +72,7 @@ final class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: Property
             guard let value = dict[self.attribute] else {
                 return nil
             }
-            return (value as! T)
+            return self.readFilter(Optional(value as! T))
         }.recover { error -> T? in
             switch error {
             case AXSwift.AXError.cannotComplete:

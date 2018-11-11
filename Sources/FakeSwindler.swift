@@ -126,8 +126,7 @@ public class FakeApplication {
         element = AppElement()
         processId = element.processID
         isHidden = false
-        delegate = try! Delegate(
-            axElement: element, stateDelegate: parent.delegate, notifier: parent.delegate)
+        delegate = try! Delegate(element, parent.delegate, parent.delegate)
 
         element.companion = self
         parent.appObserver.launch(processId)
@@ -152,7 +151,8 @@ public class FakeWindowBuilder {
 
     public func setTitle(_ title: String) -> FakeWindowBuilder { w.title = title; return self }
     public func setRect(_ rect: CGRect) -> FakeWindowBuilder { w.rect = rect; return self }
-    public func setPosition(_ pos: CGPoint) -> FakeWindowBuilder { w.rect.origin = pos; return self }
+    public func setPosition(_ pos: CGPoint) -> FakeWindowBuilder { w.rect = CGRect(origin: pos,
+    size: w.rect.size); return self }
     public func setSize(_ size: CGSize) -> FakeWindowBuilder { w.rect.size = size; return self }
     public func setMinimized(_ isMinimized: Bool = true) -> FakeWindowBuilder {
         w.isMinimized = isMinimized
@@ -174,8 +174,7 @@ public class FakeWindowBuilder {
 }
 
 public class FakeWindow: TestObject {
-    fileprivate typealias Delegate =
-        OSXWindowDelegate<TestUIElement, AppElement, FakeObserver>
+    fileprivate typealias Delegate = OSXWindowDelegate<TestUIElement, AppElement, FakeObserver>
 
     public let parent: FakeApplication
     public var window: Window {
@@ -190,11 +189,11 @@ public class FakeWindow: TestObject {
     }
     public var rect: CGRect {
         get {
-            return CGRect(origin: try! element.attribute(.position)!,
+            return CGRect(origin: invert(try! element.attribute(.position)!),
                           size: try! element.attribute(.size)!)
         }
         set {
-            try! element.setAttribute(.position, value: newValue.origin)
+            try! element.setAttribute(.position, value: invert(newValue.origin))
             try! element.setAttribute(.size, value: newValue.size)
         }
     }
@@ -227,6 +226,10 @@ public class FakeWindow: TestObject {
         rect = CGRect(x: 300, y: 300, width: 600, height: 800)
         isMinimized = false
         isFullscreen = false
+    }
+
+    private func invert(_ point: CGPoint) -> CGPoint {
+        return CGPoint(x: point.x, y: parent.parent.delegate.systemScreens.maxY - point.y)
     }
 }
 

@@ -38,7 +38,7 @@ public final class State {
 
     /// The physical screens in the current display configuration.
     public var screens: [Screen] {
-        return delegate.screens.map {Screen(delegate: $0)}
+        return delegate.systemScreens.screens.map {Screen(delegate: $0)}
     }
 
     /// Calls `handler` when the specified `Event` occurs.
@@ -56,7 +56,7 @@ protocol StateDelegate: class {
     var runningApplications: [ApplicationDelegate] { get }
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
-    var screens: [ScreenDelegate] { get }
+    var systemScreens: SystemScreenDelegate { get }
     func on<Event: EventType>(_ handler: @escaping (Event) -> Void)
 }
 
@@ -174,8 +174,7 @@ final class OSXStateDelegate<
     var knownWindows: [WindowDelegate] {
         return applications.flatMap({ $0.knownWindows })
     }
-    var systemScreenDelegate: SystemScreenDelegate
-    var screens: [ScreenDelegate] { return systemScreenDelegate.screens }
+    var systemScreens: SystemScreenDelegate
 
     fileprivate var initialized: Promise<Void>!
 
@@ -196,7 +195,7 @@ final class OSXStateDelegate<
     init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens ssd: S) {
         log.debug("Initializing Swindler")
 
-        systemScreenDelegate = ssd
+        systemScreens = ssd
         ssd.onScreenLayoutChanged { event in
             self.notify(event)
         }

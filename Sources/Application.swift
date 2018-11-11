@@ -127,16 +127,14 @@ final class OSXApplicationDelegate<
         notifier: EventNotifier
     ) -> Promise<OSXApplicationDelegate> {
         return firstly { // capture thrown errors in promise chain
-            let appDelegate = try OSXApplicationDelegate(axElement: axElement,
-                                                         stateDelegate: stateDelegate,
-                                                         notifier: notifier)
+            let appDelegate = try OSXApplicationDelegate(axElement, stateDelegate, notifier)
             return appDelegate.initialized.then { appDelegate }
         }
     }
 
-    init(axElement: ApplicationElement,
-         stateDelegate: StateDelegate,
-         notifier: EventNotifier) throws {
+    init(_ axElement: ApplicationElement,
+         _ stateDelegate: StateDelegate,
+         _ notifier: EventNotifier) throws {
         // TODO: filter out applications by activation policy
         self.axElement = axElement.toElement
         self.stateDelegate = stateDelegate
@@ -265,8 +263,12 @@ final class OSXApplicationDelegate<
     /// added, does nothing, and the returned promise resolves to nil.
     fileprivate func createWindowForElementIfNotExists(_ axElement: UIElement)
     -> Promise<WinDelegate?> {
+        guard let systemScreens = stateDelegate?.systemScreens else {
+            return Promise(value: nil)
+        }
         return WinDelegate.initialize(
-            appDelegate: self, notifier: notifier, axElement: axElement, observer: observer
+            appDelegate: self, notifier: notifier, axElement: axElement, observer: observer,
+            systemScreens: systemScreens
         ).then { windowDelegate -> WinDelegate? in
             // This check needs to happen here, because it's possible (though rare) to call this
             // method from two different places (fetchWindows and onWindowCreated) before

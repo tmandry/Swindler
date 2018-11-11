@@ -27,6 +27,8 @@ protocol SystemScreenDelegate {
     var lock_: NSLock { get }
     var screens_: [ScreenDelegate] { get }
 
+    var maxY: CGFloat { get }
+
     func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void)
 }
 
@@ -36,6 +38,18 @@ extension SystemScreenDelegate {
         defer { lock_.unlock() }
         return screens_
     }
+
+    var maxY: CGFloat {
+        return calculateMaxY(screens)
+    }
+}
+
+func calculateMaxY(_ screens: [ScreenDelegate]) -> CGFloat {
+    var maxY = 0.0 as CGFloat
+    for screen in screens {
+        maxY = CGFloat.maximum(screen.frame.maxY, maxY)
+    }
+    return maxY
 }
 
 protocol ScreenDelegate: class, CustomDebugStringConvertible {

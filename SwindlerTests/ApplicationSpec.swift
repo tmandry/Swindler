@@ -103,15 +103,18 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
                     appElement.windows.append(windowElement)
 
                     weak var appDelegate: AppDelegate?
-                    waitUntil { done in
-                        AppDelegate.initialize(axElement: appElement,
-                                               stateDelegate: StubStateDelegate(),
-                                               notifier: notifier)
-                            .then { delegate -> Void in
-                                expect(delegate.knownWindows).to(haveCount(1))
-                                appDelegate = delegate
-                                done()
-                            }.always {}
+                    do {
+                        let state = StubStateDelegate()
+                        waitUntil { done in
+                            AppDelegate.initialize(axElement: appElement,
+                                                   stateDelegate: state,
+                                                   notifier: notifier)
+                                .then { delegate -> Void in
+                                    expect(delegate.knownWindows).to(haveCount(1))
+                                    appDelegate = delegate
+                                    done()
+                                }.always {}
+                        }
                     }
                     expect(appDelegate).to(beNil())
                 }

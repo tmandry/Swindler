@@ -135,10 +135,11 @@ final class OSXWindowDelegate<
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!
 
-    private init(appDelegate: ApplicationDelegate,
-                 notifier: EventNotifier?,
-                 axElement: UIElement,
-                 observer: Observer) throws {
+    private init(_ appDelegate: ApplicationDelegate,
+                 _ notifier: EventNotifier?,
+                 _ axElement: UIElement,
+                 _ observer: Observer,
+                 _ systemScreens: SystemScreenDelegate) throws {
         self.appDelegate = appDelegate
         self.notifier = notifier
         self.axElement = axElement
@@ -148,7 +149,7 @@ final class OSXWindowDelegate<
 
         // Initialize all properties.
         position = WriteableProperty(
-            AXPropertyDelegate(axElement, .position, initPromise),
+            PositionPropertyDelegate(axElement, initPromise, systemScreens),
             withEvent: WindowPosChangedEvent.self,
             receivingObject: Window.self,
             notifier: self)
@@ -261,13 +262,12 @@ extension OSXWindowDelegate {
         appDelegate: ApplicationDelegate,
         notifier: EventNotifier?,
         axElement: UIElement,
-        observer: Observer
+        observer: Observer,
+        systemScreens: SystemScreenDelegate
     ) -> Promise<OSXWindowDelegate> {
         return firstly { // capture thrown errors in promise
             let window = try OSXWindowDelegate(
-                appDelegate: appDelegate, notifier: notifier, axElement: axElement,
-                observer: observer
-            )
+                appDelegate, notifier, axElement, observer, systemScreens)
             return window.initialized.then { window }
         }
     }
@@ -304,5 +304,39 @@ extension OSXWindowDelegate: PropertyNotifier {
 
     func notifyInvalid() {
         isValid = false
+    }
+}
+
+// MARK: PropertyDelegates
+
+/// PropertyAdapter that inverts the y-axis of the point value.
+///
+/// This is to convert between AXPosition coordinates, which have the origin at
+/// the top-left, and Cocoa coordinates, which have it at the bottom-right.
+private final class PositionPropertyDelegate<UIElement: UIElementType>:
+    AXPropertyDelegate<CGPoint, UIElement>
+{
+    typealias T = CGPoint
+
+    typealias InitDict = [AXSwift.Attribute: Any]
+
+    let systemScreens: SystemScreenDelegate
+
+    init(_ element: UIElement, _ initPromise: Promise<InitDict>, _ screens: SystemScreenDelegate) {
+        systemScreens = screens
+        super.init(element, .position, initPromise)
+    }
+
+    override func readFilter(_ value: CGPoint?) -> CGPoint? {
+        guard let point = value else { return nil }
+        return invert(point)
+    }
+
+    override func writeValue(_ newValue: CGPoint) throws {
+        try super.writeValue(invert(newValue))
+    }
+
+    private func invert(_ point: CGPoint) -> CGPoint {
+        return CGPoint(x: point.x, y: systemScreens.maxY - point.y)
     }
 }

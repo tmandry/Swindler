@@ -23,10 +23,13 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
         }
 
         func initializeWithElement(_ winElement: TestWindowElement) -> Promise<WinDelegate> {
+            let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
+            let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])
             return WinDelegate.initialize(appDelegate: stubApplicationDelegate,
                                           notifier: TestNotifier(),
                                           axElement: winElement,
-                                          observer: TestObserver())
+                                          observer: TestObserver(),
+                                          systemScreens: systemScreens)
         }
 
         func initialize() -> Promise<WinDelegate> {
@@ -54,7 +57,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
                 windowElement.attrs[.fullScreen] = false
 
                 return initialize().then { windowDelegate -> Void in
-                    expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 5)))
+                    expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 995)))
                     expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
                     expect(windowDelegate.title.value).to(equal("a window title"))
                     expect(windowDelegate.isMinimized.value).to(beFalse())
@@ -237,11 +240,14 @@ class OSXWindowDelegateSpec: QuickSpec {
 
             notifier = TestNotifier()
             waitUntil { done in
+                let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
+                let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])
                 WinDelegate.initialize(
                     appDelegate: stubApplicationDelegate,
                     notifier: notifier,
                     axElement: windowElement,
-                    observer: TestObserver()
+                    observer: TestObserver(),
+                    systemScreens: systemScreens
                 ).then { winDelegate -> Void in
                     windowDelegate = winDelegate
                     done()
@@ -292,13 +298,13 @@ class OSXWindowDelegateSpec: QuickSpec {
 
             describe("position") {
                 it("updates when the window is moved") {
-                    windowElement.attrs[.position] = CGPoint(x: 1, y: 1)
+                    windowElement.attrs[.position] = CGPoint(x: 1, y: 999)
                     windowDelegate.handleEvent(.moved, observer: TestObserver())
                     expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 1, y: 1)))
                 }
 
                 it("updates when the window is resized from the top or left") {
-                    windowElement.attrs[.position] = CGPoint(x: 0, y: 25)
+                    windowElement.attrs[.position] = CGPoint(x: 0, y: 975)
                     windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
                     windowDelegate.handleEvent(.resized, observer: TestObserver())
                     expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 0, y: 25)))
@@ -368,7 +374,7 @@ class WindowSpec: QuickSpec {
                 rightScreen = Screen(delegate: StubScreenDelegate(
                     frame: CGRect(x: 1000, y: 0, width: 1000, height: 1000)
                 ))
-                stateDelegate.screens = [leftScreen.delegate, rightScreen.delegate]
+                stateDelegate.fakeScreens.screens = [leftScreen.delegate, rightScreen.delegate]
             }
 
             func setWindowRect(_ rect: CGRect) {
