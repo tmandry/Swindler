@@ -24,8 +24,18 @@ public func ==(lhs: Screen, rhs: Screen) -> Bool {
 }
 
 protocol SystemScreenDelegate {
-    var screens: [ScreenDelegate] { get }
+    var lock_: NSLock { get }
+    var screens_: [ScreenDelegate] { get }
+
     func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void)
+}
+
+extension SystemScreenDelegate {
+    var screens: [ScreenDelegate] {
+        lock_.lock()
+        defer { lock_.unlock() }
+        return screens_
+    }
 }
 
 protocol ScreenDelegate: class, CustomDebugStringConvertible {
@@ -37,8 +47,29 @@ protocol ScreenDelegate: class, CustomDebugStringConvertible {
 
 struct FakeSystemScreenDelegate: SystemScreenDelegate {
     typealias Delegate = FakeScreenDelegate
-    var screens: [ScreenDelegate]
+
+    var lock_: NSLock
+    var screens_: [ScreenDelegate]
+
     func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void) {}
+
+    var screens: [ScreenDelegate] {
+        get {
+            lock_.lock()
+            defer { lock_.unlock() }
+            return screens_
+        }
+        set {
+            lock_.lock()
+            defer { lock_.unlock() }
+            screens_ = newValue
+        }
+    }
+
+    init(screens: [ScreenDelegate]) {
+        lock_ = NSLock()
+        screens_ = screens
+    }
 }
 
 final class FakeScreenDelegate: ScreenDelegate {
@@ -89,14 +120,16 @@ private func createDelegates() -> [OSXScreenDelegate<NSScreen>] {
 class OSXSystemScreenDelegate: SystemScreenDelegate {
     typealias Delegate = OSXScreenDelegate<NSScreen>
 
-    var screens: [ScreenDelegate]
+    var lock_: NSLock
+    var screens_: [ScreenDelegate]
     var delegates: [Delegate]
 
     private var handler: Optional<(ScreenLayoutChangedEvent) -> Void>
 
     init() {
+        lock_ = NSLock()
         delegates = createDelegates()
-        screens = delegates.map{ $0 as ScreenDelegate }
+        screens_ = delegates.map{ $0 as ScreenDelegate }
 
         let notificationCenter = NSWorkspace.shared.notificationCenter
         notificationCenter.addObserver(
@@ -104,15 +137,7 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
             object: NSApplication.shared,
             queue: nil
         ) { _ in
-            // Make a new screen delegate for every screen, because NSScreen objects can become
-            // stale.
-            let newScreens = createDelegates()
-
-            let event = handleScreenChange(newScreens: newScreens, oldScreens: self.delegates)
-            self.delegates = newScreens
-            self.screens = newScreens.map{ $0 as ScreenDelegate }
-
-            self.handler?(event)
+            self.handleScreenLayoutChange()
         }
     }
 
@@ -120,6 +145,22 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
         self.handler = handler
     }
 
+    private func handleScreenLayoutChange() {
+        // Make a new screen delegate for every screen, because NSScreen objects can become
+        // stale.
+        let newScreens = createDelegates()
+
+        let event = handleScreenChange(newScreens: newScreens, oldScreens: delegates)
+
+        do {
+            lock_.lock()
+            defer { lock_.unlock() }
+            delegates = newScreens
+            screens_ = newScreens.map{ $0 as ScreenDelegate }
+        }
+
+        handler?(event)
+    }
 }
 
 func handleScreenChange<NSScreenT: NSScreenType>(newScreens: [OSXScreenDelegate<NSScreenT>],
