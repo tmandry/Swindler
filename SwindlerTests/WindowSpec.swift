@@ -79,7 +79,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
 
             context("when called with a window that is missing attributes") {
                 it("returns an error") { () -> Promise<Void> in
-                    windowElement.attrs.removeValue(forKey: .position)
+                    windowElement.attrs.removeValue(forKey: .frame)
 
                     // TODO: put the detailed error back, or take out the error class
                     let expectedError = PropertyError.invalidObject(

@@ -60,7 +60,9 @@ class PropertySpec: QuickSpec {
         func setUpWithAttributes(_ attrs: [AXSwift.Attribute: Any])
         -> WriteableProperty<OfType<CGPoint>> {
             windowElement = TestWindowElement(forApp: TestApplicationElement())
-            windowElement.attrs = attrs
+            for (attr, value) in attrs {
+                windowElement.attrs[attr] = value
+            }
             let initPromise = Promise<[AXSwift.Attribute: Any]>(value: attrs)
             notifier = TestPropertyNotifier()
             let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(
@@ -206,7 +208,7 @@ class PropertySpec: QuickSpec {
             context("when a non-optional attribute is missing") {
 
                 it("reports an error") { () -> Promise<Void> in
-                    windowElement.attrs[.position] = nil
+                    windowElement.attrs.removeValue(forKey: .frame)
                     let expectedError = PropertyError.invalidObject(
                         cause: PropertyError.missingValue
                     )
@@ -214,7 +216,7 @@ class PropertySpec: QuickSpec {
                 }
 
                 it("marks the object as invalid", failOnError: false) { () -> Promise<Void> in
-                    windowElement.attrs[.position] = nil
+                    windowElement.attrs.removeValue(forKey: .frame)
                     return property.refresh().asVoid().always {
                         expect(notifier.stillValid).to(beFalse())
                     }
@@ -238,7 +240,7 @@ class PropertySpec: QuickSpec {
                 }
 
                 it("reports no error") { () -> Promise<Void> in
-                    windowElement.attrs[.position] = nil
+                    windowElement.attrs.removeValue(forKey: .frame)
                     return optProperty.refresh().asVoid()
                 }
 
