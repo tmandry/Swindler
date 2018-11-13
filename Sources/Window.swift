@@ -183,7 +183,7 @@ final class OSXWindowDelegate<
             isMinimized,
             isFullscreen
         ]
-        let allProperties = axProperties + [
+        let allProperties: [PropertyType] = axProperties + [
             position
         ]
 
