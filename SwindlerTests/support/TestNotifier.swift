@@ -4,8 +4,10 @@ import Nimble
 
 class TestNotifier: EventNotifier {
     var events: [EventType] = []
-    func notify<Event: EventType>(_ event: Event) {
+
+    override func notify<Event: EventType>(_ event: Event) {
         events.append(event)
+        super.notify(event)
     }
 
     func getEventsOfType<T: EventType>(_ type: T.Type) -> [T] {

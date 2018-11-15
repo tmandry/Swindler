@@ -43,7 +43,7 @@ public final class State {
 
     /// Calls `handler` when the specified `Event` occurs.
     public func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
-        delegate.on(handler)
+        delegate.notifier.on(handler)
     }
 }
 
@@ -57,15 +57,11 @@ protocol StateDelegate: class {
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
     var systemScreens: SystemScreenDelegate { get }
-    func on<Event: EventType>(_ handler: @escaping (Event) -> Void)
+
+    var notifier: EventNotifier { get }
 }
 
 // MARK: - OSXStateDelegate
-
-/// An object responsible for propagating the given event. Used internally by the OSX delegates.
-protocol EventNotifier: class {
-    func notify<Event: EventType>(_ event: Event)
-}
 
 /// Wraps behavior needed to track the frontmost applications.
 protocol ApplicationObserverType {
@@ -74,6 +70,31 @@ protocol ApplicationObserverType {
     func onApplicationLaunched(_ handler: @escaping (pid_t) -> Void)
     func onApplicationTerminated(_ handler: @escaping (pid_t) -> Void)
     func makeApplicationFrontmost(_ pid: pid_t) throws
+}
+
+/// Simple pubsub.
+class EventNotifier {
+    private typealias EventHandler = (EventType) -> Void
+    private var eventHandlers: [String: [EventHandler]] = [:]
+
+    func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
+        let notification = Event.typeName
+        if eventHandlers[notification] == nil {
+            eventHandlers[notification] = []
+        }
+        // Wrap in a casting closure to preserve type information that gets erased in the
+        // dictionary.
+        eventHandlers[notification]!.append({ handler($0 as! Event) })
+    }
+
+    func notify<Event: EventType>(_ event: Event) {
+        assert(Thread.current.isMainThread)
+        if let handlers = eventHandlers[Event.typeName] {
+            for handler in handlers {
+                handler(event)
+            }
+        }
+    }
 }
 
 struct ApplicationObserver: ApplicationObserverType {
@@ -157,10 +178,9 @@ final class OSXStateDelegate<
     where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement {
     typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
     typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
-    fileprivate typealias EventHandler = (EventType) -> Void
 
     fileprivate var applicationsByPID: [pid_t: AppDelegate] = [:]
-    fileprivate var eventHandlers: [String: [EventHandler]] = [:]
+    var notifier: EventNotifier
 
     // For convenience/readability.
     fileprivate var applications: Dictionary<pid_t, AppDelegate>.Values {
@@ -195,9 +215,11 @@ final class OSXStateDelegate<
     init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens ssd: S) {
         log.debug("Initializing Swindler")
 
+        notifier = EventNotifier()
         systemScreens = ssd
+
         ssd.onScreenLayoutChanged { event in
-            self.notify(event)
+            self.notifier.notify(event)
         }
 
         let appPromises = ApplicationElement.all().map { appElement in
@@ -246,7 +268,7 @@ final class OSXStateDelegate<
     }
 
     func watchApplication(appElement: ApplicationElement, retry: Int) -> Promise<AppDelegate> {
-        return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: self)
+        return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: notifier)
             .then { appDelegate -> AppDelegate in
                 self.applicationsByPID[try appDelegate.axElement.pid()] = appDelegate
                 return appDelegate
@@ -269,16 +291,6 @@ final class OSXStateDelegate<
                 throw error
             }
     }
-
-    func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
-        let notification = Event.typeName
-        if eventHandlers[notification] == nil {
-            eventHandlers[notification] = []
-        }
-        // Wrap in a casting closure to preserve type information that gets erased in the
-        // dictionary.
-        eventHandlers[notification]!.append({ handler($0 as! Event) })
-    }
 }
 
 extension OSXStateDelegate {
@@ -287,7 +299,7 @@ extension OSXStateDelegate {
             return
         }
         watchApplication(appElement: appElement).then { appDelegate -> Void in
-            self.notify(ApplicationLaunchedEvent(
+            self.notifier.notify(ApplicationLaunchedEvent(
                 external: true,
                 application: Application(delegate: appDelegate, stateDelegate: self)
             ))
@@ -303,23 +315,11 @@ extension OSXStateDelegate {
             return
         }
         applicationsByPID.removeValue(forKey: pid)
-        notify(ApplicationTerminatedEvent(
+        notifier.notify(ApplicationTerminatedEvent(
             external: true,
             application: Application(delegate: appDelegate, stateDelegate: self)
         ))
         // TODO: Clean up observers?
-    }
-}
-
-extension OSXStateDelegate: EventNotifier {
-    // TODO: extract this behavior to a self-contained Notifier struct
-    func notify<Event: EventType>(_ event: Event) {
-        assert(Thread.current.isMainThread)
-        if let handlers = eventHandlers[Event.typeName] {
-            for handler in handlers {
-                handler(event)
-            }
-        }
     }
 }
 
@@ -333,10 +333,10 @@ extension OSXStateDelegate: PropertyNotifier {
         oldValue: Event.PropertyType,
         newValue: Event.PropertyType
     ) where Event.Object == State {
-        notify(Event(external: external,
-                     object: State(delegate: self),
-                     oldValue: oldValue,
-                     newValue: newValue))
+        notifier.notify(Event(external: external,
+                        object: State(delegate: self),
+                        oldValue: oldValue,
+                        newValue: newValue))
     }
 
     /// Called when the underlying object has become invalid.

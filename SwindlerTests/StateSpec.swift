@@ -170,7 +170,7 @@ class OSXStateDelegateSpec: QuickSpec {
                         let stateDelegate = initializeWithApp(appObserver: appObserver)
                         waitUntil(stateDelegate.runningApplications.count == 1)
                         var count = 0
-                        stateDelegate.on { (_: ApplicationLaunchedEvent) in
+                        stateDelegate.notifier.on { (_: ApplicationLaunchedEvent) in
                             count += 1
                         }
 
@@ -202,7 +202,7 @@ class OSXStateDelegateSpec: QuickSpec {
                     let stateDelegate = initializeWithApp(appObserver: appObserver)
                     waitUntil(stateDelegate.runningApplications.count == 1)
                     var count = 0
-                    stateDelegate.on { (_: ApplicationTerminatedEvent) in
+                    stateDelegate.notifier.on { (_: ApplicationTerminatedEvent) in
                         count += 1
                     }
 

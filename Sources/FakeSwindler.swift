@@ -126,7 +126,7 @@ public class FakeApplication {
         element = AppElement()
         processId = element.processID
         isHidden = false
-        delegate = try! Delegate(element, parent.delegate, parent.delegate)
+        delegate = try! Delegate(element, parent.delegate, parent.delegate.notifier)
 
         element.companion = self
         parent.appObserver.launch(processId)

@@ -6,9 +6,9 @@ class StubStateDelegate: StateDelegate {
     var frontmostApplication: WriteableProperty<OfOptionalType<Swindler.Application>>!
     var knownWindows: [WindowDelegate] = []
     var systemScreens: SystemScreenDelegate { return fakeScreens }
+    var notifier: EventNotifier = EventNotifier()
 
     var fakeScreens: FakeSystemScreenDelegate = FakeSystemScreenDelegate(screens: [])
-    func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {}
 }
 
 class StubApplicationDelegate: ApplicationDelegate {
