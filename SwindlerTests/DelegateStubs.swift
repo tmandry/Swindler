@@ -32,6 +32,7 @@ class StubWindowDelegate: WindowDelegate {
 
     var appDelegate: ApplicationDelegate?
 
+    var frame: WriteableProperty<OfType<CGRect>>!
     var position: WriteableProperty<OfType<CGPoint>>!
     var size: WriteableProperty<OfType<CGSize>>!
     var title: Property<OfType<String>>!

@@ -55,6 +55,8 @@ public final class Window {
     /// because the application that owns them is otherwise not giving a well-behaved response.
     public var isValid: Bool { return delegate.isValid }
 
+    /// The frame of the window.
+    public var frame: WriteableProperty<OfType<CGRect>> { return delegate.frame }
     /// The position of the bottom-left corner of the window in screen coordinates.
     public var position: WriteableProperty<OfType<CGPoint>> { return delegate.position }
     /// The size of the window in screen coordinates.
@@ -99,6 +101,7 @@ protocol WindowDelegate: class {
     // ApplicationDelegate.
     var appDelegate: ApplicationDelegate? { get }
 
+    var frame: WriteableProperty<OfType<CGRect>>! { get }
     var position: WriteableProperty<OfType<CGPoint>>! { get }
     var size: WriteableProperty<OfType<CGSize>>! { get }
     var title: Property<OfType<String>>! { get }
