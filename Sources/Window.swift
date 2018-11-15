@@ -58,7 +58,8 @@ public final class Window {
     /// The frame of the window.
     public var frame: WriteableProperty<OfType<CGRect>> { return delegate.frame }
     /// The position of the bottom-left corner of the window in screen coordinates.
-    public var position: WriteableProperty<OfType<CGPoint>> { return delegate.position }
+    /// To set this, use `frame.origin`. This property may be removed in the future.
+    public var position: Property<OfType<CGPoint>> { return delegate.position }
     /// The size of the window in screen coordinates.
     public var size: WriteableProperty<OfType<CGSize>> { return delegate.size }
 
@@ -102,7 +103,7 @@ protocol WindowDelegate: class {
     var appDelegate: ApplicationDelegate? { get }
 
     var frame: WriteableProperty<OfType<CGRect>>! { get }
-    var position: WriteableProperty<OfType<CGPoint>>! { get }
+    var position: Property<OfType<CGPoint>>! { get }
     var size: WriteableProperty<OfType<CGSize>>! { get }
     var title: Property<OfType<String>>! { get }
     var isMinimized: WriteableProperty<OfType<Bool>>! { get }
@@ -132,7 +133,7 @@ final class OSXWindowDelegate<
     weak var appDelegate: ApplicationDelegate?
 
     var frame: WriteableProperty<OfType<CGRect>>!
-    var position: WriteableProperty<OfType<CGPoint>>!
+    var position: Property<OfType<CGPoint>>!
     var size: WriteableProperty<OfType<CGSize>>!
     var title: Property<OfType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
@@ -155,7 +156,7 @@ final class OSXWindowDelegate<
         frame = WriteableProperty(
             frameDelegate,
             notifier: self)
-        position = WriteableProperty(
+        position = Property(
             PositionPropertyDelegate(frameDelegate, frame),
             withEvent: WindowPosChangedEvent.self,
             receivingObject: Window.self,
@@ -370,8 +371,9 @@ private final class PositionPropertyDelegate<UIElement: UIElementType>: Property
     }
 
     func writeValue(_ newValue: T) throws {
-        let modified = CGRect(origin: newValue, size: frame.value.size)
-        try frameDelegate.writeValue(modified)
+        // This cannot be done atomically, since the top-left coordinate has to be computed from
+        // the size, which may be out of date. Therefore we don't support writing only the position.
+        fatalError("writing to position property is unsupported; shouldn't get here")
     }
 
     func initialize() -> Promise<T?> {

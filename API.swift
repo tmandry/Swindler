@@ -108,8 +108,11 @@ public protocol Window: Equatable {
     /// because the application that owns them is otherwise not giving a well-behaved response.
     public var isValid: Bool { get }
 
-    /// The position of the top-left corner of the window in screen coordinates.
-    public var position: WriteableProperty<OfType<CGPoint>> { get }
+    /// The frame of the window.
+    public var frame: WriteableProperty<OfType<CGRect>> { return delegate.frame }
+    /// The position of the bottom-left corner of the window in screen coordinates.
+    /// To set this, use `frame.origin`. This property may be removed in the future.
+    public var position: Property<OfType<CGPoint>> { get }
     /// The size of the window in screen coordinates.
     public var size: WriteableProperty<OfType<CGSize>> { get }
 

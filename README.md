@@ -79,7 +79,7 @@ Swindler.initialize().then { state in
 
     let allPlacedOnGrid = screen.knownWindows.enumerate().map { index, window in
         let rect = gridRect(screen, index)
-        return window.position.set(rect.origin).then { window.size.set(rect.size) }
+        return window.frame.set(rect)
     }
 
     when(allPlacedOnGrid) { _ in
@@ -105,8 +105,8 @@ swindlerState.on { (event: WindowMovedEvent) in
         // Ignore events that were caused by us.
         return
     }
-    let snapped = closestGridPosition(event.window.position.value)
-    event.window.position.set(snapped)
+    let snapped = closestGridPosition(event.window.frame.value)
+    event.window.frame.value = snapped
 }
 ```
 
