@@ -241,6 +241,7 @@ class OSXWindowDelegateSpec: QuickSpec {
             windowElement.attrs[.title]    = "a window"
 
             notifier = TestNotifier()
+            WinDelegate.onStateInit(notifier)
             waitUntil { done in
                 let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
                 let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])
@@ -257,6 +258,10 @@ class OSXWindowDelegateSpec: QuickSpec {
             }
         }
 
+        func getWindowElement(_ window: Window?) -> TestUIElement? {
+            return ((window?.delegate) as! WinDelegate?)?.axElement
+        }
+
         context("when a window is destroyed") {
             it("marks the window as invalid") {
                 windowDelegate.handleEvent(.uiElementDestroyed, observer: TestObserver())
@@ -270,10 +275,6 @@ class OSXWindowDelegateSpec: QuickSpec {
                 windowDelegate.handleEvent(.moved, observer: TestObserver())
             }
 
-            func getWindowElement(_ window: Window?) -> TestUIElement? {
-                return ((window?.delegate) as! WinDelegate?)?.axElement
-            }
-
             it("emits a WindowPosChangedEvent") {
                 if let event = notifier.expectEvent(WindowPosChangedEvent.self) {
                     expect(getWindowElement(event.window)).to(equal(windowElement))
@@ -285,11 +286,65 @@ class OSXWindowDelegateSpec: QuickSpec {
                     expect(event.external).to(beTrue())
                 }
             }
+        }
 
+        context("when the frame is set") {
+            func setFrame(_ val: CGRect, inverted: CGPoint) {
+                windowDelegate.frame.value = val
+                expect(windowElement.attrs[.position] as? CGPoint).toEventually(equal(inverted))
+                expect(windowElement.attrs[.size] as? CGSize).toEventually(equal(val.size))
+                // Implementation note: sent by the system, but not used.
+                windowDelegate.handleEvent(.moved, observer: TestObserver())
+                windowDelegate.handleEvent(.resized, observer: TestObserver())
+            }
+
+            context("but only the position is changed") {
+                beforeEach {
+                    setFrame(CGRect(x: 500, y: 500, width: 100, height: 100),
+                             inverted: CGPoint(x: 500, y: 400))
+                }
+                it("emits an internal WindowPosChangedEvent") {
+                    if let event = notifier.expectEvent(WindowPosChangedEvent.self) {
+                        expect(getWindowElement(event.window)).to(equal(windowElement))
+                        expect(event.external).to(beFalse())
+                    }
+                }
+            }
+
+            context("but only the size is changed") {
+                beforeEach {
+                    setFrame(CGRect(x: 0, y: 800, width: 200, height: 200),
+                             inverted: CGPoint(x: 0, y: 0))
+                }
+                it("emits an internal WindowSizeChangedEvent") {
+                    if let event = notifier.expectEvent(WindowSizeChangedEvent.self) {
+                        expect(getWindowElement(event.window)).to(equal(windowElement))
+                        expect(event.external).to(beFalse())
+                    }
+                }
+            }
+
+            context("and both position and size are changed") {
+                beforeEach {
+                    setFrame(CGRect(x: 500, y: 500, width: 200, height: 200),
+                             inverted: CGPoint(x: 500, y: 300))
+                }
+                it("emits an internal WindowPosChangedEvent") {
+                    if let event = notifier.expectEvent(WindowPosChangedEvent.self) {
+                        expect(getWindowElement(event.window)).to(equal(windowElement))
+                        expect(event.external).to(beFalse())
+                    }
+                }
+                it("emits an internal WindowSizeChangedEvent") {
+                    if let event = notifier.expectEvent(WindowSizeChangedEvent.self) {
+                        expect(getWindowElement(event.window)).to(equal(windowElement))
+                        expect(event.external).to(beFalse())
+                    }
+                }
+            }
         }
 
         describe("property updates") {
-
             describe("title") {
                 it("updates when the title changes") {
                     windowElement.attrs[.title] = "updated title"
@@ -309,6 +364,7 @@ class OSXWindowDelegateSpec: QuickSpec {
                 it("updates when the window is resized from the top") {
                     windowElement.attrs[.position] = CGPoint(x: 0, y: 25)
                     windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
+                    // Somewhat surprisingly, no .moved event is produced when this happens.
                     windowDelegate.handleEvent(.resized, observer: TestObserver())
                     expect(windowDelegate.size.value).toEventually(equal(
                         CGSize(width: 100, height: 75)))
@@ -324,6 +380,34 @@ class OSXWindowDelegateSpec: QuickSpec {
                         CGPoint(x: 0, y: 925)))
                     expect(windowDelegate.size.value).toEventually(equal(
                         CGSize(width: 100, height: 75)))
+                }
+            }
+
+            describe("frame") {
+                it("updates when the window is moved") {
+                    expect(windowDelegate.frame.value).to(equal(
+                        CGRect(x: 0, y: 900, width: 100, height: 100)))
+                    windowElement.attrs[.position] = CGPoint(x: 1, y: 1)
+                    windowDelegate.handleEvent(.moved, observer: TestObserver())
+                    expect(windowDelegate.frame.value).toEventually(equal(
+                        CGRect(x: 1, y: 899, width: 100, height: 100)))
+                }
+
+                it("updates when the window is resized from the top") {
+                    windowElement.attrs[.position] = CGPoint(x: 0, y: 25)
+                    windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
+                    // Somewhat surprisingly, no .moved event is produced when this happens.
+                    windowDelegate.handleEvent(.resized, observer: TestObserver())
+                    expect(windowDelegate.frame.value).toEventually(equal(
+                        CGRect(x: 0, y: 900, width: 100, height: 75)))
+                }
+
+                it("updates when the window is resized from the bottom") {
+                    windowElement.attrs[.position] = CGPoint(x: 0, y: 0)
+                    windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
+                    windowDelegate.handleEvent(.resized, observer: TestObserver())
+                    expect(windowDelegate.frame.value).toEventually(equal(
+                        CGRect(x: 0, y: 925, width: 100, height: 75)))
                 }
             }
 
@@ -355,7 +439,6 @@ class OSXWindowDelegateSpec: QuickSpec {
                     expect(windowDelegate.isMinimized.value).toEventually(beFalse())
                 }
             }
-
         }
 
     }
@@ -432,7 +515,6 @@ class WindowSpec: QuickSpec {
                     expect(window.screen).to(equal(rightScreen))
                 }
             }
-
         }
 
     }

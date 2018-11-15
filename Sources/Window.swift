@@ -155,17 +155,15 @@ final class OSXWindowDelegate<
         let frameDelegate = FramePropertyDelegate(axElement, initPromise, systemScreens)
         frame = WriteableProperty(
             frameDelegate,
+            withEvent: WindowFrameChangedEvent.self,
+            receivingObject: Window.self,
             notifier: self)
         position = Property(
             PositionPropertyDelegate(frameDelegate, frame),
-            withEvent: WindowPosChangedEvent.self,
-            receivingObject: Window.self,
-            notifier: self)
+            notifier: self)  // WindowPosChangedEvent is generated from WindowFrameChangedEvent
         size = WriteableProperty(
             AXPropertyDelegate(axElement, .size, initPromise),
-            withEvent: WindowSizeChangedEvent.self,
-            receivingObject: Window.self,
-            notifier: self)
+            notifier: self)  // WindowSizeChangedEvent is generated from WindowFrameChangedEvent
         title = Property(
             AXPropertyDelegate(axElement, .title, initPromise),
             withEvent: WindowTitleChangedEvent.self,
@@ -262,6 +260,31 @@ final class OSXWindowDelegate<
             return axElement == other.axElement
         } else {
             return false
+        }
+    }
+}
+
+extension OSXWindowDelegate {
+    static func onStateInit(_ notifier: EventNotifier) {
+        // Translate from WindowFrameChangedEvent to WindowPosChangedEvent and
+        // WindowSizeChangedEvent.
+        notifier.on() { (event: WindowFrameChangedEvent) in
+            if event.oldValue.origin != event.newValue.origin {
+                notifier.notify(WindowPosChangedEvent(
+                    external: event.external,
+                    window: event.window,
+                    oldValue: event.oldValue.origin,
+                    newValue: event.newValue.origin
+                ))
+            }
+            if event.oldValue.size != event.newValue.size {
+                notifier.notify(WindowSizeChangedEvent(
+                    external: event.external,
+                    window: event.window,
+                    oldValue: event.oldValue.size,
+                    newValue: event.newValue.size
+                ))
+            }
         }
     }
 }
