@@ -157,27 +157,22 @@ Swindler is in development and is in **alpha**. Here is the state of its major f
 
 You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/API.swift).
 
-## Getting Started
+## Development
 
-Swindler uses `pod` for Dependency management, so first you need to get that.
-[Follow the instructions](https://guides.cocoapods.org/using/getting-started.html) on the cocoapods web site.
+Swindler uses Cococapods for Dependency management.
+[Follow the instructions](https://guides.cocoapods.org/using/getting-started.html) to install Cocoapods.
 This should give you the `pod` command for use in the shell.
 
-With that, the simplest way to get started is to run XCode and start with the "Clone an
-existing project" button. Give it the URL to Swindler (presumably
-https://github.com/tmandry/Swindler.git). It will download the repository to
-your local disk and start it up.
-
-Now, in a Terminal window, cd to the directory where you downloaded Swindler.
-In that directory, run the following commands:
+Clone the project, then in your shell run:
 
 ```
-% git submodule init
-% git submodule update
-% pod install
+$ cd Swindler
+$ git submodule init
+$ git submodule update
+$ pod install
 ```
 
-At this point you should be able to build Swindler in XCode and start on your way!
+At this point you should be able to build Swindler in Xcode and start on your way!
 
 ## Contact
 
