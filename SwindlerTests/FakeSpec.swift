@@ -36,7 +36,7 @@ class FakeSpec: QuickSpec {
             }
 
             it("sees changes from Swindler") {
-                fake.window.position.value = CGPoint(x: 99, y: 100)
+                fake.window.frame.value.origin = CGPoint(x: 99, y: 100)
                 expect(fake.rect.origin).toEventually(equal(CGPoint(x: 99, y: 100)))
 
                 fake.window.size.value = CGSize(width: 1111, height: 2222)

@@ -5,8 +5,10 @@ class StubStateDelegate: StateDelegate {
     var runningApplications: [ApplicationDelegate] = []
     var frontmostApplication: WriteableProperty<OfOptionalType<Swindler.Application>>!
     var knownWindows: [WindowDelegate] = []
-    var screens: [ScreenDelegate] = []
-    func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {}
+    var systemScreens: SystemScreenDelegate { return fakeScreens }
+    var notifier: EventNotifier = EventNotifier()
+
+    var fakeScreens: FakeSystemScreenDelegate = FakeSystemScreenDelegate(screens: [])
 }
 
 class StubApplicationDelegate: ApplicationDelegate {
@@ -30,7 +32,8 @@ class StubWindowDelegate: WindowDelegate {
 
     var appDelegate: ApplicationDelegate?
 
-    var position: WriteableProperty<OfType<CGPoint>>!
+    var frame: WriteableProperty<OfType<CGRect>>!
+    var position: Property<OfType<CGPoint>>!
     var size: WriteableProperty<OfType<CGSize>>!
     var title: Property<OfType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!

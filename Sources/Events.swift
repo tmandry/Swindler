@@ -75,6 +75,14 @@ extension WindowPropertyEventType {
     }
 }
 
+struct WindowFrameChangedEvent: WindowPropertyEventType {
+    public typealias PropertyType = CGRect
+    public let external: Bool
+    public let window: Window
+    public let oldValue: PropertyType
+    public let newValue: PropertyType
+}
+
 public struct WindowPosChangedEvent: WindowPropertyEventType {
     public typealias PropertyType = CGPoint
     public let external: Bool

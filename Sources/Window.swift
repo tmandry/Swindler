@@ -55,8 +55,11 @@ public final class Window {
     /// because the application that owns them is otherwise not giving a well-behaved response.
     public var isValid: Bool { return delegate.isValid }
 
-    /// The position of the top-left corner of the window in screen coordinates.
-    public var position: WriteableProperty<OfType<CGPoint>> { return delegate.position }
+    /// The frame of the window.
+    public var frame: WriteableProperty<OfType<CGRect>> { return delegate.frame }
+    /// The position of the bottom-left corner of the window in screen coordinates.
+    /// To set this, use `frame.origin`. This property may be removed in the future.
+    public var position: Property<OfType<CGPoint>> { return delegate.position }
     /// The size of the window in screen coordinates.
     public var size: WriteableProperty<OfType<CGSize>> { return delegate.size }
 
@@ -99,7 +102,8 @@ protocol WindowDelegate: class {
     // ApplicationDelegate.
     var appDelegate: ApplicationDelegate? { get }
 
-    var position: WriteableProperty<OfType<CGPoint>>! { get }
+    var frame: WriteableProperty<OfType<CGRect>>! { get }
+    var position: Property<OfType<CGPoint>>! { get }
     var size: WriteableProperty<OfType<CGSize>>! { get }
     var title: Property<OfType<String>>! { get }
     var isMinimized: WriteableProperty<OfType<Bool>>! { get }
@@ -124,21 +128,22 @@ final class OSXWindowDelegate<
 
     fileprivate(set) var isValid: Bool = true
 
-    fileprivate var axProperties: [PropertyType]!
     fileprivate var watchedAxProperties: [AXSwift.AXNotification: [PropertyType]]!
 
     weak var appDelegate: ApplicationDelegate?
 
-    var position: WriteableProperty<OfType<CGPoint>>!
+    var frame: WriteableProperty<OfType<CGRect>>!
+    var position: Property<OfType<CGPoint>>!
     var size: WriteableProperty<OfType<CGSize>>!
     var title: Property<OfType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!
 
-    private init(appDelegate: ApplicationDelegate,
-                 notifier: EventNotifier?,
-                 axElement: UIElement,
-                 observer: Observer) throws {
+    private init(_ appDelegate: ApplicationDelegate,
+                 _ notifier: EventNotifier?,
+                 _ axElement: UIElement,
+                 _ observer: Observer,
+                 _ systemScreens: SystemScreenDelegate) throws {
         self.appDelegate = appDelegate
         self.notifier = notifier
         self.axElement = axElement
@@ -147,16 +152,18 @@ final class OSXWindowDelegate<
         let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pending()
 
         // Initialize all properties.
-        position = WriteableProperty(
-            AXPropertyDelegate(axElement, .position, initPromise),
-            withEvent: WindowPosChangedEvent.self,
+        let frameDelegate = FramePropertyDelegate(axElement, initPromise, systemScreens)
+        frame = WriteableProperty(
+            frameDelegate,
+            withEvent: WindowFrameChangedEvent.self,
             receivingObject: Window.self,
             notifier: self)
+        position = Property(
+            PositionPropertyDelegate(frameDelegate, frame),
+            notifier: self)  // WindowPosChangedEvent is generated from WindowFrameChangedEvent
         size = WriteableProperty(
             AXPropertyDelegate(axElement, .size, initPromise),
-            withEvent: WindowSizeChangedEvent.self,
-            receivingObject: Window.self,
-            notifier: self)
+            notifier: self)  // WindowSizeChangedEvent is generated from WindowFrameChangedEvent
         title = Property(
             AXPropertyDelegate(axElement, .title, initPromise),
             withEvent: WindowTitleChangedEvent.self,
@@ -171,18 +178,21 @@ final class OSXWindowDelegate<
             AXPropertyDelegate(axElement, .fullScreen, initPromise),
             notifier: self)
 
-        axProperties = [
-            position,
+        let axProperties: [PropertyType] = [
+            frame,
             size,
             title,
             isMinimized,
             isFullscreen
         ]
+        let allProperties: [PropertyType] = axProperties + [
+            position
+        ]
 
         // Map notifications on this element to the corresponding property.
         watchedAxProperties = [
-            .moved: [position],
-            .resized: [position, size, isFullscreen],
+            .moved: [frame, position],
+            .resized: [frame, position, size, isFullscreen],
             .titleChanged: [title],
             .windowMiniaturized: [isMinimized],
             .windowDeminiaturized: [isMinimized]
@@ -218,7 +228,7 @@ final class OSXWindowDelegate<
             }
         }
 
-        initialized = when(fulfilled: initializeProperties(axProperties).asVoid(), subroleChecked)
+        initialized = when(fulfilled: initializeProperties(allProperties).asVoid(), subroleChecked)
     }
 
     private func watchWindowElement(_ element: UIElement,
@@ -254,6 +264,31 @@ final class OSXWindowDelegate<
     }
 }
 
+extension OSXWindowDelegate {
+    static func onStateInit(_ notifier: EventNotifier) {
+        // Translate from WindowFrameChangedEvent to WindowPosChangedEvent and
+        // WindowSizeChangedEvent.
+        notifier.on() { (event: WindowFrameChangedEvent) in
+            if event.oldValue.origin != event.newValue.origin {
+                notifier.notify(WindowPosChangedEvent(
+                    external: event.external,
+                    window: event.window,
+                    oldValue: event.oldValue.origin,
+                    newValue: event.newValue.origin
+                ))
+            }
+            if event.oldValue.size != event.newValue.size {
+                notifier.notify(WindowSizeChangedEvent(
+                    external: event.external,
+                    window: event.window,
+                    oldValue: event.oldValue.size,
+                    newValue: event.newValue.size
+                ))
+            }
+        }
+    }
+}
+
 /// Interface used by OSXApplicationDelegate.
 extension OSXWindowDelegate {
     /// Initializes the window, and returns it in a Promise once it's ready.
@@ -261,13 +296,12 @@ extension OSXWindowDelegate {
         appDelegate: ApplicationDelegate,
         notifier: EventNotifier?,
         axElement: UIElement,
-        observer: Observer
+        observer: Observer,
+        systemScreens: SystemScreenDelegate
     ) -> Promise<OSXWindowDelegate> {
         return firstly { // capture thrown errors in promise
             let window = try OSXWindowDelegate(
-                appDelegate: appDelegate, notifier: notifier, axElement: axElement,
-                observer: observer
-            )
+                appDelegate, notifier, axElement, observer, systemScreens)
             return window.initialized.then { window }
         }
     }
@@ -304,5 +338,68 @@ extension OSXWindowDelegate: PropertyNotifier {
 
     func notifyInvalid() {
         isValid = false
+    }
+}
+
+// MARK: PropertyDelegates
+
+/// PropertyAdapter that inverts the y-axis of the point value.
+///
+/// This is to convert between AXPosition coordinates, which have the origin at
+/// the top-left, and Cocoa coordinates, which have it at the bottom-left.
+private final class FramePropertyDelegate<UIElement: UIElementType>:
+    AXPropertyDelegate<CGRect, UIElement>
+{
+    typealias T = CGRect
+
+    typealias InitDict = [AXSwift.Attribute: Any]
+
+    let systemScreens: SystemScreenDelegate
+
+    init(_ element: UIElement, _ initPromise: Promise<InitDict>, _ screens: SystemScreenDelegate) {
+        systemScreens = screens
+        super.init(element, .frame, initPromise)
+    }
+
+    override func readFilter(_ value: CGRect?) -> CGRect? {
+        guard let rect = value else { return nil }
+        return invert(rect)
+    }
+
+    override func writeValue(_ newValue: CGRect) throws {
+        try super.writeValue(invert(newValue))
+    }
+
+    private func invert(_ rect: CGRect) -> CGRect {
+        let inverted = CGPoint(x: rect.minX, y: systemScreens.maxY - rect.maxY)
+        return CGRect(origin: inverted, size: rect.size)
+    }
+}
+
+/// Adapts from .frame to .position.
+private final class PositionPropertyDelegate<UIElement: UIElementType>: PropertyDelegate {
+    typealias T = CGPoint
+
+    let frameDelegate: FramePropertyDelegate<UIElement>
+    let frame: WriteableProperty<OfType<CGRect>>
+
+    init(_ frameDelegate_: FramePropertyDelegate<UIElement>,
+         _ frame_: WriteableProperty<OfType<CGRect>>) {
+        frameDelegate = frameDelegate_
+        frame = frame_
+    }
+
+    func readValue() throws -> T? {
+        return try frameDelegate.readValue()?.origin
+    }
+
+    func writeValue(_ newValue: T) throws {
+        // This cannot be done atomically, since the top-left coordinate has to be computed from
+        // the size, which may be out of date. Therefore we don't support writing only the position.
+        fatalError("writing to position property is unsupported; shouldn't get here")
+    }
+
+    func initialize() -> Promise<T?> {
+        return frameDelegate.initialize().then { return $0?.origin }
     }
 }

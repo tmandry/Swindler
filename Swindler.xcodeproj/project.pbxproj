@@ -14,7 +14,6 @@
 		2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */; };
 		2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898C1C22718E00C422C0 /* StateSpec.swift */; };
 		2F6189921C22718E00C422C0 /* WindowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898E1C22718E00C422C0 /* WindowSpec.swift */; };
-		2F61899A1C22737600C422C0 /* AXSwiftFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189971C22737600C422C0 /* AXSwiftFakes.swift */; };
 		2F61899B1C22737600C422C0 /* ExpectationHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189981C22737600C422C0 /* ExpectationHelpers.swift */; };
 		2F61899C1C22737600C422C0 /* TestNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6189991C22737600C422C0 /* TestNotifier.swift */; };
 		2F61899E1C27A8DD00C422C0 /* DriverSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61899D1C27A8DC00C422C0 /* DriverSpec.swift */; };
@@ -33,6 +32,7 @@
 		2F86CEEE1BD6EC32007E8C29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F86CEED1BD6EC32007E8C29 /* Assets.xcassets */; };
 		2F86CEF71BD6EC55007E8C29 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F86CEF61BD6EC55007E8C29 /* main.swift */; };
 		2F9E31A91BF050AF00EAD248 /* Property.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9E31A81BF050AF00EAD248 /* Property.swift */; };
+		2FA4C2A12198C8F000C7027C /* AdversaryFakes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA4C2A02198C8F000C7027C /* AdversaryFakes.swift */; };
 		2FD2D0661C5493F500D0355D /* DelegateStubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD2D0651C5493F500D0355D /* DelegateStubs.swift */; };
 		2FD2D0681C67EC8700D0355D /* ScreenSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD2D0671C67EC8700D0355D /* ScreenSpec.swift */; };
 		2FEEA29C1C1D36B000CD515E /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
@@ -61,7 +61,6 @@
 		2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationSpec.swift; sourceTree = "<group>"; };
 		2F61898C1C22718E00C422C0 /* StateSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateSpec.swift; sourceTree = "<group>"; };
 		2F61898E1C22718E00C422C0 /* WindowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WindowSpec.swift; sourceTree = "<group>"; };
-		2F6189971C22737600C422C0 /* AXSwiftFakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AXSwiftFakes.swift; path = support/AXSwiftFakes.swift; sourceTree = "<group>"; };
 		2F6189981C22737600C422C0 /* ExpectationHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = ExpectationHelpers.swift; path = support/ExpectationHelpers.swift; sourceTree = "<group>"; };
 		2F6189991C22737600C422C0 /* TestNotifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = TestNotifier.swift; path = support/TestNotifier.swift; sourceTree = "<group>"; };
 		2F61899D1C27A8DC00C422C0 /* DriverSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DriverSpec.swift; sourceTree = "<group>"; };
@@ -86,6 +85,7 @@
 		2F86CEF21BD6EC32007E8C29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		2F86CEF61BD6EC55007E8C29 /* main.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		2F9E31A81BF050AF00EAD248 /* Property.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Property.swift; sourceTree = "<group>"; };
+		2FA4C2A02198C8F000C7027C /* AdversaryFakes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = AdversaryFakes.swift; path = support/AdversaryFakes.swift; sourceTree = "<group>"; };
 		2FD2D0651C5493F500D0355D /* DelegateStubs.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DelegateStubs.swift; sourceTree = "<group>"; };
 		2FD2D0671C67EC8700D0355D /* ScreenSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenSpec.swift; sourceTree = "<group>"; };
 		2FEEA2AC1C1E041200CD515E /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -148,7 +148,7 @@
 		2F6189961C22736800C422C0 /* support */ = {
 			isa = PBXGroup;
 			children = (
-				2F6189971C22737600C422C0 /* AXSwiftFakes.swift */,
+				2FA4C2A02198C8F000C7027C /* AdversaryFakes.swift */,
 				2F6189981C22737600C422C0 /* ExpectationHelpers.swift */,
 				2F6189991C22737600C422C0 /* TestNotifier.swift */,
 				2FD2D0651C5493F500D0355D /* DelegateStubs.swift */,
@@ -519,7 +519,7 @@
 				2F7F01081C115D4B00C97949 /* PropertySpec.swift in Sources */,
 				2F61899C1C22737600C422C0 /* TestNotifier.swift in Sources */,
 				2FD2D0661C5493F500D0355D /* DelegateStubs.swift in Sources */,
-				2F61899A1C22737600C422C0 /* AXSwiftFakes.swift in Sources */,
+				2FA4C2A12198C8F000C7027C /* AdversaryFakes.swift in Sources */,
 				2F61899B1C22737600C422C0 /* ExpectationHelpers.swift in Sources */,
 				2F6189921C22718E00C422C0 /* WindowSpec.swift in Sources */,
 			);

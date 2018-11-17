@@ -6,6 +6,46 @@
 
 import AXSwift
 
+/// A dictionary of AX attributes.
+///
+/// This struct models redundancies in the data model (frame, position, and
+/// size).
+struct Attributes {
+    private var values: [Attribute: Any] = [:]
+
+    subscript(attr: Attribute) -> Any? {
+        get {
+            switch attr {
+            case .position:
+                guard let frame = values[.frame] as? CGRect else { return nil }
+                return Optional(frame.origin)
+            case .size:
+                guard let frame = values[.frame] as? CGRect else { return nil }
+                return Optional(frame.size)
+            default:
+                return values[attr]
+            }
+        }
+        set {
+            if attr == .position {
+                let frame = values[.frame] as? CGRect ?? CGRect.zero
+                values[.frame] = CGRect(origin: newValue as! CGPoint, size: frame.size)
+                return
+            }
+            if attr == .size {
+                let frame = values[.frame] as? CGRect ?? CGRect.zero
+                values[.frame] = CGRect(origin: frame.origin, size: newValue as! CGSize)
+                return
+            }
+            values[attr] = newValue
+        }
+    }
+
+    mutating func removeValue(forKey: Attribute) {
+        values.removeValue(forKey: forKey)
+    }
+}
+
 class TestUIElement: UIElementType, Hashable {
     static var globalMessagingTimeout: Float = 0
 
@@ -13,27 +53,28 @@ class TestUIElement: UIElementType, Hashable {
 
     var id: Int
     var processID: pid_t = 0
-    var attrs: [Attribute: Any] = [:]
+    var attrs: Attributes
 
     var throwInvalid: Bool = false
 
     init() {
+        attrs = Attributes()
         TestUIElement.elementCount += 1
         id = TestUIElement.elementCount
     }
     var hashValue: Int { return id }
 
     func pid() throws -> pid_t { return processID }
-    func attribute<T>(_ attribute: Attribute) throws -> T? {
+    func attribute<T>(_ attr: Attribute) throws -> T? {
         if throwInvalid { throw AXSwift.AXError.invalidUIElement }
-        if let value = attrs[attribute] {
+        if let value = attrs[attr] {
             return (value as! T)
         }
         return nil
     }
-    func arrayAttribute<T>(_ attribute: Attribute) throws -> [T]? {
+    func arrayAttribute<T>(_ attr: Attribute) throws -> [T]? {
         if throwInvalid { throw AXSwift.AXError.invalidUIElement }
-        guard let value = attrs[attribute] else {
+        guard let value = attrs[attr] else {
             return nil
         }
         return (value as! [T])
@@ -41,14 +82,14 @@ class TestUIElement: UIElementType, Hashable {
     func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute: Any] {
         if throwInvalid { throw AXSwift.AXError.invalidUIElement }
         var result: [Attribute: Any] = [:]
-        for attribute in attributes {
-            result[attribute] = attrs[attribute]
+        for attr in attributes {
+            result[attr] = attrs[attr]
         }
         return result
     }
-    func setAttribute(_ attribute: Attribute, value: Any) throws {
+    func setAttribute(_ attr: Attribute, value: Any) throws {
         if throwInvalid { throw AXSwift.AXError.invalidUIElement }
-        attrs[attribute] = value
+        attrs[attr] = value
     }
 
     func addObserver(_: FakeObserver) { }
@@ -178,8 +219,7 @@ class TestWindowElement: TestUIElement {
         super.init()
         processID = app.processID
         attrs[.role] = AXSwift.Role.window.rawValue
-        attrs[.position] = CGPoint(x: 0, y: 0)
-        attrs[.size] = CGSize(width: 100, height: 100)
+        attrs[.frame] = CGRect(x: 0, y: 0, width: 100, height: 100)
         attrs[.title] = "Window \(id)"
         attrs[.minimized] = false
         attrs[.main] = true
@@ -214,19 +254,20 @@ class EmittingTestWindowElement: TestWindowElement {
 
     override func setAttribute(_ attribute: Attribute, value: Any) throws {
         try super.setAttribute(attribute, value: value)
-        let notification = { () -> AXNotification? in
+        let notifications = { () -> [AXNotification] in
             switch attribute {
-            case .position:   return .moved
-            case .size:       return .resized
-            case .fullScreen: return .resized
-            case .title:      return .titleChanged
+            case .position:   return [.moved]
+            case .size:       return [.resized]
+            case .frame:      return [.moved, .resized]
+            case .fullScreen: return [.resized]
+            case .title:      return [.titleChanged]
             case .minimized:
-                return (value as? Bool == true) ? .windowDeminiaturized : .windowMiniaturized
+                return (value as? Bool == true) ? [.windowDeminiaturized] : [.windowMiniaturized]
             default:
-                return nil
+                return []
             }
         }()
-        if let notification = notification {
+        for notification in notifications {
             for observer in observers {
                 observer.unbox?.emit(notification, forElement: self)
             }
