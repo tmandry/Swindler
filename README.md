@@ -1,5 +1,5 @@
 # Swindler
-_A Swift window management framework for macOS_
+_A Swift window management library for macOS_
 
 [![Build Status](https://travis-ci.org/tmandry/Swindler.svg?branch=master)](https://travis-ci.org/tmandry/Swindler)
 [![Join the chat at https://gitter.im/tmandry/Swindler](https://badges.gitter.im/tmandry/Swindler.svg)](https://gitter.im/tmandry/Swindler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -74,14 +74,17 @@ The following code assigns all windows on the screen to a grid. Note the simplic
 promise-based API. Requests are dispatched concurrently and in the background, not serially.
 
 ```swift
-let screen = Swindler.state.screens.first!
-let allPlacedOnGrid = screen.knownWindows.enumerate().map { index, window in
-    let rect = gridRect(screen, index)
-    return window.position.set(rect.origin).then { window.size.set(rect.size) }
-}
+Swindler.initialize().then { state in
+    let screen = state.screens.first!
 
-when(allPlacedOnGrid) { _ in
-    print("all done!")
+    let allPlacedOnGrid = screen.knownWindows.enumerate().map { index, window in
+        let rect = gridRect(screen, index)
+        return window.position.set(rect.origin).then { window.size.set(rect.size) }
+    }
+
+    when(allPlacedOnGrid) { _ in
+        print("all done!")
+    }
 }
 
 func gridRect(screen: Swindler.Screen, index: Int) -> CGRect {
@@ -97,7 +100,7 @@ func gridRect(screen: Swindler.Screen, index: Int) -> CGRect {
 Watching for events is simple. Here's how you would implement snap-to-grid:
 
 ```swift
-swindler.on { (event: WindowMovedEvent) in
+swindlerState.on { (event: WindowMovedEvent) in
     guard event.external == true else {
         // Ignore events that were caused by us.
         return
