@@ -26,8 +26,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        swindler = Swindler.state
+        Swindler.initialize().then { state -> () in
+            self.swindler = state
+            self.setupEventHandlers()
+        }.catch { error in
+            print("Fatal error: failed to initialize Swindler: \(error)")
+            NSApp.terminate(self)
+        }
 
+        //    dispatchAfter(10.0) {
+        //      for window in self.swindler.knownWindows {
+        //        let title = window.title.value
+        //        print("resizing \(title)")
+        //        window.size.set(CGSize(width: 200, height: 200)).then { newValue in
+        //          print("done with \(title), valid: \(window.isValid), newValue: \(newValue)")
+        //        }.error { error in
+        //          print("failed to resize \(title), valid: \(window.isValid), error: \(error)")
+        //        }
+        //      }
+        //    }
+    }
+
+    private func setupEventHandlers() {
         print("screens: \(swindler.screens)")
 
         swindler.on { (event: WindowCreatedEvent) in
@@ -55,18 +75,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                   "[old: \(event.oldValue?.bundleIdentifier ?? "unknown")]")
             self.frontmostWindowChanged()
         }
-
-        //    dispatchAfter(10.0) {
-        //      for window in self.swindler.knownWindows {
-        //        let title = window.title.value
-        //        print("resizing \(title)")
-        //        window.size.set(CGSize(width: 200, height: 200)).then { newValue in
-        //          print("done with \(title), valid: \(window.isValid), newValue: \(newValue)")
-        //        }.error { error in
-        //          print("failed to resize \(title), valid: \(window.isValid), error: \(error)")
-        //        }
-        //      }
-        //    }
     }
 
     private func frontmostWindowChanged() {
