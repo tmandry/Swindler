@@ -1,4 +1,6 @@
-/// The basic protocol for an event struct.
+/// The protocol for all event structs.
+///
+/// Usually not used directly. Used as a bound by `State.on(...)`.
 public protocol EventType {
     /// All events are marked as internal or external. Internal events were caused via Swindler,
     /// external events were not.

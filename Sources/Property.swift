@@ -38,6 +38,7 @@ protocol PropertyDelegate {
     func initialize() -> Promise<T?>
 }
 
+/// Specifies an error that occurred during a property read or write.
 public enum PropertyError: Error {
     /// The value the property was set to is illegal.
     /// - note: In practice, applications often simply ignore illegal values instead of returning
@@ -61,6 +62,8 @@ public enum PropertyError: Error {
 // In Swift, even when T: Equatable, we don't have T?: Equatable (but you CAN compare optionals with
 // ==). To get around this while keeping our code general, we have to specify all this explicitly.
 
+/// Internally used by Swindler. You should not use this directly.
+/// :nodoc:
 public protocol PropertyTypeSpec {
     associatedtype NonOptionalType: Equatable
     /// The property type, which might be the same as the base type, or Optional<NonOptionalType>.
@@ -70,6 +73,9 @@ public protocol PropertyTypeSpec {
     static func toOptionalType(_ from: PropertyType) -> NonOptionalType?
 }
 
+/// Specifies that a `Property` has type `T`.
+///
+/// Internally used by Swindler. You should not use this directly.
 public struct OfType<T: Equatable>: PropertyTypeSpec {
     public typealias NonOptionalType = T
     public typealias PropertyType = T
@@ -85,6 +91,9 @@ public struct OfType<T: Equatable>: PropertyTypeSpec {
     public static func toOptionalType(_ from: T) -> T? { return from }
 }
 
+/// Used to specify that a `Property` has the type `T?`.
+///
+/// Internally used by Swindler. You should not use this directly.
 public struct OfOptionalType<T: Equatable>: PropertyTypeSpec {
     public typealias NonOptionalType = T
     public typealias PropertyType = T?
@@ -93,8 +102,9 @@ public struct OfOptionalType<T: Equatable>: PropertyTypeSpec {
     public static func toOptionalType(_ from: T?) -> T? { return from }
 }
 
-/// A property on a window. Property values are watched and cached in the background, so they are
-/// always available to read.
+/// A property on a Swindler object.
+///
+/// Property values are watched and cached in the background, so they are always available to read.
 ///
 /// - throws: Only `PropertyError` errors are given for rejected promises.
 open class Property<TypeSpec: PropertyTypeSpec> {
@@ -174,8 +184,15 @@ open class Property<TypeSpec: PropertyTypeSpec> {
         return value_
     }
 
-    /// Forces the value of the property to refresh. Most properties are watched so you don't need
-    /// to call this yourself.
+    /// Forces the value of the property to refresh.
+    ///
+    /// You almost never need to call this yourself, because properties are watched and updated
+    /// automatically.
+    ///
+    /// You might need this if, for example, you receive information via a side channel that a
+    /// property has updated, and want to make sure you have the latest value before continuing.
+    ///
+    /// - throws: `PropertyError` (via Promise)
     @discardableResult
     public final func refresh() -> Promise<PropertyType> {
         // Allow queueing up a refresh before initialization is complete, which means "assume the
@@ -257,7 +274,9 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
     }
 
     /// Sets the value of the property.
-    /// - returns: A promise that resolves to the new actual value of the property.
+    ///
+    /// - returns: A promise that resolves to the new _actual_ value of the property, once set.
+    /// - throws: `PropertyError` (via Promise)
     public final func set(_ newValue: NonOptionalType) -> Promise<PropertyType> {
         return Promise<Void>(value: ()).then(on: backgroundQueue) {
             () throws -> (PropertyType, PropertyType) in
