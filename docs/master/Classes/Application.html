@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Application Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset="utf-8">
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+
+    <a name="//apple_ref/swift/Class/Application" class="dashAnchor"></a>
+
+    <a title="Application Class Reference"></a>
+
+    <header class="header">
+      <p class="header-col header-col--primary">
+        <a class="header-link" href="../index.html">
+          Swindler Docs
+        </a>
+         (47% documented)
+      </p>
+    
+      <p class="header-col--secondary">
+        <form role="search" action="../search.json">
+          <input type="text" placeholder="Search documentation" data-typeahead>
+        </form>
+      </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="https://github.com/tmandry/Swindler">
+            <img class="header-icon" src="../img/gh.png"/>
+            View on GitHub
+          </a>
+        </p>
+    
+        <p class="header-col header-col--secondary">
+          <a class="header-link" href="dash-feed://https%3A%2F%2Ftmandry%2Egithub%2Eio%2FSwindler%2Fdocs%2Fdocsets%2FSwindler%2Exml">
+            <img class="header-icon" src="../img/dash.png"/>
+            Install in Dash
+          </a>
+        </p>
+    </header>
+
+    <p class="breadcrumbs">
+      <a class="breadcrumb" href="../index.html">Swindler Reference</a>
+      <img class="carat" src="../img/carat.png" />
+      Application Class Reference
+    </p>
+
+    <div class="content-wrapper">
+      <nav class="navigation">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../System.html">System</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../System.html#/s:8Swindler10initialize10PromiseKit0C0CyAA5StateCGyF">initialize()</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/State.html">State</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Application.html">Application</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Window.html">Window</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Screen.html">Screen</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Properties.html">Properties</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/Property.html">Property</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/WriteableProperty.html">WriteableProperty</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Enums/PropertyError.html">PropertyError</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Fakes.html">Fakes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/FakeState.html">FakeState</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/FakeApplication.html">FakeApplication</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/FakeWindow.html">FakeWindow</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/FakeScreen.html">FakeScreen</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Classes/FakeWindowBuilder.html">FakeWindowBuilder</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Events.html">Events</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ApplicationFocusedWindowChangedEvent.html">ApplicationFocusedWindowChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ApplicationIsHiddenChangedEvent.html">ApplicationIsHiddenChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ApplicationLaunchedEvent.html">ApplicationLaunchedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ApplicationMainWindowChangedEvent.html">ApplicationMainWindowChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ApplicationTerminatedEvent.html">ApplicationTerminatedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/FrontmostApplicationChangedEvent.html">FrontmostApplicationChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/ScreenLayoutChangedEvent.html">ScreenLayoutChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/WindowCreatedEvent.html">WindowCreatedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/WindowDestroyedEvent.html">WindowDestroyedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/WindowMinimizedChangedEvent.html">WindowMinimizedChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/WindowPosChangedEvent.html">WindowPosChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/WindowSizeChangedEvent.html">WindowSizeChangedEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/WindowTitleChangedEvent.html">WindowTitleChangedEvent</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Functions.html">Other Functions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/s:8Swindler2eeoiSbAA10FakeWindowC_ADtF">==(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/s:8Swindler2eeoiSbAA11ApplicationC_ADtF">==(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/s:8Swindler2eeoiSbAA15FakeApplicationC_ADtF">==(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/s:8Swindler2eeoiSbAA6ScreenC_ADtF">==(_:_:)</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Other Functions.html#/s:8Swindler2eeoiSbAA6WindowC_ADtF">==(_:_:)</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Protocols.html">Other Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Protocols/EventType.html">EventType</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a class="nav-group-name-link" href="../Other Structs.html">Other Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/OfOptionalType.html">OfOptionalType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="../Structs/OfType.html">OfType</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+
+        <section class="section">
+          <div class="section-content">
+            <h1>Application</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="kt">Application</span></code></pre>
+
+                </div>
+              </div>
+            <p>A running application.</p>
+
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-content">
+            <div class="task-group">
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler11ApplicationC17processIdentifiers5Int32Vvp"></a>
+                    <a name="//apple_ref/swift/Property/processIdentifier" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler11ApplicationC17processIdentifiers5Int32Vvp">processIdentifier</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">processIdentifier</span><span class="p">:</span> <span class="n">pid_t</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler11ApplicationC16bundleIdentifierSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/bundleIdentifier" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler11ApplicationC16bundleIdentifierSSSgvp">bundleIdentifier</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">bundleIdentifier</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler11ApplicationC13swindlerStateAA0D0Cvp"></a>
+                    <a name="//apple_ref/swift/Property/swindlerState" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler11ApplicationC13swindlerStateAA0D0Cvp">swindlerState</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The global Swindler state.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">swindlerState</span><span class="p">:</span> <span class="kt"><a href="../Classes/State.html">State</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L33">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler11ApplicationC12knownWindowsSayAA6WindowCGvp"></a>
+                    <a name="//apple_ref/swift/Property/knownWindows" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler11ApplicationC12knownWindowsSayAA6WindowCGvp">knownWindows</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The known windows of the application. Windows on spaces that we haven&rsquo;t seen yet aren&rsquo;t
+included.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">knownWindows</span><span class="p">:</span> <span class="p">[</span><span class="kt"><a href="../Classes/Window.html">Window</a></span><span class="p">]</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L37-L39">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler11ApplicationC10mainWindowAA17WriteablePropertyCyAA14OfOptionalTypeVyAA0D0CGGvp"></a>
+                    <a name="//apple_ref/swift/Property/mainWindow" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler11ApplicationC10mainWindowAA17WriteablePropertyCyAA14OfOptionalTypeVyAA0D0CGGvp">mainWindow</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The main window of the application.
+-Note: Setting this will bring the window forward to just below the main window of the
+       frontmost application.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">mainWindow</span><span class="p">:</span> <span class="kt"><a href="../Classes/WriteableProperty.html">WriteableProperty</a></span><span class="o">&lt;</span><span class="kt"><a href="../Structs/OfOptionalType.html">OfOptionalType</a></span><span class="o">&lt;</span><span class="kt"><a href="../Classes/Window.html">Window</a></span><span class="o">&gt;&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L44">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler11ApplicationC13focusedWindowAA8PropertyCyAA14OfOptionalTypeVyAA0D0CGGvp"></a>
+                    <a name="//apple_ref/swift/Property/focusedWindow" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler11ApplicationC13focusedWindowAA8PropertyCyAA14OfOptionalTypeVyAA0D0CGGvp">focusedWindow</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The focused (or key) window of the application, the one currently accepting keyboard input.
+Usually the same as the main window, or one of its helper windows such as a file open
+dialog.</p>
+
+<p>-Note: Sometimes the focused <q>window</q> is a sheet and not a window (i.e. it has no title bar
+       and cannot be moved by the user). In that case the value will be nil.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">focusedWindow</span><span class="p">:</span> <span class="kt"><a href="../Classes/Property.html">Property</a></span><span class="o">&lt;</span><span class="kt"><a href="../Structs/OfOptionalType.html">OfOptionalType</a></span><span class="o">&lt;</span><span class="kt"><a href="../Classes/Window.html">Window</a></span><span class="o">&gt;&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L52">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler11ApplicationC8isHiddenAA17WriteablePropertyCyAA6OfTypeVySbGGvp"></a>
+                    <a name="//apple_ref/swift/Property/isHidden" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler11ApplicationC8isHiddenAA17WriteablePropertyCyAA6OfTypeVySbGGvp">isHidden</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Whether the application is hidden.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">isHidden</span><span class="p">:</span> <span class="kt"><a href="../Classes/WriteableProperty.html">WriteableProperty</a></span><span class="o">&lt;</span><span class="kt"><a href="../Structs/OfType.html">OfType</a></span><span class="o">&lt;</span><span class="kt">Bool</span><span class="o">&gt;&gt;</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L55">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Application"></a>
+                <a name="//apple_ref/swift/Section/Application" class="dashAnchor"></a>
+                <a href="#/Application">
+                  <h3 class="section-name">Application</h3>
+                </a>
+              </div>
+              <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:s23CustomStringConvertibleP11descriptionSSvp"></a>
+                    <a name="//apple_ref/swift/Property/description" class="dashAnchor"></a>
+                    <a class="token" href="#/s:s23CustomStringConvertibleP11descriptionSSvp">description</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">var</span> <span class="nv">description</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/b0a89da80750403dd8c6b2c6dbb62b78428e4a05/Sources/Application.swift#L64-L66">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+      </article>
+    </div>
+    <section class="footer">
+      <p>&copy; 2018 <a class="link" href="https://twitter.com/tmandry" target="_blank" rel="external">Tyler Mandry</a>. All rights reserved. (Last updated: 2018-11-18)</p>
+      <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.9.4</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+    </section>
+  </body>
+</div>
+</html>
