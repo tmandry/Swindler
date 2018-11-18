@@ -157,6 +157,10 @@ Swindler is in development and is in **alpha**. Here is the state of its major f
 
 You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/API.swift).
 
+[API Documentation (latest release)](https://tmandry.github.io/Swindler/docs/latest)
+
+[API Documentation (master)](https://tmandry.github.io/Swindler/docs/master)
+
 ## Development
 
 Swindler uses Cococapods for Dependency management.
