@@ -10,7 +10,7 @@ import PromiseKit
 - Returns: A new promise that resolves once all the provided promises resolve, containing an array
            of the results from the successful promises.
 */
-public func successes<T>(_ promises: [Promise<T>], onError: @escaping (Int, Error) -> Void)
+func successes<T>(_ promises: [Promise<T>], onError: @escaping (Int, Error) -> Void)
 -> Promise<[T]> {
     guard !promises.isEmpty else { return Promise<[T]>(value: []) }
     return Promise<[T]> { fulfill, _ in
