@@ -266,7 +266,7 @@ actions. This feature alone makes a whole new level of sophistication possible.<
 
 <p>The following code assigns all windows on the screen to a grid. Note the simplicity and power of the
 promise-based API. Requests are dispatched concurrently and in the background, not serially.</p>
-<pre class="highlight swift"><code><span class="kt">Swindler</span><span class="o">.</span><span class="nf">initialize</span><span class="p">()</span><span class="o">.</span><span class="n">then</span> <span class="p">{</span> <span class="n">state</span> <span class="k">in</span>
+<pre class="highlight swift"><code><span class="kt">Swindler</span><span class="o">.</span><span class="nf">initialize</span><span class="p">()</span><span class="o">.</span><span class="n">then</span> <span class="p">{</span> <span class="n">state</span> <span class="o">-&gt;</span> <span class="kt">Void</span> <span class="k">in</span>
     <span class="k">let</span> <span class="nv">screen</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">screens</span><span class="o">.</span><span class="n">first</span><span class="o">!</span>
 
     <span class="k">let</span> <span class="nv">allPlacedOnGrid</span> <span class="o">=</span> <span class="n">screen</span><span class="o">.</span><span class="n">knownWindows</span><span class="o">.</span><span class="nf">enumerate</span><span class="p">()</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="n">index</span><span class="p">,</span> <span class="n">window</span> <span class="k">in</span>
@@ -277,6 +277,8 @@ promise-based API. Requests are dispatched concurrently and in the background, n
     <span class="nf">when</span><span class="p">(</span><span class="n">allPlacedOnGrid</span><span class="p">)</span> <span class="p">{</span> <span class="n">_</span> <span class="k">in</span>
         <span class="nf">print</span><span class="p">(</span><span class="s">"all done!"</span><span class="p">)</span>
     <span class="p">}</span>
+<span class="p">}</span><span class="o">.</span><span class="k">catch</span> <span class="p">{</span> <span class="n">error</span> <span class="k">in</span>
+    <span class="c1">// ...</span>
 <span class="p">}</span>
 
 <span class="kd">func</span> <span class="nf">gridRect</span><span class="p">(</span><span class="nv">screen</span><span class="p">:</span> <span class="kt">Swindler</span><span class="o">.</span><span class="kt">Screen</span><span class="p">,</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">CGRect</span> <span class="p">{</span>
