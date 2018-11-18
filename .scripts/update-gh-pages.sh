@@ -45,6 +45,19 @@ pushd "$CHECKOUT_PATH"
         echo "No doc changes present; exiting."
         exit 0
     fi
+    # Exit if only the docset archive has changed (it always changes)
+    if [ "$CHANGE_SET" == " M $TARGET_DIR/docsets/$NAME.tgz" ]; then
+        echo "Only the docset archive changed on this push; exiting."
+        exit 0
+    fi
+
+    # If this looks like a release tag, update the `latest` symlink to point to it.
+    LATEST_CANDIDATE_PATTERN='^[0-9]+[.][0-9]+[.][0-9]+$'
+    if [[ "$TRAVIS_TAG" =~ $LATEST_CANDIDATE_PATTERN ]]; then
+        echo " ==> Updating latest symlink to $RELEASE"
+        ln -sf "$RELEASE" "$DOC_URL_ROOT/latest"
+        git add "$DOC_URL_ROOT/latest"
+    fi
 
     echo " ==> Deploying docs"
     set -x
