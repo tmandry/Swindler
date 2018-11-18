@@ -1,7 +1,7 @@
 import AXSwift
 import PromiseKit
 
-/// The global Swindler state, lazily initialized.
+/// Initializes a new Swindler state and returns it in a Promise.
 public func initialize() -> Promise<State> {
     return OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>.initialize(
         appObserver: ApplicationObserver(),
