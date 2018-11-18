@@ -1,0 +1,40 @@
+xcodebuild_arguments: [-workspace, Swindler.xcworkspace, -scheme, Swindler]
+theme: fullwidth
+github_url: https://github.com/tmandry/Swindler
+author_url: https://twitter.com/tmandry
+#github_file_prefix: https://github.com/tmandry/Swindler/tree/master
+custom_categories:
+  - name: System
+    children:
+      - initialize()
+      - State
+      - Application
+      - Window
+      - Screen
+  - name: Properties
+    children:
+      - Property
+      - WriteableProperty
+      - PropertyError
+  - name: Fakes
+    children:
+      - FakeState
+      - FakeApplication
+      - FakeWindow
+      - FakeScreen
+      - FakeWindowBuilder
+  - name: Events
+    children:
+      - ApplicationFocusedWindowChangedEvent
+      - ApplicationIsHiddenChangedEvent
+      - ApplicationLaunchedEvent
+      - ApplicationMainWindowChangedEvent
+      - ApplicationTerminatedEvent
+      - FrontmostApplicationChangedEvent
+      - ScreenLayoutChangedEvent
+      - WindowCreatedEvent
+      - WindowDestroyedEvent
+      - WindowMinimizedChangedEvent
+      - WindowPosChangedEvent
+      - WindowSizeChangedEvent
+      - WindowTitleChangedEvent
