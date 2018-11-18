@@ -6,3 +6,11 @@ xcode_workspace: Swindler.xcworkspace
 xcode_scheme: Swindler
 
 script: xcodebuild -workspace Swindler.xcworkspace -scheme Swindler build test
+
+deploy:
+  - provider: script
+    script: bash .scripts/update-gh-pages.sh
+    skip_cleanup: true
+    on:
+        all_branches: true
+        condition: '"$TRAVIS_BRANCH" == "master" || "$TRAVIS_TAG" != ""'
