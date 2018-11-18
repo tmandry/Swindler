@@ -11,6 +11,9 @@ New features
 - A `Window.frame` property was added. You can now atomically change the whole
   frame of a window.
 
+Bug fixes
+- `ScreenLayoutChangedEvent` is now correctly detected.
+
 0.0.2
 =====
 

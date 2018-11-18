@@ -145,11 +145,10 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
         delegates = createDelegates()
         screens_ = delegates.map{ $0 as ScreenDelegate }
 
-        let notificationCenter = NSWorkspace.shared.notificationCenter
-        notificationCenter.addObserver(
+        NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
             object: NSApplication.shared,
-            queue: nil
+            queue: OperationQueue.main
         ) { _ in
             self.handleScreenLayoutChange()
         }
