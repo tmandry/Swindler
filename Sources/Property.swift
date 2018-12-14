@@ -279,7 +279,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
     /// - throws: `PropertyError` (via Promise)
     public final func set(_ newValue: NonOptionalType) -> Promise<PropertyType> {
         return Promise<Void>(value: ()).then(on: backgroundQueue) {
-            () throws -> (PropertyType, PropertyType) in
+            () throws -> (PropertyType, PropertyType, PropertyType) in
 
             self.requestLock.lock()
             defer { self.requestLock.unlock() }
@@ -289,7 +289,8 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
             do {
                 let actual = try TypeSpec.toPropertyType(self.delegate_.readValue())
                 let oldValue = self.updateBackingStore(actual)
-                return (oldValue, actual)
+                let desired = try TypeSpec.toPropertyType(newValue)
+                return (oldValue, desired, actual)
             } catch let PropertyError.timeout(time) {
                 log.warn("A readback timed out (in \(time) seconds) after successfully writing a "
                        + "property (of type \(PropertyType.self)). This can result in an "
@@ -297,10 +298,15 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
                        + "as external that are actually internal.")
                 throw PropertyError.timeout(time: time)
             }
-        }.then { (oldValue: PropertyType, actual: PropertyType) -> PropertyType in
+        }.then { (oldValue: PropertyType, desired: PropertyType, actual: PropertyType)
+                  -> PropertyType in
             // Back on main thread.
             if !TypeSpec.equal(actual, oldValue) {
-                self.notifier.notify?(false, oldValue, actual)
+                // If the new value is not the desired value, then _something_ external interfered.
+                // That something could be the user, the application, or the operating system.
+                // Therefore we mark the event as external.
+                let external = !TypeSpec.equal(actual, desired)
+                self.notifier.notify?(external, oldValue, actual)
             }
             return actual
         }.recover { error in
