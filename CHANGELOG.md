@@ -6,6 +6,9 @@ Breaking changes
   at bottom-left), to match the behavior of Screen and most modern macOS APIs.
 - `Window.position` was made non-writeable (use `Window.frame` instead). It may
   be removed in the future. See #29 for more.
+- When a property value is written to, and the new value is changed but does
+  not match the desired value, the corresponding event is marked as external.
+  See #49.
 
 New features
 - A `Window.frame` property was added. You can now atomically change the whole
