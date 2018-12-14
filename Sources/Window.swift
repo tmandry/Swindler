@@ -179,13 +179,13 @@ final class OSXWindowDelegate<
             notifier: self)
 
         let axProperties: [PropertyType] = [
-            frame,
             size,
             title,
             isMinimized,
             isFullscreen
         ]
         let allProperties: [PropertyType] = axProperties + [
+            frame,
             position
         ]
 
@@ -208,6 +208,7 @@ final class OSXWindowDelegate<
 
         // Fetch attribute values.
         let attributes = axProperties.map {($0.delegate as! AXPropertyDelegateType).attribute} + [
+            .frame,
             .subrole
         ]
         fetchAttributes(
@@ -347,27 +348,39 @@ extension OSXWindowDelegate: PropertyNotifier {
 ///
 /// This is to convert between AXPosition coordinates, which have the origin at
 /// the top-left, and Cocoa coordinates, which have it at the bottom-left.
-private final class FramePropertyDelegate<UIElement: UIElementType>:
-    AXPropertyDelegate<CGRect, UIElement>
-{
+private final class FramePropertyDelegate<UIElement: UIElementType>: PropertyDelegate {
     typealias T = CGRect
 
-    typealias InitDict = [AXSwift.Attribute: Any]
+    let frame: AXPropertyDelegate<CGRect, UIElement>
+    let pos: AXPropertyDelegate<CGPoint, UIElement>
+    let size: AXPropertyDelegate<CGSize, UIElement>
 
     let systemScreens: SystemScreenDelegate
 
+    typealias InitDict = [AXSwift.Attribute: Any]
+
     init(_ element: UIElement, _ initPromise: Promise<InitDict>, _ screens: SystemScreenDelegate) {
+        frame = AXPropertyDelegate<CGRect, UIElement>(element, .frame, initPromise)
+        pos = AXPropertyDelegate<CGPoint, UIElement>(element, .position, initPromise)
+        size = AXPropertyDelegate<CGSize, UIElement>(element, .size, initPromise)
         systemScreens = screens
-        super.init(element, .frame, initPromise)
     }
 
-    override func readFilter(_ value: CGRect?) -> CGRect? {
-        guard let rect = value else { return nil }
+    func readValue() throws -> T? {
+        guard let rect = try frame.readValue() else { return nil }
         return invert(rect)
     }
 
-    override func writeValue(_ newValue: CGRect) throws {
-        try super.writeValue(invert(newValue))
+    func writeValue(_ newValue: T) throws {
+        let rect = invert(newValue)
+        try pos.writeValue(rect.origin)
+        try size.writeValue(rect.size)
+    }
+
+    func initialize() -> Promise<T?> {
+        return frame.initialize().then { rect in
+            rect.map{ self.invert($0) }
+        }
     }
 
     private func invert(_ rect: CGRect) -> CGRect {
