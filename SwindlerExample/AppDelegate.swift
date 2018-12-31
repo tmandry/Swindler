@@ -54,12 +54,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let window = event.window
             print("new window: \(window.title.value)")
         }
-        swindler.on { (event: WindowPosChangedEvent) in
-            print("Pos changed from \(event.oldValue) to \(event.newValue),",
-                  "external: \(event.external)")
-        }
-        swindler.on { (event: WindowSizeChangedEvent) in
-            print("Size changed from \(event.oldValue) to \(event.newValue),",
+        swindler.on { (event: WindowFrameChangedEvent) in
+            print("Frame changed from \(event.oldValue) to \(event.newValue),",
                   "external: \(event.external)")
         }
         swindler.on { (event: WindowDestroyedEvent) in

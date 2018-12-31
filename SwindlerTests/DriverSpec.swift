@@ -85,7 +85,7 @@ class OSXDriverSpec: QuickSpec {
 
             it("emits a ChangedEvent") {
                 var callbacks = 0
-                state.on { (_: WindowPosChangedEvent) in
+                state.on { (_: WindowFrameChangedEvent) in
                     callbacks += 1
                 }
                 windowElement.attrs[.position] = CGPoint(x: 100, y: 100)
@@ -97,10 +97,10 @@ class OSXDriverSpec: QuickSpec {
             it("calls multiple event handlers") {
                 var callbacks1 = 0
                 var callbacks2 = 0
-                state.on { (_: WindowPosChangedEvent) in
+                state.on { (_: WindowFrameChangedEvent) in
                     callbacks1 += 1
                 }
-                state.on { (_: WindowPosChangedEvent) in
+                state.on { (_: WindowFrameChangedEvent) in
                     callbacks2 += 1
                 }
                 windowElement.attrs[.position] = CGPoint(x: 100, y: 100)

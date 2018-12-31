@@ -53,32 +53,32 @@ class TestPropertyNotifier: PropertyNotifier {
 class PropertySpec: QuickSpec {
     override func spec() {
 
-        // Set up a position property on a test AX window.
+        // Set up a frame property on a test AX window.
         var windowElement: TestWindowElement!
         var notifier: TestPropertyNotifier!
 
         func setUpWithAttributes(_ attrs: [AXSwift.Attribute: Any])
-        -> WriteableProperty<OfType<CGPoint>> {
+        -> WriteableProperty<OfType<CGRect>> {
             windowElement = TestWindowElement(forApp: TestApplicationElement())
             for (attr, value) in attrs {
                 windowElement.attrs[attr] = value
             }
             let initPromise = Promise<[AXSwift.Attribute: Any]>(value: attrs)
             notifier = TestPropertyNotifier()
-            let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(
-                windowElement, .position, initPromise
+            let delegate = AXPropertyDelegate<CGRect, TestWindowElement>(
+                windowElement, .frame, initPromise
             )
             return WriteableProperty(
                 delegate,
-                withEvent: WindowPosChangedEvent.self,
+                withEvent: WindowFrameChangedEvent.self,
                 receivingObject: Window.self,
                 notifier: notifier)
         }
 
-        let firstPoint = CGPoint(x: 5, y: 5)
-        let secondPoint = CGPoint(x: 100, y: 100)
+        let firstFrame = CGRect(x: 5, y: 5, width: 20, height: 50)
+        let secondFrame = CGRect(x: 100, y: 100, width: 200, height: 500)
 
-        var property: WriteableProperty<OfType<CGPoint>>!
+        var property: WriteableProperty<OfType<CGRect>>!
         func finishPropertyInit() {
             waitUntil { done in
                 property.initialized.then {
@@ -88,14 +88,14 @@ class PropertySpec: QuickSpec {
         }
 
         beforeEach {
-            property = setUpWithAttributes([.position: firstPoint])
+            property = setUpWithAttributes([.frame: firstFrame])
             finishPropertyInit()
         }
 
         describe("initialization") {
 
             it("doesn't leak") {
-                weak var property = setUpWithAttributes([.position: firstPoint])
+                weak var property = setUpWithAttributes([.frame: firstFrame])
                 waitUntil { done in
                     if let prop = property {
                         prop.initialized.then { done() }.always {}
@@ -127,11 +127,11 @@ class PropertySpec: QuickSpec {
 
             context("when an optional attribute is missing") {
 
-                var optProperty: WriteableProperty<OfOptionalType<CGPoint>>!
+                var optProperty: WriteableProperty<OfOptionalType<CGRect>>!
                 beforeEach {
                     let initPromise = Promise<[AXSwift.Attribute: Any]>(value: [:])
-                    let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(
-                        windowElement, .position, initPromise
+                    let delegate = AXPropertyDelegate<CGRect, TestWindowElement>(
+                        windowElement, .frame, initPromise
                     )
                     optProperty = WriteableProperty(delegate, notifier: notifier)
                 }
@@ -152,12 +152,12 @@ class PropertySpec: QuickSpec {
         describe("refresh") {
             context("when the attribute has changed") {
                 beforeEach {
-                    windowElement.attrs[.position] = secondPoint
+                    windowElement.attrs[.frame] = secondFrame
                 }
 
                 it("resolves to the new value") {
                     property.refresh().then { newValue in
-                        expect(newValue).to(equal(secondPoint))
+                        expect(newValue).to(equal(secondFrame))
                     }
                 }
 
@@ -165,7 +165,7 @@ class PropertySpec: QuickSpec {
                     property.refresh().then { _ -> Void in
                         expect(notifier.events.count).to(equal(1))
                         if let event = notifier.events.first {
-                            expect(event.type == WindowPosChangedEvent.self).to(beTrue())
+                            expect(event.type == WindowFrameChangedEvent.self).to(beTrue())
                         }
                     }
                 }
@@ -173,8 +173,8 @@ class PropertySpec: QuickSpec {
                 it("includes the correct oldValue and newValue in the event") {
                     property.refresh().then { _ -> Void in
                         if let event = notifier.events.first {
-                            expect(event.oldValue as? CGPoint).to(equal(firstPoint))
-                            expect(event.newValue as? CGPoint).to(equal(secondPoint))
+                            expect(event.oldValue as? CGRect).to(equal(firstFrame))
+                            expect(event.newValue as? CGRect).to(equal(secondFrame))
                         }
                     }
                 }
@@ -193,7 +193,7 @@ class PropertySpec: QuickSpec {
 
                 it("resolves to the correct value") {
                     property.refresh().then { newValue in
-                        expect(newValue).to(equal(firstPoint))
+                        expect(newValue).to(equal(firstFrame))
                     }
                 }
 
@@ -225,13 +225,13 @@ class PropertySpec: QuickSpec {
             }
 
             context("when an optional attribute is missing") {
-                var optProperty: WriteableProperty<OfOptionalType<CGPoint>>!
+                var optProperty: WriteableProperty<OfOptionalType<CGRect>>!
                 beforeEach {
                     let initPromise = Promise<[AXSwift.Attribute: Any]>(
-                        value: [.position: firstPoint]
+                        value: [.frame: firstFrame]
                     )
-                    let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(
-                        windowElement, .position, initPromise
+                    let delegate = AXPropertyDelegate<CGRect, TestWindowElement>(
+                        windowElement, .frame, initPromise
                     )
                     optProperty = WriteableProperty(delegate, notifier: notifier)
                     waitUntil { done in
@@ -271,7 +271,7 @@ class PropertySpec: QuickSpec {
 
                 it("still allows reading", failOnError: false) {
                     property.refresh().always {
-                        expect(property.value).to(equal(firstPoint))
+                        expect(property.value).to(equal(firstFrame))
                     }
                 }
 
@@ -289,12 +289,12 @@ class PropertySpec: QuickSpec {
                 beforeEach {
                     let (initPromise, fulfill, _) = Promise<[AXSwift.Attribute: Any]>.pending()
                     fulfillInitPromise = fulfill
-                    let delegate = AXPropertyDelegate<CGPoint, TestWindowElement>(
-                        windowElement, .position, initPromise
+                    let delegate = AXPropertyDelegate<CGRect, TestWindowElement>(
+                        windowElement, .frame, initPromise
                     )
                     property = WriteableProperty(
                         delegate,
-                        withEvent: WindowPosChangedEvent.self,
+                        withEvent: WindowFrameChangedEvent.self,
                         receivingObject: Window.self,
                         notifier: notifier)
                 }
@@ -307,10 +307,10 @@ class PropertySpec: QuickSpec {
                     () -> Promise<Void> in
 
                     let promise = property.refresh().then { newValue -> Void in
-                        expect(newValue).to(equal(secondPoint))
+                        expect(newValue).to(equal(secondFrame))
                     }
-                    windowElement.attrs[.position] = secondPoint
-                    fulfillInitPromise([.position: firstPoint])
+                    windowElement.attrs[.frame] = secondFrame
+                    fulfillInitPromise([.frame: firstFrame])
                     return promise
                 }
 
@@ -320,43 +320,43 @@ class PropertySpec: QuickSpec {
         describe("set") {
 
             it("eventually updates the property value") {
-                property.set(secondPoint).always {}
-                expect(property.value).toEventually(equal(secondPoint))
+                property.set(secondFrame).always {}
+                expect(property.value).toEventually(equal(secondFrame))
             }
 
             it("resolves to the new value") {
-                property.set(secondPoint).then { newValue in
-                    expect(newValue).to(equal(secondPoint))
+                property.set(secondFrame).then { newValue in
+                    expect(newValue).to(equal(secondFrame))
                 }
             }
 
             it("sets the attribute on the UIElement") {
-                property.set(secondPoint).then { _ -> Void in
-                    expect(windowElement.attrs[.position]! is CGPoint).to(beTrue())
-                    expect(windowElement.attrs[.position]! as? CGPoint).to(equal(secondPoint))
+                property.set(secondFrame).then { _ -> Void in
+                    expect(windowElement.attrs[.frame]! is CGRect).to(beTrue())
+                    expect(windowElement.attrs[.frame]! as? CGRect).to(equal(secondFrame))
                 }
             }
 
             it("emits a ChangedEvent of the correct type") {
-                property.set(secondPoint).then { _ -> Void in
+                property.set(secondFrame).then { _ -> Void in
                     expect(notifier.events.count).to(equal(1))
                     if let event = notifier.events.first {
-                        expect(event.type == WindowPosChangedEvent.self).to(beTrue())
+                        expect(event.type == WindowFrameChangedEvent.self).to(beTrue())
                     }
                 }
             }
 
             it("includes the correct oldValue and newValue in the event") {
-                property.set(secondPoint).then { _ -> Void in
+                property.set(secondFrame).then { _ -> Void in
                     if let event = notifier.events.first {
-                        expect(event.oldValue as? CGPoint).to(equal(firstPoint))
-                        expect(event.newValue as? CGPoint).to(equal(secondPoint))
+                        expect(event.oldValue as? CGRect).to(equal(firstFrame))
+                        expect(event.newValue as? CGRect).to(equal(secondFrame))
                     }
                 }
             }
 
             it("marks the event as internal") {
-                property.set(secondPoint).then { _ -> Void in
+                property.set(secondFrame).then { _ -> Void in
                     if let event = notifier.events.first {
                         expect(event.external).to(beFalse())
                     }
@@ -364,27 +364,27 @@ class PropertySpec: QuickSpec {
             }
 
             it("updates the property value before emitting the event") {
-                property.set(secondPoint).then { _ -> Void in
-                    expect(property.value).to(equal(secondPoint))
+                property.set(secondFrame).then { _ -> Void in
+                    expect(property.value).to(equal(secondFrame))
                 }
             }
 
             context("when the new value is the same as the old value") {
                 it("does not emit a ChangedEvent") {
-                    property.set(firstPoint).then { _ in
+                    property.set(firstFrame).then { _ in
                         expect(notifier.events.count).to(equal(0))
                     }
                 }
             }
 
             context("when the UIElement") {
-                class MyPropertyDelegate: TestPropertyDelegate<CGPoint> {
-                    let setTo: CGPoint?
-                    init(value: CGPoint, setTo: CGPoint) {
+                class MyPropertyDelegate: TestPropertyDelegate<CGRect> {
+                    let setTo: CGRect?
+                    init(value: CGRect, setTo: CGRect) {
                         self.setTo = setTo
                         super.init(value: value)
                     }
-                    override func writeValue(_ newValue: CGPoint?) throws {
+                    override func writeValue(_ newValue: CGRect?) throws {
                         systemValue = setTo
                     }
                 }
@@ -394,7 +394,7 @@ class PropertySpec: QuickSpec {
                     delegate = delegate_
                     property = WriteableProperty(
                             delegate,
-                            withEvent: WindowPosChangedEvent.self,
+                            withEvent: WindowFrameChangedEvent.self,
                             receivingObject: Window.self,
                             notifier: notifier)
                     finishPropertyInit()
@@ -403,19 +403,19 @@ class PropertySpec: QuickSpec {
                 context("does not change its value") {
                     beforeEach {
                         initPropertyWithDelegate(
-                            MyPropertyDelegate(value: firstPoint, setTo: firstPoint)
+                            MyPropertyDelegate(value: firstFrame, setTo: firstFrame)
                         )
                     }
 
                     it("reports the actual value") {
-                        property.set(secondPoint).then { newValue -> Void in
-                            expect(newValue).to(equal(firstPoint))
-                            expect(property.value).to(equal(firstPoint))
+                        property.set(secondFrame).then { newValue -> Void in
+                            expect(newValue).to(equal(firstFrame))
+                            expect(property.value).to(equal(firstFrame))
                         }
                     }
 
                     it("does not emit a ChangedEvent") {
-                        property.set(secondPoint).then { _ in
+                        property.set(secondFrame).then { _ in
                             expect(notifier.events.count).to(equal(0))
                         }
                     }
@@ -423,32 +423,32 @@ class PropertySpec: QuickSpec {
                 }
 
                 context("changes to a different value than the one requested") {
-                    let resultingPoint = CGPoint(x: 50, y: 75)
+                    let resultingFrame = CGRect(x: 50, y: 75, width: 300, height: 400)
                     beforeEach {
                         initPropertyWithDelegate(
-                            MyPropertyDelegate(value: firstPoint, setTo: resultingPoint)
+                            MyPropertyDelegate(value: firstFrame, setTo: resultingFrame)
                         )
                     }
 
                     it("reports the actual value") {
-                        return property.set(secondPoint).then { newValue -> Void in
-                            expect(newValue).to(equal(resultingPoint))
-                            expect(property.value).to(equal(resultingPoint))
+                        return property.set(secondFrame).then { newValue -> Void in
+                            expect(newValue).to(equal(resultingFrame))
+                            expect(property.value).to(equal(resultingFrame))
                         }
                     }
 
                     it("emits a ChangedEvent with the actual value") {
-                        return property.set(secondPoint).then { _ -> Void in
+                        return property.set(secondFrame).then { _ -> Void in
                             expect(notifier.events.count).to(equal(1))
                             if let event = notifier.events.first {
-                                expect(event.oldValue as? CGPoint).to(equal(firstPoint))
-                                expect(event.newValue as? CGPoint).to(equal(resultingPoint))
+                                expect(event.oldValue as? CGRect).to(equal(firstFrame))
+                                expect(event.newValue as? CGRect).to(equal(resultingFrame))
                             }
                         }
                     }
 
                     it("marks the event as external") {
-                        return property.set(secondPoint).then { _ -> Void in
+                        return property.set(secondFrame).then { _ -> Void in
                             if let event = notifier.events.first {
                                 expect(event.external).to(beTrue())
                             }
@@ -473,28 +473,28 @@ class PropertySpec: QuickSpec {
                     }
                 }
 
-                var delegate: MyPropertyDelegate<CGPoint>!
-                var property: WriteableProperty<OfType<CGPoint>>!
+                var delegate: MyPropertyDelegate<CGRect>!
+                var property: WriteableProperty<OfType<CGRect>>!
                 beforeEach {
-                    delegate = MyPropertyDelegate(value: firstPoint, onWrite: {
+                    delegate = MyPropertyDelegate(value: firstFrame, onWrite: {
                         property.refresh()
                     })
                     property = WriteableProperty(
                         delegate,
-                        withEvent: WindowPosChangedEvent.self,
+                        withEvent: WindowFrameChangedEvent.self,
                         receivingObject: Window.self,
                         notifier: notifier)
                     finishPropertyInit()
                 }
 
                 it("only emits one event") {
-                    return property.set(secondPoint).then { _ -> Void in
+                    return property.set(secondFrame).then { _ -> Void in
                         expect(notifier.events.count).to(equal(1))
                     }
                 }
 
                 it("marks the event as internal") {
-                    return property.set(secondPoint).then { _ -> Void in
+                    return property.set(secondFrame).then { _ -> Void in
                         if let event = notifier.events.first {
                             expect(event.external).to(beFalse())
                         }
@@ -515,20 +515,20 @@ class PropertySpec: QuickSpec {
                 }
 
                 it("calls notifier.notifyInvalid()", failOnError: false) {
-                    property.set(secondPoint).always {
+                    property.set(secondFrame).always {
                         expect(notifier.stillValid).to(beFalse())
                     }
                 }
 
                 it("does not update the property value, but still allows reading",
                    failOnError: false) {
-                    property.set(secondPoint).always {
-                        expect(property.value).to(equal(firstPoint))
+                    property.set(secondFrame).always {
+                        expect(property.value).to(equal(firstFrame))
                     }
                 }
 
                 it("does not emit a ChangedEvent", failOnError: false) {
-                    property.set(secondPoint).always {
+                    property.set(secondFrame).always {
                         expect(notifier.events.count).to(equal(0))
                     }
                 }
