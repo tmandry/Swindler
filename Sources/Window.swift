@@ -265,31 +265,6 @@ final class OSXWindowDelegate<
     }
 }
 
-extension OSXWindowDelegate {
-    static func onStateInit(_ notifier: EventNotifier) {
-        // Translate from WindowFrameChangedEvent to WindowPosChangedEvent and
-        // WindowSizeChangedEvent.
-        notifier.on() { (event: WindowFrameChangedEvent) in
-            if event.oldValue.origin != event.newValue.origin {
-                notifier.notify(WindowPosChangedEvent(
-                    external: event.external,
-                    window: event.window,
-                    oldValue: event.oldValue.origin,
-                    newValue: event.newValue.origin
-                ))
-            }
-            if event.oldValue.size != event.newValue.size {
-                notifier.notify(WindowSizeChangedEvent(
-                    external: event.external,
-                    window: event.window,
-                    oldValue: event.oldValue.size,
-                    newValue: event.newValue.size
-                ))
-            }
-        }
-    }
-}
-
 /// Interface used by OSXApplicationDelegate.
 extension OSXWindowDelegate {
     /// Initializes the window, and returns it in a Promise once it's ready.

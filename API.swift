@@ -146,13 +146,11 @@ public protocol Window: Equatable {
 
 // WindowCreatedEvent
 // WindowDestroyedEvent
-// WindowDiscoveredEvent
 // WindowFrameChangedEvent
 // WindowMinimizedChangedEvent
 // WindowTitleChangedEvent
 //
-// PositionChanged
-// SizeChanged
+// WindowDiscoveredEvent
 // IsFullScreenChanged (?)
 // ScreenChanged
 //   - cause: {.Moved, .ScreenLayoutChanged}

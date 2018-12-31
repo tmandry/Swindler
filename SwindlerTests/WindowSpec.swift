@@ -241,7 +241,6 @@ class OSXWindowDelegateSpec: QuickSpec {
             windowElement.attrs[.title]    = "a window"
 
             notifier = TestNotifier()
-            WinDelegate.onStateInit(notifier)
             waitUntil { done in
                 let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
                 let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])
