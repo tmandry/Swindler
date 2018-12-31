@@ -85,22 +85,6 @@ public struct WindowFrameChangedEvent: WindowPropertyEventType {
     public let newValue: PropertyType
 }
 
-public struct WindowPosChangedEvent: WindowPropertyEventType {
-    public typealias PropertyType = CGPoint
-    public let external: Bool
-    public let window: Window
-    public let oldValue: PropertyType
-    public let newValue: PropertyType
-}
-
-public struct WindowSizeChangedEvent: WindowPropertyEventType {
-    public typealias PropertyType = CGSize
-    public let external: Bool
-    public let window: Window
-    public let oldValue: PropertyType
-    public let newValue: PropertyType
-}
-
 public struct WindowTitleChangedEvent: WindowPropertyEventType {
     public typealias PropertyType = String
     public let external: Bool

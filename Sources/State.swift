@@ -222,8 +222,6 @@ final class OSXStateDelegate<
             self.notifier.notify(event)
         }
 
-        WinDelegate.onStateInit(notifier)
-
         let appPromises = ApplicationElement.all().map { appElement in
             watchApplication(appElement: appElement)
             .asVoid()
