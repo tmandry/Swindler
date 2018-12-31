@@ -275,14 +275,14 @@ class OSXWindowDelegateSpec: QuickSpec {
                 windowDelegate.handleEvent(.moved, observer: TestObserver())
             }
 
-            it("emits a WindowPosChangedEvent") {
-                if let event = notifier.expectEvent(WindowPosChangedEvent.self) {
+            it("emits a WindowFrameChangedEvent") {
+                if let event = notifier.expectEvent(WindowFrameChangedEvent.self) {
                     expect(getWindowElement(event.window)).to(equal(windowElement))
                 }
             }
 
             it("marks the event as external") {
-                if let event = notifier.waitUntilEvent(WindowPosChangedEvent.self) {
+                if let event = notifier.waitUntilEvent(WindowFrameChangedEvent.self) {
                     expect(event.external).to(beTrue())
                 }
             }
@@ -303,8 +303,8 @@ class OSXWindowDelegateSpec: QuickSpec {
                     setFrame(CGRect(x: 500, y: 500, width: 100, height: 100),
                              inverted: CGPoint(x: 500, y: 400))
                 }
-                it("emits an internal WindowPosChangedEvent") {
-                    if let event = notifier.expectEvent(WindowPosChangedEvent.self) {
+                it("emits an internal WindowFrameChangedEvent") {
+                    if let event = notifier.expectEvent(WindowFrameChangedEvent.self) {
                         expect(getWindowElement(event.window)).to(equal(windowElement))
                         expect(event.external).to(beFalse())
                     }
@@ -316,8 +316,8 @@ class OSXWindowDelegateSpec: QuickSpec {
                     setFrame(CGRect(x: 0, y: 800, width: 200, height: 200),
                              inverted: CGPoint(x: 0, y: 0))
                 }
-                it("emits an internal WindowSizeChangedEvent") {
-                    if let event = notifier.expectEvent(WindowSizeChangedEvent.self) {
+                it("emits an internal WindowFrameChangedEvent") {
+                    if let event = notifier.expectEvent(WindowFrameChangedEvent.self) {
                         expect(getWindowElement(event.window)).to(equal(windowElement))
                         expect(event.external).to(beFalse())
                     }
@@ -329,14 +329,8 @@ class OSXWindowDelegateSpec: QuickSpec {
                     setFrame(CGRect(x: 500, y: 500, width: 200, height: 200),
                              inverted: CGPoint(x: 500, y: 300))
                 }
-                it("emits an internal WindowPosChangedEvent") {
-                    if let event = notifier.expectEvent(WindowPosChangedEvent.self) {
-                        expect(getWindowElement(event.window)).to(equal(windowElement))
-                        expect(event.external).to(beFalse())
-                    }
-                }
-                it("emits an internal WindowSizeChangedEvent") {
-                    if let event = notifier.expectEvent(WindowSizeChangedEvent.self) {
+                it("emits an internal WindowFrameChangedEvent") {
+                    if let event = notifier.expectEvent(WindowFrameChangedEvent.self) {
                         expect(getWindowElement(event.window)).to(equal(windowElement))
                         expect(event.external).to(beFalse())
                     }
