@@ -77,7 +77,7 @@ extension WindowPropertyEventType {
     }
 }
 
-struct WindowFrameChangedEvent: WindowPropertyEventType {
+public struct WindowFrameChangedEvent: WindowPropertyEventType {
     public typealias PropertyType = CGRect
     public let external: Bool
     public let window: Window
