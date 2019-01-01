@@ -160,10 +160,11 @@ final class OSXWindowDelegate<
             notifier: self)
         position = Property(
             PositionPropertyDelegate(frameDelegate, frame),
-            notifier: self)  // WindowPosChangedEvent is generated from WindowFrameChangedEvent
-        size = WriteableProperty(
+            notifier: self)
+        size = SizeProperty(
             AXPropertyDelegate(axElement, .size, initPromise),
-            notifier: self)  // WindowSizeChangedEvent is generated from WindowFrameChangedEvent
+            notifier: self,
+            frame: frame)
         title = Property(
             AXPropertyDelegate(axElement, .title, initPromise),
             withEvent: WindowTitleChangedEvent.self,
@@ -190,9 +191,10 @@ final class OSXWindowDelegate<
         ]
 
         // Map notifications on this element to the corresponding property.
+        // Note that `size` implicitly updates every time `frame` updates, so it is not listed here.
         watchedAxProperties = [
             .moved: [frame, position],
-            .resized: [frame, position, size, isFullscreen],
+            .resized: [frame, position, isFullscreen],
             .titleChanged: [title],
             .windowMiniaturized: [isMinimized],
             .windowDeminiaturized: [isMinimized]
@@ -389,5 +391,52 @@ private final class PositionPropertyDelegate<UIElement: UIElementType>: Property
 
     func initialize() -> Promise<T?> {
         return frameDelegate.initialize().then { return $0?.origin }
+    }
+}
+
+// MARK: SizeProperty
+
+/// Custom Property class for the `size` property.
+///
+/// Does not use the backing store at all; delegates to `frame` instead for all reads. This ensures
+/// that `frame` and `size` are always consistent with each other.
+///
+/// The purpose of this property is to support atomic writes to the `size` attribute of a window.
+final class SizeProperty: WriteableProperty<OfType<CGSize>> {
+    let frame: WriteableProperty<OfType<CGRect>>
+
+    init<Impl: PropertyDelegate, Notifier: PropertyNotifier>(
+        _ delegate: Impl, notifier: Notifier, frame: WriteableProperty<OfType<CGRect>>
+    ) where Impl.T == NonOptionalType {
+        self.frame = frame
+        super.init(delegate, notifier: notifier)
+    }
+
+    override func initialize<Impl: PropertyDelegate>(_ delegate: Impl) -> Promise<Void> {
+        return frame.initialized
+    }
+
+    override func getValue() -> PropertyType {
+        return frame.value.size
+    }
+
+    @discardableResult
+    public override func refresh() -> Promise<PropertyType> {
+        return frame.refresh().then { rect in
+            return rect.size
+        }
+    }
+
+    public override func set(_ newValue: NonOptionalType) -> Promise<PropertyType> {
+        // Because we don't have a WindowSizeChangedEvent, we don't have to worry about our own
+        // events. However, the frame does need to know that we are mutating it from within
+        // Swindler, so events are correctly marked as internal.
+        return frame.mutateWith() {
+            let orig = self.frame.value
+            try self.delegate_.writeValue(newValue)
+            return CGRect(origin: orig.origin, size: newValue)
+        }.then { rect in
+            return rect.size
+        }
     }
 }

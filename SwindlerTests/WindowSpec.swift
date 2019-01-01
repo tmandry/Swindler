@@ -321,6 +321,11 @@ class OSXWindowDelegateSpec: QuickSpec {
                         expect(event.external).to(beFalse())
                     }
                 }
+                it("immediately updates size") {
+                    if let event = notifier.expectEvent(WindowFrameChangedEvent.self) {
+                        expect(event.window.size.value) == event.window.frame.value.size
+                    }
+                }
             }
 
             context("and both position and size are changed") {
@@ -334,6 +339,31 @@ class OSXWindowDelegateSpec: QuickSpec {
                         expect(event.external).to(beFalse())
                     }
                 }
+                it("immediately updates size") {
+                    if let event = notifier.expectEvent(WindowFrameChangedEvent.self) {
+                        expect(event.window.size.value) == event.window.frame.value.size
+                    }
+                }
+            }
+        }
+
+        describe("frame and size sync") {
+            it("immediately updates size when frame is set") { () -> Promise<Void> in
+                return windowDelegate
+                    .frame
+                    .set(CGRect(x: 500, y: 500, width: 200, height: 200))
+                    .then { _ in
+                        expect(windowDelegate.size.value) == windowDelegate.frame.value.size
+                    }
+            }
+
+            it("immediately updates frame when size is set") { () -> Promise<Void> in
+                return windowDelegate
+                    .size
+                    .set(CGSize(width: 200, height: 200))
+                    .then { _ in
+                        expect(windowDelegate.frame.value.size) == windowDelegate.size.value
+                    }
             }
         }
 
