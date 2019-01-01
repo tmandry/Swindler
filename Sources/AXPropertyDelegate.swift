@@ -101,7 +101,7 @@ extension AXPropertyDelegate: AXPropertyDelegateType {}
 protocol PropertyType {
     func issueRefresh()
     var delegate: Any { get }
-    var initialized: Promise<Void> { get }
+    var initialized: Promise<Void>! { get }
 }
 extension Property: PropertyType {
     func issueRefresh() {

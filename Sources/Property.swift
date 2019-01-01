@@ -107,7 +107,7 @@ public struct OfOptionalType<T: Equatable>: PropertyTypeSpec {
 /// Property values are watched and cached in the background, so they are always available to read.
 ///
 /// - throws: Only `PropertyError` errors are given for rejected promises.
-open class Property<TypeSpec: PropertyTypeSpec> {
+public class Property<TypeSpec: PropertyTypeSpec> {
     public typealias PropertyType = TypeSpec.PropertyType
     public typealias NonOptionalType = TypeSpec.NonOptionalType
     public typealias OptionalType = TypeSpec.NonOptionalType?
@@ -115,7 +115,7 @@ open class Property<TypeSpec: PropertyTypeSpec> {
     // The backing store
     fileprivate var value_: PropertyType!
     // Implementation of how to read and write the value
-    fileprivate var delegate_: PropertyDelegateThunk<TypeSpec>
+    var delegate_: PropertyDelegateThunk<TypeSpec>
     // Where events go
     fileprivate var notifier: PropertyNotifierThunk<TypeSpec>
 
@@ -131,7 +131,7 @@ open class Property<TypeSpec: PropertyTypeSpec> {
 
     // Property definer is responsible for ensuring that it is NOT used before this promise
     // resolves.
-    fileprivate(set) var initialized: Promise<Void>
+    fileprivate(set) var initialized: Promise<Void>!
     // Property definer can access the delegate they provided here
     fileprivate(set) var delegate: Any
 
@@ -143,19 +143,7 @@ open class Property<TypeSpec: PropertyTypeSpec> {
         self.delegate = delegate
         delegate_ = PropertyDelegateThunk(delegate)
 
-        let (initialized, fulfill, reject) = Promise<Void>.pending()
-        self.initialized = initialized // must be set before capturing `self` in a closure
-
-        delegate.initialize().then { (value: OptionalType) -> Void in
-            self.value_ = try TypeSpec.toPropertyType(value)
-            fulfill(())
-        }.catch { error in
-            do {
-                try self.handleError(error)
-            } catch {
-                reject(error)
-            }
-        }
+        self.initialized = initialize(delegate)
     }
 
     /// Use this initializer if there is an event associated with the property.
@@ -177,8 +165,28 @@ open class Property<TypeSpec: PropertyTypeSpec> {
                                               receivingObject: Object.self)
     }
 
+    func initialize<Impl: PropertyDelegate>(_ delegate: Impl) -> Promise<Void>
+    where Impl.T == NonOptionalType {
+        let (promise, fulfill, reject) = Promise<Void>.pending()
+        delegate.initialize().then { (value: OptionalType) -> () in
+            self.value_ = try TypeSpec.toPropertyType(value)
+            fulfill(())
+        }.catch { error in
+            do {
+                try self.handleError(error)
+            } catch {
+                reject(error)
+            }
+        }
+        return promise
+    }
+
     /// The value of the property.
     public var value: PropertyType {
+        return getValue()
+    }
+
+    func getValue() -> PropertyType {
         backingStoreLock.lock()
         defer { backingStoreLock.unlock() }
         return value_
@@ -194,7 +202,7 @@ open class Property<TypeSpec: PropertyTypeSpec> {
     ///
     /// - throws: `PropertyError` (via Promise)
     @discardableResult
-    public final func refresh() -> Promise<PropertyType> {
+    public func refresh() -> Promise<PropertyType> {
         // Allow queueing up a refresh before initialization is complete, which means "assume the
         // value you will be initialized with is going to be stale". This is useful if an event is
         // received before fully initializing.
@@ -255,7 +263,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
     /// The value of the property. Reading is instant and synchronous, but writing is asynchronous
     /// and the value will not be updated until the write is complete. Use `set` to retrieve a
     /// promise.
-    public final override var value: PropertyType {
+    public override var value: PropertyType {
         get {
             return super.value
         }
@@ -277,7 +285,14 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
     ///
     /// - returns: A promise that resolves to the new _actual_ value of the property, once set.
     /// - throws: `PropertyError` (via Promise)
-    public final func set(_ newValue: NonOptionalType) -> Promise<PropertyType> {
+    public func set(_ newValue: NonOptionalType) -> Promise<PropertyType> {
+        return mutateWith() {
+            try self.delegate_.writeValue(newValue)
+            return newValue
+        }
+    }
+
+    final func mutateWith(f: @escaping () throws -> (NonOptionalType)) -> Promise<PropertyType> {
         return Promise<Void>(value: ()).then(on: backgroundQueue) {
             () throws -> (PropertyType, PropertyType, PropertyType) in
 
@@ -285,7 +300,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
             defer { self.requestLock.unlock() }
 
             // Write, then read back the value to see what actually changed.
-            try self.delegate_.writeValue(newValue)
+            let newValue = try f()
             do {
                 let actual = try TypeSpec.toPropertyType(self.delegate_.readValue())
                 let oldValue = self.updateBackingStore(actual)
@@ -318,7 +333,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
 // Because Swift doesn't have generic protocols, we have to use these ugly thunks to simulate them.
 // Hopefully this will be addressed in a future Swift release.
 
-private struct PropertyDelegateThunk<TypeSpec: PropertyTypeSpec> {
+struct PropertyDelegateThunk<TypeSpec: PropertyTypeSpec> {
     // Use non-optional type as base so we don't have a double optional, and preserve the Equatable
     // info.
     typealias PropertyType = TypeSpec.NonOptionalType
