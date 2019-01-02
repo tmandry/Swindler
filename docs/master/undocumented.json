@@ -374,7 +374,7 @@
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
       "line": 153,
-      "symbol": "FakeWindowBuilder.setRect(_:)",
+      "symbol": "FakeWindowBuilder.setFrame(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
@@ -444,7 +444,7 @@
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
       "line": 190,
-      "symbol": "FakeWindow.rect",
+      "symbol": "FakeWindow.frame",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
