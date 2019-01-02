@@ -150,10 +150,10 @@ public class FakeWindowBuilder {
     }
 
     public func setTitle(_ title: String) -> FakeWindowBuilder { w.title = title; return self }
-    public func setRect(_ rect: CGRect) -> FakeWindowBuilder { w.rect = rect; return self }
-    public func setPosition(_ pos: CGPoint) -> FakeWindowBuilder { w.rect = CGRect(origin: pos,
-    size: w.rect.size); return self }
-    public func setSize(_ size: CGSize) -> FakeWindowBuilder { w.rect.size = size; return self }
+    public func setFrame(_ frame: CGRect) -> FakeWindowBuilder { w.frame = frame; return self }
+    public func setPosition(_ pos: CGPoint) -> FakeWindowBuilder { w.frame = CGRect(origin: pos,
+    size: w.frame.size); return self }
+    public func setSize(_ size: CGSize) -> FakeWindowBuilder { w.frame.size = size; return self }
     public func setMinimized(_ isMinimized: Bool = true) -> FakeWindowBuilder {
         w.isMinimized = isMinimized
         return self
@@ -187,7 +187,7 @@ public class FakeWindow: TestObject {
         get { return try! element.attribute(.title)! }
         set { try! element.setAttribute(.title, value: newValue) }
     }
-    public var rect: CGRect {
+    public var frame: CGRect {
         get { return invert(try! element.attribute(.frame)!) }
         set { try! element.setAttribute(.frame, value: invert(newValue)) }
     }
@@ -217,7 +217,7 @@ public class FakeWindow: TestObject {
         element.companion = self
 
         title = "FakeWindow"
-        rect = CGRect(x: 300, y: 300, width: 600, height: 800)
+        frame = CGRect(x: 300, y: 300, width: 600, height: 800)
         isMinimized = false
         isFullscreen = false
     }

@@ -27,9 +27,9 @@ class FakeSpec: QuickSpec {
 
             it("builds with the requested properties") {
                 expect(fake.title).to(equal("I'm a test window"))
-                expect(fake.rect.origin).to(equal(CGPoint(x: 100, y: 100)))
+                expect(fake.frame.origin).to(equal(CGPoint(x: 100, y: 100)))
                 expect(fake.window.title.value).to(equal("I'm a test window"))
-                expect(fake.window.position.value).to(equal(CGPoint(x: 100, y: 100)))
+                expect(fake.window.frame.value.origin).to(equal(CGPoint(x: 100, y: 100)))
 
                 expect(fake.isMinimized).to(beFalse())
                 expect(fake.isFullscreen).to(beFalse())
@@ -37,10 +37,10 @@ class FakeSpec: QuickSpec {
 
             it("sees changes from Swindler") {
                 fake.window.frame.value.origin = CGPoint(x: 99, y: 100)
-                expect(fake.rect.origin).toEventually(equal(CGPoint(x: 99, y: 100)))
+                expect(fake.frame.origin).toEventually(equal(CGPoint(x: 99, y: 100)))
 
                 fake.window.size.value = CGSize(width: 1111, height: 2222)
-                expect(fake.rect.size).toEventually(equal(CGSize(width: 1111, height: 2222)))
+                expect(fake.frame.size).toEventually(equal(CGSize(width: 1111, height: 2222)))
 
                 fake.window.isMinimized.value = true
                 expect(fake.isMinimized).toEventually(beTrue())
@@ -55,10 +55,10 @@ class FakeSpec: QuickSpec {
                 fake.title = "My title changes"
                 expect(fake.window.title.value).toEventually(equal("My title changes"))
 
-                fake.rect.origin = CGPoint(x: 200, y: 200)
-                expect(fake.window.position.value).toEventually(equal(CGPoint(x: 200, y: 200)))
+                fake.frame.origin = CGPoint(x: 200, y: 200)
+                expect(fake.window.frame.value.origin).toEventually(equal(CGPoint(x: 200, y: 200)))
 
-                fake.rect.size = CGSize(width: 3333, height: 4444)
+                fake.frame.size = CGSize(width: 3333, height: 4444)
                 expect(fake.window.size.value).toEventually(equal(CGSize(width: 3333, height: 4444)))
 
                 fake.isMinimized = true
