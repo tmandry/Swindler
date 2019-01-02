@@ -597,7 +597,7 @@
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Window.swift",
-      "line": 76,
+      "line": 74,
       "symbol": "==(_:_:)",
       "symbol_kind": "source.lang.swift.decl.function.free",
       "warning": "undocumented"
