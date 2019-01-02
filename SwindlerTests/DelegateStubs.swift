@@ -34,19 +34,21 @@ class StubWindowDelegate: WindowDelegate {
 
     var frame: WriteableProperty<OfType<CGRect>>!
     var position: Property<OfType<CGPoint>>!
-    var size: WriteableProperty<OfType<CGSize>>!
+    var size: SizeProperty!
     var title: Property<OfType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!
 
+    let frame_ = StubPropertyDelegate(value: CGRect.zero)
     let position_ = StubPropertyDelegate(value: CGPoint.zero)
     let size_ = StubPropertyDelegate(value: CGSize.zero)
 
     init() {
         let notifier = TestPropertyNotifier()
 
+        frame = WriteableProperty(frame_, notifier: notifier)
         position = WriteableProperty(position_, notifier: notifier)
-        size = WriteableProperty(size_, notifier: notifier)
+        size = SizeProperty(size_, notifier: notifier, frame: frame)
     }
 
     func equalTo(_ other: WindowDelegate) -> Bool { return self === other }
