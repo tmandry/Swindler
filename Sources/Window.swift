@@ -104,7 +104,7 @@ protocol WindowDelegate: class {
 
     var frame: WriteableProperty<OfType<CGRect>>! { get }
     var position: Property<OfType<CGPoint>>! { get }
-    var size: WriteableProperty<OfType<CGSize>>! { get }
+    var size: SizeProperty! { get }
     var title: Property<OfType<String>>! { get }
     var isMinimized: WriteableProperty<OfType<Bool>>! { get }
     var isFullscreen: WriteableProperty<OfType<Bool>>! { get }
@@ -134,7 +134,7 @@ final class OSXWindowDelegate<
 
     var frame: WriteableProperty<OfType<CGRect>>!
     var position: Property<OfType<CGPoint>>!
-    var size: WriteableProperty<OfType<CGSize>>!
+    var size: SizeProperty!
     var title: Property<OfType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!

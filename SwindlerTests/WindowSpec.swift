@@ -501,10 +501,10 @@ class WindowSpec: QuickSpec {
 
             func setWindowRect(_ rect: CGRect) {
                 windowDelegate.position_.value = rect.origin
-                windowDelegate.size_.value = rect.size
+                windowDelegate.frame_.value = rect
                 waitUntil { done in
                     when(fulfilled: windowDelegate.position.refresh(),
-                                    windowDelegate.size.refresh())
+                                    windowDelegate.frame.refresh())
                         .then { _ in done() }.always {}
                 }
             }
