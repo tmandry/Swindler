@@ -33,7 +33,6 @@ class StubWindowDelegate: WindowDelegate {
     var appDelegate: ApplicationDelegate?
 
     var frame: WriteableProperty<OfType<CGRect>>!
-    var position: Property<OfType<CGPoint>>!
     var size: SizeProperty!
     var title: Property<OfType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
@@ -47,7 +46,6 @@ class StubWindowDelegate: WindowDelegate {
         let notifier = TestPropertyNotifier()
 
         frame = WriteableProperty(frame_, notifier: notifier)
-        position = WriteableProperty(position_, notifier: notifier)
         size = SizeProperty(size_, notifier: notifier, frame: frame)
     }
 

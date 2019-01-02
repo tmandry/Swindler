@@ -41,13 +41,12 @@ public final class Window {
     public var screen: Screen? {
         let screenIntersectSizes =
             application.swindlerState.screens.lazy
-            .map { screen in (screen, screen.frame.intersection(self.rect)) }
+            .map { screen in (screen, screen.frame.intersection(self.frame.value)) }
             .filter { _, intersect in !intersect.isNull }
             .map { screen, intersect in (screen, intersect.size.width * intersect.size.height) }
         let bestScreen = screenIntersectSizes.max { lhs, rhs in lhs.1 < rhs.1 }?.0
         return bestScreen
     }
-    fileprivate var rect: CGRect { return CGRect(origin: position.value, size: size.value) }
 
     /// Whether or not the window referred to by this type remains valid. Windows usually become
     /// invalid because they are destroyed (in which case a WindowDestroyedEvent will be emitted).
@@ -56,10 +55,9 @@ public final class Window {
     public var isValid: Bool { return delegate.isValid }
 
     /// The frame of the window.
+    ///
+    /// The origin of the frame is the bottom-left corner of the window in screen coordinates.
     public var frame: WriteableProperty<OfType<CGRect>> { return delegate.frame }
-    /// The position of the bottom-left corner of the window in screen coordinates.
-    /// To set this, use `frame.origin`. This property may be removed in the future.
-    public var position: Property<OfType<CGPoint>> { return delegate.position }
     /// The size of the window in screen coordinates.
     public var size: WriteableProperty<OfType<CGSize>> { return delegate.size }
 
@@ -103,7 +101,6 @@ protocol WindowDelegate: class {
     var appDelegate: ApplicationDelegate? { get }
 
     var frame: WriteableProperty<OfType<CGRect>>! { get }
-    var position: Property<OfType<CGPoint>>! { get }
     var size: SizeProperty! { get }
     var title: Property<OfType<String>>! { get }
     var isMinimized: WriteableProperty<OfType<Bool>>! { get }
@@ -133,7 +130,6 @@ final class OSXWindowDelegate<
     weak var appDelegate: ApplicationDelegate?
 
     var frame: WriteableProperty<OfType<CGRect>>!
-    var position: Property<OfType<CGPoint>>!
     var size: SizeProperty!
     var title: Property<OfType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
@@ -157,9 +153,6 @@ final class OSXWindowDelegate<
             frameDelegate,
             withEvent: WindowFrameChangedEvent.self,
             receivingObject: Window.self,
-            notifier: self)
-        position = Property(
-            PositionPropertyDelegate(frameDelegate, frame),
             notifier: self)
         size = SizeProperty(
             AXPropertyDelegate(axElement, .size, initPromise),
@@ -186,15 +179,14 @@ final class OSXWindowDelegate<
             isFullscreen
         ]
         let allProperties: [PropertyType] = axProperties + [
-            frame,
-            position
+            frame
         ]
 
         // Map notifications on this element to the corresponding property.
         // Note that `size` implicitly updates every time `frame` updates, so it is not listed here.
         watchedAxProperties = [
-            .moved: [frame, position],
-            .resized: [frame, position, isFullscreen],
+            .moved: [frame],
+            .resized: [frame, isFullscreen],
             .titleChanged: [title],
             .windowMiniaturized: [isMinimized],
             .windowDeminiaturized: [isMinimized]
@@ -363,34 +355,6 @@ private final class FramePropertyDelegate<UIElement: UIElementType>: PropertyDel
     private func invert(_ rect: CGRect) -> CGRect {
         let inverted = CGPoint(x: rect.minX, y: systemScreens.maxY - rect.maxY)
         return CGRect(origin: inverted, size: rect.size)
-    }
-}
-
-/// Adapts from .frame to .position.
-private final class PositionPropertyDelegate<UIElement: UIElementType>: PropertyDelegate {
-    typealias T = CGPoint
-
-    let frameDelegate: FramePropertyDelegate<UIElement>
-    let frame: WriteableProperty<OfType<CGRect>>
-
-    init(_ frameDelegate_: FramePropertyDelegate<UIElement>,
-         _ frame_: WriteableProperty<OfType<CGRect>>) {
-        frameDelegate = frameDelegate_
-        frame = frame_
-    }
-
-    func readValue() throws -> T? {
-        return try frameDelegate.readValue()?.origin
-    }
-
-    func writeValue(_ newValue: T) throws {
-        // This cannot be done atomically, since the top-left coordinate has to be computed from
-        // the size, which may be out of date. Therefore we don't support writing only the position.
-        fatalError("writing to position property is unsupported; shouldn't get here")
-    }
-
-    func initialize() -> Promise<T?> {
-        return frameDelegate.initialize().then { return $0?.origin }
     }
 }
 

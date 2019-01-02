@@ -1,17 +1,17 @@
 0.0.3
 =====
 
-Breaking changes
-- `Window.position` and the new `Window.frame` now use Cocoa coordinates (origin
-  at bottom-left), to match the behavior of Screen and most modern macOS APIs.
-- `Window.position` was made non-writeable (use `Window.frame` instead). It may
-  be removed in the future. See #29 for more.
-- `WindowFrameChangedEvent` was added, replacing `WindowPosChangedEvent` and
-  `WindowSizeChangedEvent`. See #16 for more.
-
 New features
 - A `Window.frame` property was added. You can now atomically change the whole
   frame of a window.
+
+Breaking changes
+- The new `Window.frame` now uses Cocoa coordinates (origin at bottom-left), to
+  match the behavior of Screen and most modern macOS APIs.
+- `Window.position` was removed in favor of `Window.frame`. See #32 and #29 for
+  more.
+- `WindowFrameChangedEvent` was added, replacing `WindowPosChangedEvent` and
+  `WindowSizeChangedEvent`. See #16 for more.
 
 Bug fixes
 - `ScreenLayoutChangedEvent` is now correctly detected.

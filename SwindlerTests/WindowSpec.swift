@@ -59,9 +59,10 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
                 return initialize().then { windowDelegate -> Void in
                     // In inverted (AX) coordinates, top-left is (5, 5) and bottom-left is (5, 105)
                     // In Cocoa coordinates, the bottom-left would be (5, 1000 - 105) = (5, 895)
-                    expect(windowDelegate.position.value).to(equal(CGPoint(x: 5, y: 895)))
-                    expect(windowDelegate.size.value).to(equal(CGSize(width: 100, height: 100)))
-                    expect(windowDelegate.title.value).to(equal("a window title"))
+                    expect(windowDelegate.frame.value.origin) == CGPoint(x: 5, y: 895)
+                    expect(windowDelegate.frame.value.size) == CGSize(width: 100, height: 100)
+                    expect(windowDelegate.size.value) == CGSize(width: 100, height: 100)
+                    expect(windowDelegate.title.value) == "a window title"
                     expect(windowDelegate.isMinimized.value).to(beFalse())
                     expect(windowDelegate.isFullscreen.value).to(beFalse())
                 }
@@ -378,10 +379,10 @@ class OSXWindowDelegateSpec: QuickSpec {
 
             describe("position") {
                 it("updates when the window is moved") {
-                    expect(windowDelegate.position.value).to(equal(CGPoint(x: 0, y: 900)))
+                    expect(windowDelegate.frame.value.origin).to(equal(CGPoint(x: 0, y: 900)))
                     windowElement.attrs[.position] = CGPoint(x: 1, y: 1)
                     windowDelegate.handleEvent(.moved, observer: TestObserver())
-                    expect(windowDelegate.position.value).toEventually(equal(CGPoint(x: 1, y: 899)))
+                    expect(windowDelegate.frame.value.origin).toEventually(equal(CGPoint(x: 1, y: 899)))
                 }
 
                 it("updates when the window is resized from the top") {
@@ -391,7 +392,7 @@ class OSXWindowDelegateSpec: QuickSpec {
                     windowDelegate.handleEvent(.resized, observer: TestObserver())
                     expect(windowDelegate.size.value).toEventually(equal(
                         CGSize(width: 100, height: 75)))
-                    expect(windowDelegate.position.value).toEventually(equal(
+                    expect(windowDelegate.frame.value.origin).toEventually(equal(
                         CGPoint(x: 0, y: 900)))  // no change
                 }
 
@@ -399,7 +400,7 @@ class OSXWindowDelegateSpec: QuickSpec {
                     windowElement.attrs[.position] = CGPoint(x: 0, y: 0)
                     windowElement.attrs[.size]     = CGSize(width: 100, height: 75)
                     windowDelegate.handleEvent(.resized, observer: TestObserver())
-                    expect(windowDelegate.position.value).toEventually(equal(
+                    expect(windowDelegate.frame.value.origin).toEventually(equal(
                         CGPoint(x: 0, y: 925)))
                     expect(windowDelegate.size.value).toEventually(equal(
                         CGSize(width: 100, height: 75)))
@@ -500,12 +501,11 @@ class WindowSpec: QuickSpec {
             }
 
             func setWindowRect(_ rect: CGRect) {
-                windowDelegate.position_.value = rect.origin
                 windowDelegate.frame_.value = rect
                 waitUntil { done in
-                    when(fulfilled: windowDelegate.position.refresh(),
-                                    windowDelegate.frame.refresh())
-                        .then { _ in done() }.always {}
+                    windowDelegate.frame.refresh()
+                        .then { _ in done() }
+                        .always {}
                 }
             }
 
