@@ -1,15 +1,19 @@
+0.1.0
+=====
+
+Breaking changes
+- Upgraded to PromiseKit 6; see the [migration guide](https://promisekit.org/news/2018/02/PromiseKit-6.0-Released/)
+
 0.0.3
 =====
 
 New features
-- A `Window.frame` property was added. You can now atomically change the whole
-  frame of a window.
+- A `Window.frame` property was added.
 
 Breaking changes
 - The new `Window.frame` now uses Cocoa coordinates (origin at bottom-left), to
-  match the behavior of Screen and most modern macOS APIs.
-- `Window.position` was removed in favor of `Window.frame`. See #32 and #29 for
-  more.
+  match the behavior of Screen and most modern macOS APIs. See #29 for more.
+- `Window.position` was removed in favor of `Window.frame`. See #32 for more.
 - `WindowFrameChangedEvent` was added, replacing `WindowPosChangedEvent` and
   `WindowSizeChangedEvent`. See #16 for more.
 
