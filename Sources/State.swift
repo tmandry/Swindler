@@ -6,8 +6,8 @@ public func initialize() -> Promise<State> {
     return OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>.initialize(
         appObserver: ApplicationObserver(),
         screens: OSXSystemScreenDelegate()
-    ).then { delegate in
-       return State(delegate: delegate)
+    ).map { delegate in
+       State(delegate: delegate)
     }
 }
 
@@ -205,9 +205,9 @@ final class OSXStateDelegate<
         appObserver: ApplicationObserverType,
         screens: S
     ) -> Promise<OSXStateDelegate> {
-        return firstly {
+        return firstly { () -> Promise<OSXStateDelegate> in
             let delegate = OSXStateDelegate(appObserver: appObserver, screens: screens)
-            return delegate.initialized.then { delegate }
+            return delegate.initialized.map { delegate }
         }
     }
 
@@ -230,7 +230,7 @@ final class OSXStateDelegate<
             }
         }
 
-        let (propertyInitPromise, propertyInit, propertyInitError) = Promise<Void>.pending()
+        let (propertyInitPromise, seal) = Promise<Void>.pending()
         frontmostApplication = WriteableProperty(
             FrontmostApplicationPropertyDelegate(
                 appFinder: self,
@@ -251,12 +251,12 @@ final class OSXStateDelegate<
         // Must not allow frontmostApplication to initialize until the observer is in place.
         when(fulfilled: appPromises)
             //.asVoid()
-            .then(execute: propertyInit)
-            .catch(execute: propertyInitError)
+            .done { seal.fulfill(()) }
+            .catch(seal.reject)
 
         frontmostApplication.initialized.catch { error in
             log.error("Caught error initializing frontmostApplication: \(error)")
-        }.always {
+        }.finally {
             log.debug("Done initializing")
         }
 
@@ -269,7 +269,7 @@ final class OSXStateDelegate<
 
     func watchApplication(appElement: ApplicationElement, retry: Int) -> Promise<AppDelegate> {
         return AppDelegate.initialize(axElement: appElement, stateDelegate: self, notifier: notifier)
-            .then { appDelegate -> AppDelegate in
+            .map { appDelegate in
                 self.applicationsByPID[try appDelegate.axElement.pid()] = appDelegate
                 return appDelegate
             }
@@ -298,7 +298,7 @@ extension OSXStateDelegate {
         guard let appElement = ApplicationElement(forProcessID: pid) else {
             return
         }
-        watchApplication(appElement: appElement).then { appDelegate -> Void in
+        watchApplication(appElement: appElement).done { appDelegate in
             self.notifier.notify(ApplicationLaunchedEvent(
                 external: true,
                 application: Application(delegate: appDelegate, stateDelegate: self)
@@ -387,7 +387,7 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
 
     func initialize() -> Promise<Application?> {
         // No need to run in background, the call happens instantly.
-        return initPromise.then { self.readValue() }
+        return initPromise.map { self.readValue() }
     }
 
     fileprivate func findAppByPID(_ pid: pid_t) -> Application? {

@@ -27,11 +27,10 @@ func it<T>(_ desc: String,
            file: String = #file,
            line: UInt = #line,
            closure: @escaping () -> Promise<T>) {
-    setUpPromiseErrorHandler(file: file, line: line)
     it(desc, file: file, line: line, closure: {
         let promise = closure()
         waitUntil(timeout: timeout, file: file, line: line) { done in
-            promise.then { _ in
+            promise.done { _ in
                 done()
             }.catch { error in
                 if failOnError {
@@ -43,12 +42,6 @@ func it<T>(_ desc: String,
     } as () -> Void)
 }
 
-func setUpPromiseErrorHandler(file: String, line: UInt) {
-    PMKSetUnhandledErrorHandler { error in
-        fail("Unhandled error returned from promise: \(error)", file: file, line: line)
-    }
-}
-
 func expectToSucceed<T>(_ promise: Promise<T>, file: String = #file, line: UInt = #line)
 -> Promise<Void> {
     return promise.asVoid().recover { (error: Error) -> Void in
@@ -58,11 +51,11 @@ func expectToSucceed<T>(_ promise: Promise<T>, file: String = #file, line: UInt 
 
 func expectToFail<T>(_ promise: Promise<T>, file: String = #file, line: UInt = #line)
 -> Promise<Void> {
-    return promise.asVoid().then {
+    return promise.asVoid().done {
         fail("Expected promise to fail, but succeeded", file: file, line: line)
     }.recover { (error: Error) -> Promise<Void> in
         expect(file, line: line, expression: { throw error }).to(throwError())
-        return Promise(value: ())
+        return Promise.value(())
     }
 }
 
@@ -70,7 +63,7 @@ func expectToFail<T, E: Error>(_ promise: Promise<T>,
                                with expectedError: E,
                                file: String = #file,
                                line: UInt = #line) -> Promise<Void> {
-    return promise.asVoid().then {
+    return promise.asVoid().done {
         fail("Expected promise to fail with error \(expectedError), but succeeded",
              file: file, line: line)
     }.recover { (error: Error) -> Void in

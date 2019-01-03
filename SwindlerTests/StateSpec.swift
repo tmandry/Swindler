@@ -62,7 +62,7 @@ class OSXStateDelegateSpec: QuickSpec {
                 TestUIElement, TestApplicationElement, TestObserver
             >(appObserver: appObserver, screens: screenDel)
             waitUntil { done in
-                stateDel.frontmostApplication.initialized.then { done() }.always {}
+                stateDel.frontmostApplication.initialized.done { done() }.cauterize()
             }
             return stateDel
         }
@@ -226,7 +226,7 @@ class OSXStateDelegateSpec: QuickSpec {
             context("when there is no frontmost application") {
                 it("is nil") { () -> Promise<Void> in
                     let stateDelegate = initialize()
-                    return stateDelegate.frontmostApplication.initialized.then {
+                    return stateDelegate.frontmostApplication.initialized.done {
                         expect(stateDelegate.frontmostApplication.value).to(beNil())
                     }
                 }
@@ -237,7 +237,7 @@ class OSXStateDelegateSpec: QuickSpec {
                     let appObserver = FakeApplicationObserver()
                     appObserver.setFrontmost(1234)
                     let stateDelegate = initializeWithApp(appObserver: appObserver)
-                    return stateDelegate.frontmostApplication.initialized.then {
+                    return stateDelegate.frontmostApplication.initialized.done {
                         expect(getPID(stateDelegate.frontmostApplication.value)).to(equal(1234))
                     }
                 }
@@ -260,7 +260,7 @@ class OSXStateDelegateSpec: QuickSpec {
                     let appObserver = FakeApplicationObserver()
                     let state = State(delegate: initializeWithApp(appObserver: appObserver))
                     expect(state.frontmostApplication.value).to(beNil())
-                    state.frontmostApplication.set(state.runningApplications.first!).always {}
+                    state.frontmostApplication.set(state.runningApplications.first!).cauterize()
                     expect(appObserver.frontmostApplicationPID).toEventually(equal(1234))
                 }
 
@@ -269,7 +269,7 @@ class OSXStateDelegateSpec: QuickSpec {
                     it("returns the app in the promise") { () -> Promise<Void> in
                         let state = State(delegate: initializeWithApp())
                         return state.frontmostApplication.set(state.runningApplications.first!)
-                            .then { app in
+                            .done { app in
                                 expect(app).to(equal(state.runningApplications.first!))
                             }
                     }
@@ -286,7 +286,7 @@ class OSXStateDelegateSpec: QuickSpec {
                             delegate: initializeWithApp(appObserver: StubApplicationObserver())
                         )
                         return state.frontmostApplication.set(state.runningApplications.first!)
-                            .then { app in
+                            .done { app in
                                 expect(app).to(beNil())
                             }
                     }

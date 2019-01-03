@@ -126,9 +126,9 @@ final class OSXApplicationDelegate<
         stateDelegate: StateDelegate,
         notifier: EventNotifier
     ) -> Promise<OSXApplicationDelegate> {
-        return firstly { // capture thrown errors in promise chain
+        return firstly { () -> Promise<OSXApplicationDelegate> in // capture thrown errors in promise chain
             let appDelegate = try OSXApplicationDelegate(axElement, stateDelegate, notifier)
-            return appDelegate.initialized.then { appDelegate }
+            return appDelegate.initialized.map { appDelegate }
         }
     }
 
@@ -156,12 +156,12 @@ final class OSXApplicationDelegate<
         let windowsFetched = fetchWindows(after: appWatched)
 
         // Create a promise for the attribute dictionary we'll get from fetchAttributes.
-        let (attrsFetched, fulfillAttrs, rejectAttrs) = Promise<[AXSwift.Attribute: Any]>.pending()
+        let (attrsFetched, attrsSeal) = Promise<[AXSwift.Attribute: Any]>.pending()
 
         // Some properties can't initialize until we fetch the windows. (WindowPropertyAdapter)
         let initProperties =
-            when(fulfilled: attrsFetched, windowsFetched)
-            .then { fetchedAttrs, _ in fetchedAttrs }
+            PromiseKit.when(fulfilled: attrsFetched, windowsFetched)
+            .map { fetchedAttrs, _ in fetchedAttrs }
 
         // Configure properties.
         mainWindow = WriteableProperty(
@@ -200,8 +200,7 @@ final class OSXApplicationDelegate<
         fetchAttributes(attributes,
                         forElement: axElement,
                         after: appWatched,
-                        fulfill: fulfillAttrs,
-                        reject: rejectAttrs)
+                        seal: attrsSeal)
 
         initialized = initializeProperties(properties).asVoid()
     }
@@ -217,7 +216,7 @@ final class OSXApplicationDelegate<
             return Promise(error: error)
         }
 
-        return Promise<Void>(value: ()).then(on: .global()) { () -> Void in
+        return Promise.value(()).done(on: .global()) {
             for notification in notifications {
                 try traceRequest(self.axElement, "addNotification", notification) {
                     try self.observer.addNotification(notification, forElement: self.axElement)
@@ -229,7 +228,7 @@ final class OSXApplicationDelegate<
     /// Called during initialization to fetch a list of window elements and initialize window
     /// delegates for them.
     fileprivate func fetchWindows(after promise: Promise<Void>) -> Promise<Void> {
-        return promise.then(on: .global()) { () -> [UIElement]? in
+        return promise.map(on: .global()) { () -> [UIElement]? in
             // Fetch the list of window elements.
             try traceRequest(self.axElement, "arrayAttribute", AXSwift.Attribute.windows) {
                 return try self.axElement.arrayAttribute(.windows)
@@ -264,12 +263,12 @@ final class OSXApplicationDelegate<
     fileprivate func createWindowForElementIfNotExists(_ axElement: UIElement)
     -> Promise<WinDelegate?> {
         guard let systemScreens = stateDelegate?.systemScreens else {
-            return Promise(value: nil)
+            return .value(nil)
         }
         return WinDelegate.initialize(
             appDelegate: self, notifier: notifier, axElement: axElement, observer: observer,
             systemScreens: systemScreens
-        ).then { windowDelegate -> WinDelegate? in
+        ).map { windowDelegate in
             // This check needs to happen here, because it's possible (though rare) to call this
             // method from two different places (fetchWindows and onWindowCreated) before
             // initialization of either one is complete.
@@ -281,7 +280,7 @@ final class OSXApplicationDelegate<
             self.newWindowHandler.windowCreated(axElement)
 
             return windowDelegate
-        }.recover { error -> WinDelegate? in
+        }.recover { error -> Promise<WinDelegate?> in
             // If this initialization of WinDelegate failed, the window is somehow invalid and we
             // won't be seeing it again. Here we assume that if there were other initializations
             // requested, they won't succeed either.
@@ -330,7 +329,7 @@ extension OSXApplicationDelegate {
     internal func addWindowElement(_ windowElement: UIElement) -> Promise<WinDelegate?> {
         return firstly {
             createWindowForElementIfNotExists(windowElement)
-        }.then { windowDelegate -> WinDelegate? in
+        }.map { windowDelegate in
             guard let windowDelegate = windowDelegate,
                   let window = Window(delegate: windowDelegate)
             else { return nil }
@@ -368,10 +367,10 @@ extension OSXApplicationDelegate {
         _ element: UIElement,
         property: Property<OfOptionalType<Window>>
     ) {
-        Promise<Void>(value: ()).then(on: .global()) { () -> Role? in
+        Promise.value(()).map(on: .global()) { () -> Role? in
             guard let role: String = try element.attribute(.role) else { return nil }
             return Role(rawValue: role)
-        }.then { role -> Void in
+        }.done { role in
             if role == .application {
                 // There is no main window; we can refresh immediately.
                 property.refresh()
@@ -585,7 +584,7 @@ private final class MainWindowPropertyDelegate<
         // To set the main window, we have to access the .main attribute of the window element and
         // set it to true.
         let writeDelegate = AXPropertyDelegate<Bool, UIElement>(
-            winDelegate.axElement, .main, Promise(value: [:])
+            winDelegate.axElement, .main, Promise.value([:])
         )
         try writeDelegate.writeValue(true)
     }
@@ -629,7 +628,7 @@ private final class WindowPropertyAdapter<
     }
 
     func initialize() -> Promise<Window?> {
-        return delegate.initialize().then { maybeElement -> Window? in
+        return delegate.initialize().map { maybeElement in
             guard let element = maybeElement else {
                 return nil
             }

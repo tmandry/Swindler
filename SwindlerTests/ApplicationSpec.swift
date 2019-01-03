@@ -72,10 +72,10 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
                     AppDelegate.initialize(axElement: appElement,
                                            stateDelegate: StubStateDelegate(),
                                            notifier: notifier)
-                        .then { delegate -> Void in
+                        .done { delegate in
                             appDelegate = delegate
                             done()
-                        }.always {}
+                        }.cauterize()
                 }
                 expect(appDelegate).to(beNil())
             }
@@ -88,10 +88,10 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
                     notifier = n
                     AppDelegate.initialize(
                         axElement: appElement, stateDelegate: StubStateDelegate(), notifier: n
-                    ).then { delegate -> Void in
+                    ).done { delegate in
                         appDelegate = delegate
                         done()
-                    }.always {}
+                    }.cauterize()
                 }
                 expect(appDelegate).toNot(beNil())
                 expect(notifier).to(beNil())
@@ -109,11 +109,11 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
                             AppDelegate.initialize(axElement: appElement,
                                                    stateDelegate: state,
                                                    notifier: notifier)
-                                .then { delegate -> Void in
+                                .done { delegate in
                                     expect(delegate.knownWindows).to(haveCount(1))
                                     appDelegate = delegate
                                     done()
-                                }.always {}
+                                }.cauterize()
                         }
                     }
                     expect(appDelegate).to(beNil())
@@ -193,10 +193,10 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
                     AppDelegate.initialize(axElement: appElement,
                                            stateDelegate: stubStateDelegate,
                                            notifier: notifier)
-                        .then { appDel -> Void in
+                        .done { appDel in
                             appDelegate = appDel
                             done()
-                        }.always {}
+                        }.cauterize()
                 }
                 return appDelegate!
             }
@@ -391,11 +391,11 @@ class OSXApplicationDelegateSpec: QuickSpec {
                     TestUIElement, AdversaryApplicationElement, FakeObserver
                 >.initialize(
                     axElement: appElement, stateDelegate: stubStateDelegate, notifier: notifier
-                ).then { applicationDelegate -> Void in
+                ).done { applicationDelegate in
                     appDelegate = applicationDelegate
                     observer = appDelegate.observer
                     done()
-                }.always {}
+                }.cauterize()
             }
         }
 
@@ -648,7 +648,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
                     }
 
                     it("returns the new main window in the promise") { () -> Promise<Void> in
-                        setPromise.then { newMainWindow in
+                        setPromise.done { newMainWindow in
                             expect(newMainWindow?.delegate.equalTo(windowDelegate)).to(beTrue())
                         }
                     }
@@ -667,7 +667,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
                     }
 
                     it("returns the old value in the promise") { () -> Promise<Void> in
-                        setPromise.then { newMainWindow in
+                        setPromise.done { newMainWindow in
                             expect(newMainWindow).to(beNil())
                         }
                     }
@@ -840,7 +840,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
                     .initialize(axElement: otherAppElement,
                                 stateDelegate: StubStateDelegate(),
                                 notifier: notifier)
-                    .then { otherAppDelegate -> Void in
+                    .done { otherAppDelegate in
                         expect(appDelegate.equalTo(otherAppDelegate)).to(beFalse())
                     }
             }

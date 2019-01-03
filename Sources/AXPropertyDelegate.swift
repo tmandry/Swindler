@@ -68,12 +68,12 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
     }
 
     func initialize() -> Promise<T?> {
-        return initPromise.then { (dict: InitDict) throws -> T? in
+        return initPromise.map { dict in
             guard let value = dict[self.attribute] else {
                 return nil
             }
             return self.readFilter(Optional(value as! T))
-        }.recover { error -> T? in
+        }.recover { error -> Promise<T?> in
             switch error {
             case AXSwift.AXError.cannotComplete:
                 // If messaging timeout unspecified, we'll pass -1.
@@ -113,16 +113,15 @@ extension Property: PropertyType {
 func fetchAttributes<UIElement: UIElementType>(_ attributeNames: [Attribute],
                                                forElement axElement: UIElement,
                                                after: Promise<Void>,
-                                               fulfill: @escaping ([Attribute: Any]) -> Void,
-                                               reject: @escaping (Error) -> Void) {
+                                               seal: Resolver<[Attribute: Any]>) {
     // Issue a request in the background.
-    after.then(on: .global()) { () -> Void in
+    after.done(on: .global()) {
         let attributes = try traceRequest(axElement, "getMultipleAttributes", attributeNames) {
             try axElement.getMultipleAttributes(attributeNames)
         }
-        fulfill(attributes)
+        seal.fulfill(attributes)
     }.catch { error in
-        reject(error)
+        seal.reject(error)
     }
 }
 

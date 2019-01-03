@@ -19,13 +19,12 @@ public class FakeState {
         OSXStateDelegate<TestUIElement, AppElement, FakeObserver>
 
     public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
-        return firstly { () -> (Promise<Delegate>, Promise<FakeApplicationObserver>) in
-            let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
-            let appObserver = FakeApplicationObserver()
-            return (Delegate.initialize(appObserver: appObserver, screens: screens),
-                    Promise(value: appObserver))
-        }.then { data in
-            return FakeState(data.0, data.1)
+        let appObserver = FakeApplicationObserver()
+        let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+        return firstly {
+            Delegate.initialize(appObserver: appObserver, screens: screens)
+        }.map { delegate in
+            FakeState(delegate, appObserver)
         }
     }
 
@@ -166,7 +165,7 @@ public class FakeWindowBuilder {
     public func build() -> Promise<FakeWindow> {
         // TODO schedule new window event
         //w.parent.delegate!...
-        return w.parent.delegate.addWindowElement(w.element).then { delegate -> FakeWindow in
+        return w.parent.delegate.addWindowElement(w.element).map { delegate in
             self.w.delegate = delegate
             return self.w
         }
@@ -287,9 +286,9 @@ class TestPropertyDelegate<T: Equatable, Object: TestObject>: PropertyDelegate {
 
     func initialize() -> Promise<T?> {
         guard let object = object, object.isValid else {
-            return Promise(value: nil)
+            return .value(nil)
         }
-        return Promise(value: getter(object))
+        return .value(getter(object))
     }
 
     func readValue() throws -> T? {
