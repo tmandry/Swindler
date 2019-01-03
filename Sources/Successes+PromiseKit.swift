@@ -12,17 +12,17 @@ import PromiseKit
 */
 func successes<T>(_ promises: [Promise<T>], onError: @escaping (Int, Error) -> Void)
 -> Promise<[T]> {
-    guard !promises.isEmpty else { return Promise<[T]>(value: []) }
-    return Promise<[T]> { fulfill, _ in
+    guard !promises.isEmpty else { return .value([]) }
+    return Promise<[T]> { seal in
         var values = [T]()
         var countdown = promises.count
         for (index, promise) in promises.enumerated() {
-            promise.then { value in
+            promise.done { value in
                 values.append(value)
-            }.always {
+            }.ensure {
                 countdown -= 1
                 if countdown == 0 {
-                    fulfill(values)
+                    seal.fulfill(values)
                 }
             }.catch { error in
                 onError(index, error)

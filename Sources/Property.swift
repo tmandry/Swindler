@@ -167,16 +167,13 @@ public class Property<TypeSpec: PropertyTypeSpec> {
 
     func initialize<Impl: PropertyDelegate>(_ delegate: Impl) -> Promise<Void>
     where Impl.T == NonOptionalType {
-        let (promise, fulfill, reject) = Promise<Void>.pending()
-        delegate.initialize().then { (value: OptionalType) -> () in
+        let (promise, seal) = Promise<Void>.pending()
+        delegate.initialize().done { value in
             self.value_ = try TypeSpec.toPropertyType(value)
-            fulfill(())
+            seal.fulfill(())
         }.catch { error in
-            do {
-                try self.handleError(error)
-            } catch {
-                reject(error)
-            }
+            self.handleError(error)
+            seal.reject(error)
         }
         return promise
     }
@@ -206,7 +203,7 @@ public class Property<TypeSpec: PropertyTypeSpec> {
         // Allow queueing up a refresh before initialization is complete, which means "assume the
         // value you will be initialized with is going to be stale". This is useful if an event is
         // received before fully initializing.
-        return initialized.then(on: backgroundQueue) { () -> (PropertyType, PropertyType) in
+        return initialized.map(on: backgroundQueue) { () -> (PropertyType, PropertyType) in
             self.requestLock.lock()
             defer { self.requestLock.unlock() }
 
@@ -214,14 +211,16 @@ public class Property<TypeSpec: PropertyTypeSpec> {
             let oldValue = self.updateBackingStore(actual)
 
             return (oldValue, actual)
-        }.then { (oldValue: PropertyType, actual: PropertyType) throws -> PropertyType in
+        }.map { (oldValue, actual) -> PropertyType in
             // Back on main thread.
             if !TypeSpec.equal(oldValue, actual) {
                 self.notifier.notify?(true, oldValue, actual)
             }
             return actual
-        }.recover { error in
-            try self.handleError(error)
+        }.tap { result in
+            if case .rejected(let error) = result {
+                self.handleError(error)
+            }
         }
     }
 
@@ -236,9 +235,8 @@ public class Property<TypeSpec: PropertyTypeSpec> {
         return oldValue!
     }
 
-    /// Checks and re-throws an error.
-    @discardableResult
-    fileprivate func handleError(_ error: Error) throws -> PropertyType {
+    /// Checks an error.
+    fileprivate func handleError(_ error: Error) {
         assert(error is PropertyError,
                "Errors thrown from PropertyDelegate must be PropertyErrors, but got \(error)")
 
@@ -246,8 +244,6 @@ public class Property<TypeSpec: PropertyTypeSpec> {
             log.debug("Marking property of type \(PropertyType.self) invalid: \(error)")
             self.notifier.notifyInvalid()
         }
-
-        throw error
     }
 }
 
@@ -293,7 +289,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
     }
 
     final func mutateWith(f: @escaping () throws -> (NonOptionalType)) -> Promise<PropertyType> {
-        return Promise<Void>(value: ()).then(on: backgroundQueue) {
+        return Promise<Void>.value(()).map(on: backgroundQueue) {
             () throws -> (PropertyType, PropertyType, PropertyType) in
 
             self.requestLock.lock()
@@ -313,7 +309,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
                        + "as external that are actually internal.")
                 throw PropertyError.timeout(time: time)
             }
-        }.then { (oldValue: PropertyType, desired: PropertyType, actual: PropertyType)
+        }.map { (oldValue: PropertyType, desired: PropertyType, actual: PropertyType)
                   -> PropertyType in
             // Back on main thread.
             if !TypeSpec.equal(actual, oldValue) {
@@ -324,8 +320,10 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
                 self.notifier.notify?(external, oldValue, actual)
             }
             return actual
-        }.recover { error in
-            try self.handleError(error)
+        }.tap { result in
+            if case .rejected(let error) = result {
+                self.handleError(error)
+            }
         }
     }
 }

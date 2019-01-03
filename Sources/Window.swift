@@ -145,7 +145,7 @@ final class OSXWindowDelegate<
         self.axElement = axElement
 
         // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
-        let (initPromise, fulfill, reject) = Promise<[AXSwift.Attribute: Any]>.pending()
+        let (initPromise, seal) = Promise<[AXSwift.Attribute: Any]>.pending()
 
         // Initialize all properties.
         let frameDelegate = FramePropertyDelegate(axElement, initPromise, systemScreens)
@@ -206,12 +206,12 @@ final class OSXWindowDelegate<
             .subrole
         ]
         fetchAttributes(
-            attributes, forElement: axElement, after: watched, fulfill: fulfill, reject: reject
+            attributes, forElement: axElement, after: watched, seal: seal
         )
 
         // Ignore windows with the "AXUnknown" role. This (undocumented) role shows up in several
         // places, including Chrome tooltips and OS X fullscreen transitions.
-        let subroleChecked = initPromise.then { attributeValues -> Void in
+        let subroleChecked = initPromise.done { attributeValues in
             if attributeValues[.subrole] as! String? == "AXUnknown" {
                 log.trace("Window \(axElement) has subrole AXUnknown, unwatching")
                 self.unwatchWindowElement(
@@ -229,7 +229,7 @@ final class OSXWindowDelegate<
     private func watchWindowElement(_ element: UIElement,
                                     observer: Observer,
                                     notifications: [AXNotification]) -> Promise<Void> {
-        return Promise<Void>(value: ()).then(on: .global()) { () -> Void in
+        return Promise<Void>.value(()).done(on: .global()) {
             for notification in notifications {
                 try traceRequest(self.axElement, "addNotification", notification) {
                     try observer.addNotification(notification, forElement: self.axElement)
@@ -241,7 +241,7 @@ final class OSXWindowDelegate<
     private func unwatchWindowElement(_ element: UIElement,
                                       observer: Observer,
                                       notifications: [AXNotification]) -> Promise<Void> {
-        return Promise<Void>(value: ()).then(on: .global()) { () -> Void in
+        return Promise<Void>.value(()).done(on: .global()) {
             for notification in notifications {
                 try traceRequest(self.axElement, "removeNotification", notification) {
                     try observer.removeNotification(notification, forElement: self.axElement)
@@ -269,10 +269,10 @@ extension OSXWindowDelegate {
         observer: Observer,
         systemScreens: SystemScreenDelegate
     ) -> Promise<OSXWindowDelegate> {
-        return firstly { // capture thrown errors in promise
+        return firstly { () -> Promise<OSXWindowDelegate> in // capture thrown errors in promise
             let window = try OSXWindowDelegate(
                 appDelegate, notifier, axElement, observer, systemScreens)
-            return window.initialized.then { window }
+            return window.initialized.map { window }
         }
     }
 
@@ -347,7 +347,7 @@ private final class FramePropertyDelegate<UIElement: UIElementType>: PropertyDel
     }
 
     func initialize() -> Promise<T?> {
-        return frame.initialize().then { rect in
+        return frame.initialize().map { rect in
             rect.map{ self.invert($0) }
         }
     }
@@ -386,7 +386,7 @@ final class SizeProperty: WriteableProperty<OfType<CGSize>> {
 
     @discardableResult
     public override func refresh() -> Promise<PropertyType> {
-        return frame.refresh().then { rect in
+        return frame.refresh().map { rect in
             return rect.size
         }
     }
@@ -399,7 +399,7 @@ final class SizeProperty: WriteableProperty<OfType<CGSize>> {
             let orig = self.frame.value
             try self.delegate_.writeValue(newValue)
             return CGRect(origin: orig.origin, size: newValue)
-        }.then { rect in
+        }.map { rect in
             return rect.size
         }
     }

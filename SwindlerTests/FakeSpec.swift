@@ -18,10 +18,10 @@ class FakeSpec: QuickSpec {
                             .setTitle("I'm a test window")
                             .setPosition(CGPoint(x: 100, y: 100))
                             .build()
-                    }.then { fw -> () in
+                    }.done { fw -> () in
                         fake = fw
                         done()
-                    }.always {}
+                    }.cauterize()
                 }
             }
 
@@ -84,11 +84,11 @@ class FakeSpec: QuickSpec {
                             FakeWindowBuilder(parent: fakeApp).build(),
                             FakeWindowBuilder(parent: fakeApp).build()
                         )
-                    }.then { (fw1, fw2) -> () in
+                    }.done { (fw1, fw2) in
                         fakeWindow1 = fw1
                         fakeWindow2 = fw2
                         done()
-                    }.always {}
+                    }.cauterize()
                 }
             }
 
@@ -131,12 +131,12 @@ class FakeSpec: QuickSpec {
 
             beforeEach {
                 waitUntil { done in
-                    FakeState.initialize().then { fs -> () in
+                    FakeState.initialize().done { fs in
                         fakeState = fs
                         fakeApp1 = FakeApplication(parent: fakeState)
                         fakeApp2 = FakeApplication(parent: fakeState)
                         done()
-                    }.always {}
+                    }.cauterize()
                 }
             }
 

@@ -39,10 +39,10 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
         it("doesn't leak memory") {
             weak var windowDelegate: WinDelegate?
             waitUntil { done in
-                initialize().then { delegate -> Void in
+                initialize().done { delegate in
                     windowDelegate = delegate
                     done()
-                }.always {}
+                }.cauterize()
             }
             expect(windowDelegate).to(beNil())
         }
@@ -56,7 +56,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
                 windowElement.attrs[.minimized] = false
                 windowElement.attrs[.fullScreen] = false
 
-                return initialize().then { windowDelegate -> Void in
+                return initialize().done { windowDelegate in
                     // In inverted (AX) coordinates, top-left is (5, 5) and bottom-left is (5, 105)
                     // In Cocoa coordinates, the bottom-left would be (5, 1000 - 105) = (5, 895)
                     expect(windowDelegate.frame.value.origin) == CGPoint(x: 5, y: 895)
@@ -69,13 +69,13 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
             }
 
             it("stores the ApplicationDelegate in appDelegate") { () -> Promise<Void> in
-                initialize().then { winDelegate in
+                initialize().done { winDelegate in
                     expect(winDelegate.appDelegate === stubApplicationDelegate).to(beTrue())
                 }
             }
 
             it("marks the window as valid") { () -> Promise<Void> in
-                initialize().then { windowDelegate -> Void in
+                initialize().done { windowDelegate in
                     expect(windowDelegate.isValid).to(beTrue())
                 }
             }
@@ -105,16 +105,16 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
         describe("Window equality") {
 
             it("returns true for identical WindowDelegates") { () -> Promise<Void> in
-                initialize().then { windowDelegate in
+                initialize().done { windowDelegate in
                     expect(Window(delegate: windowDelegate))
                         .to(equal(Window(delegate: windowDelegate)))
                 }
             }
 
             it("returns false for different WindowDelegates") { () -> Promise<Void> in
-                initialize().then { windowDelegate1 in
+                initialize().then { windowDelegate1 -> Promise<Void> in
                     let windowElement2 = TestWindowElement(forApp: TestApplicationElement())
-                    return initializeWithElement(windowElement2).then { windowDelegate2 -> Void in
+                    return initializeWithElement(windowElement2).done { windowDelegate2 in
                         expect(Window(delegate: windowDelegate1))
                             .toNot(equal(Window(delegate: windowDelegate2)))
                     }
@@ -157,7 +157,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                     .initialize(axElement: appElement,
                                 stateDelegate: StubStateDelegate(),
                                 notifier: TestNotifier())
-                    .then { appDelegate -> WinDelegate in
+                    .map { appDelegate -> WinDelegate in
                         observer = appDelegate.observer
                         guard let winDelegate = appDelegate.knownWindows.first
                                                 as! WinDelegate? else {
@@ -176,7 +176,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                         windowElement.attrs[.minimized] = true
                     }
 
-                    return initialize().then { winDelegate -> Void in
+                    return initialize().done { winDelegate in
                         expect(winDelegate.isMinimized.value).toEventually(beTrue())
                     }
                 }
@@ -195,7 +195,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                         }
                     }
 
-                    return initialize().then { winDelegate -> Void in
+                    return initialize().done { winDelegate in
                         expect(winDelegate.isMinimized.value).toEventually(beTrue())
                     }
                 }
@@ -214,7 +214,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                         observer?.emit(.windowMiniaturized, forElement: windowElement)
                     }
 
-                    return initialize().then { winDelegate -> Void in
+                    return initialize().done { winDelegate in
                         expect(winDelegate.isMinimized.value).toEventually(beTrue())
                     }
                 }
@@ -251,10 +251,10 @@ class OSXWindowDelegateSpec: QuickSpec {
                     axElement: windowElement,
                     observer: TestObserver(),
                     systemScreens: systemScreens
-                ).then { winDelegate -> Void in
+                ).done { winDelegate in
                     windowDelegate = winDelegate
                     done()
-                }.always {}
+                }.cauterize()
             }
         }
 
@@ -353,7 +353,7 @@ class OSXWindowDelegateSpec: QuickSpec {
                 return windowDelegate
                     .frame
                     .set(CGRect(x: 500, y: 500, width: 200, height: 200))
-                    .then { _ in
+                    .done { _ in
                         expect(windowDelegate.size.value) == windowDelegate.frame.value.size
                     }
             }
@@ -362,7 +362,7 @@ class OSXWindowDelegateSpec: QuickSpec {
                 return windowDelegate
                     .size
                     .set(CGSize(width: 200, height: 200))
-                    .then { _ in
+                    .done { _ in
                         expect(windowDelegate.frame.value.size) == windowDelegate.size.value
                     }
             }
@@ -504,8 +504,8 @@ class WindowSpec: QuickSpec {
                 windowDelegate.frame_.value = rect
                 waitUntil { done in
                     windowDelegate.frame.refresh()
-                        .then { _ in done() }
-                        .always {}
+                        .done { _ in done() }
+                        .cauterize()
                 }
             }
 

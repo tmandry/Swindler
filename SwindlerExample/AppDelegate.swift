@@ -26,7 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        Swindler.initialize().then { state -> () in
+        Swindler.initialize().done { state in
             self.swindler = state
             self.setupEventHandlers()
         }.catch { error in
@@ -38,7 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         //      for window in self.swindler.knownWindows {
         //        let title = window.title.value
         //        print("resizing \(title)")
-        //        window.size.set(CGSize(width: 200, height: 200)).then { newValue in
+        //        window.size.set(CGSize(width: 200, height: 200)).done { newValue in
         //          print("done with \(title), valid: \(window.isValid), newValue: \(newValue)")
         //        }.error { error in
         //          print("failed to resize \(title), valid: \(window.isValid), error: \(error)")

@@ -1,24 +1,13 @@
 PODS:
-  - AXSwift (0.2.1)
+  - AXSwift (0.2.3)
   - Nimble (7.3.1)
-  - PromiseKit (4.4.0):
-    - PromiseKit/Foundation (= 4.4.0)
-    - PromiseKit/QuartzCore (= 4.4.0)
-    - PromiseKit/UIKit (= 4.4.0)
-  - PromiseKit/CorePromise (4.4.0)
-  - PromiseKit/Foundation (4.4.0):
-    - PromiseKit/CorePromise
-  - PromiseKit/QuartzCore (4.4.0):
-    - PromiseKit/CorePromise
-  - PromiseKit/UIKit (4.4.0):
-    - PromiseKit/CorePromise
+  - PromiseKit/CorePromise (6.7.1)
   - Quick (1.2.0)
 
 DEPENDENCIES:
   - AXSwift (from `./AXSwift`)
   - Nimble (~> 7.3.1)
-  - PromiseKit (= 4.4.0)
-  - PromiseKit/CorePromise (= 4.4.0)
+  - PromiseKit/CorePromise (~> 6.0)
   - Quick (~> 1.2.0)
 
 SPEC REPOS:
@@ -32,11 +21,11 @@ EXTERNAL SOURCES:
     :path: "./AXSwift"
 
 SPEC CHECKSUMS:
-  AXSwift: dff0062fd88b2a92f40b149238d9e5f356b97d2e
+  AXSwift: d49fe05ca04f983196c5caedfc88f617922ae671
   Nimble: 04f732da099ea4d153122aec8c2a88fd0c7219ae
-  PromiseKit: ecf5fe92275d57ee77c9ede858af47a162e9b97e
+  PromiseKit: ef376fb8b4e92edfeb66bd403b983eaa07fbde0c
   Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08
 
-PODFILE CHECKSUM: 1f766e5a668836d96590159a39d9b2cd7c34c710
+PODFILE CHECKSUM: 43bf31a341af28c11e1feb4fd05f8c9670b59b58
 
 COCOAPODS: 1.6.0.beta.2

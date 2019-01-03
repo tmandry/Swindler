@@ -88,6 +88,6 @@ class StubPropertyDelegate<T: Equatable>: PropertyDelegate {
     }
 
     func initialize() -> Promise<T?> {
-        return Promise(value: value)
+        return Promise.value(value)
     }
 }

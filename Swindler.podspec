@@ -21,20 +21,14 @@ Pod::Spec.new do |s|
   s.author             = { 'Tyler Mandry' => 'tmandry@gmail.com' }
   s.social_media_url   = 'http://twitter.com/tmandry'
 
-  # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
-  #
-  #  If this Pod runs only on iOS or OS X, then specify the platform and
-  #  the deployment target. You can optionally include the target after the platform.
-  #
-
   s.platform     = :osx, '10.10'
 
   s.source       = { git: 'https://github.com/tmandry/Swindler.git', tag: s.version.to_s }
 
   s.source_files = 'Sources', 'Sources/**/*.{h,swift}'
 
-  s.dependency 'PromiseKit', '4.4.0'
-  s.dependency 'AXSwift', '0.2.2'
+  s.dependency 'PromiseKit/CorePromise', '~> 6.0'
+  s.dependency 'AXSwift', '0.2.3'
 
   s.frameworks = 'Cocoa'
 end
