@@ -282,231 +282,231 @@
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 32,
+      "line": 31,
       "symbol": "FakeState.state",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 34,
+      "line": 33,
       "symbol": "FakeState.frontmostApplication",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 78,
+      "line": 77,
       "symbol": "FakeApplication",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 84,
+      "line": 83,
       "symbol": "FakeApplication.application",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 91,
+      "line": 90,
       "symbol": "FakeApplication.isHidden",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 95,
+      "line": 94,
       "symbol": "FakeApplication.mainWindow",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 107,
+      "line": 106,
       "symbol": "FakeApplication.focusedWindow",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 124,
+      "line": 123,
       "symbol": "FakeApplication.init(parent:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 135,
+      "line": 134,
       "symbol": "FakeApplication.createWindow()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 140,
+      "line": 139,
       "symbol": "==(_:_:)",
       "symbol_kind": "source.lang.swift.decl.function.free",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 145,
+      "line": 144,
       "symbol": "FakeWindowBuilder",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 148,
+      "line": 147,
       "symbol": "FakeWindowBuilder.init(parent:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 152,
+      "line": 151,
       "symbol": "FakeWindowBuilder.setTitle(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 153,
+      "line": 152,
       "symbol": "FakeWindowBuilder.setFrame(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 154,
+      "line": 153,
       "symbol": "FakeWindowBuilder.setPosition(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 156,
+      "line": 155,
       "symbol": "FakeWindowBuilder.setSize(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 157,
+      "line": 156,
       "symbol": "FakeWindowBuilder.setMinimized(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 161,
+      "line": 160,
       "symbol": "FakeWindowBuilder.setFullscreen(_:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 166,
+      "line": 165,
       "symbol": "FakeWindowBuilder.build()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 176,
+      "line": 175,
       "symbol": "FakeWindow",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 179,
+      "line": 178,
       "symbol": "FakeWindow.parent",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 180,
+      "line": 179,
       "symbol": "FakeWindow.window",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 186,
+      "line": 185,
       "symbol": "FakeWindow.title",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 190,
+      "line": 189,
       "symbol": "FakeWindow.frame",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 194,
+      "line": 193,
       "symbol": "FakeWindow.isMinimized",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 198,
+      "line": 197,
       "symbol": "FakeWindow.isFullscreen",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 232,
+      "line": 231,
       "symbol": "==(_:_:)",
       "symbol_kind": "source.lang.swift.decl.function.free",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 243,
+      "line": 242,
       "symbol": "FakeScreen",
       "symbol_kind": "source.lang.swift.decl.class",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 244,
+      "line": 243,
       "symbol": "FakeScreen.screen",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 250,
+      "line": 249,
       "symbol": "FakeScreen.init(frame:applicationFrame:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 253,
+      "line": 252,
       "symbol": "FakeScreen.init(frame:menuBarHeight:dockHeight:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 260,
+      "line": 259,
       "symbol": "FakeScreen.init(frame:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
-      "line": 263,
+      "line": 262,
       "symbol": "FakeScreen.init()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
