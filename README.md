@@ -74,7 +74,7 @@ The following code assigns all windows on the screen to a grid. Note the simplic
 promise-based API. Requests are dispatched concurrently and in the background, not serially.
 
 ```swift
-Swindler.initialize().then { state -> Void in
+Swindler.initialize().done { state in
     let screen = state.screens.first!
 
     let allPlacedOnGrid = screen.knownWindows.enumerate().map { index, window in
