@@ -2,6 +2,8 @@ import Quick
 import Nimble
 import PromiseKit
 
+let swindlerQueue = DispatchQueue.main
+
 func waitUntil(_ expression: @autoclosure @escaping () throws -> Bool,
                file: String = #file,
                line: UInt = #line) {

@@ -26,7 +26,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
             let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
             let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])
             return WinDelegate.initialize(appDelegate: stubApplicationDelegate,
-                                          notifier: TestNotifier(),
+                                          notifier: TestNotifier(queue: swindlerQueue),
                                           axElement: winElement,
                                           observer: TestObserver(),
                                           systemScreens: systemScreens)
@@ -156,7 +156,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                 return AppDelegate
                     .initialize(axElement: appElement,
                                 stateDelegate: StubStateDelegate(),
-                                notifier: TestNotifier())
+                                notifier: TestNotifier(queue: swindlerQueue))
                     .map { appDelegate -> WinDelegate in
                         observer = appDelegate.observer
                         guard let winDelegate = appDelegate.knownWindows.first
@@ -241,7 +241,7 @@ class OSXWindowDelegateSpec: QuickSpec {
             windowElement.attrs[.size]     = CGSize(width: 100, height: 100)
             windowElement.attrs[.title]    = "a window"
 
-            notifier = TestNotifier()
+            notifier = TestNotifier(queue: swindlerQueue)
             waitUntil { done in
                 let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
                 let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])

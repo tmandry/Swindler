@@ -5,15 +5,27 @@ import PromiseKit
 
 /// A window.
 public final class Window {
-    internal let delegate: WindowDelegate
+    private let delegate_: WindowDelegate
+    private let queue_: DispatchQueue
 
     // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.
     // It should not be held internally by delegates, or it would create a reference cycle.
     fileprivate var application_: Application!
 
+    var delegate: WindowDelegate {
+        dispatchPrecondition(condition: .onQueue(queue_))
+        return delegate_
+    }
+
+    var delegateUnchecked: WindowDelegate {
+        return delegate_
+    }
+
     internal init(delegate: WindowDelegate, application: Application) {
-        self.delegate = delegate
+        delegate_ = delegate
         application_ = application
+        queue_ = delegate_.queue
+        dispatchPrecondition(condition: .onQueue(queue_))
     }
 
     /// This initializer fails only if the ApplicationDelegate is no longer reachable (because the
@@ -106,6 +118,8 @@ protocol WindowDelegate: class {
     var isMinimized: WriteableProperty<OfType<Bool>>! { get }
     var isFullscreen: WriteableProperty<OfType<Bool>>! { get }
 
+    var queue: DispatchQueue { get }
+
     func equalTo(_ other: WindowDelegate) -> Bool
 }
 
@@ -135,6 +149,8 @@ final class OSXWindowDelegate<
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!
 
+    let queue: DispatchQueue
+
     private init(_ appDelegate: ApplicationDelegate,
                  _ notifier: EventNotifier?,
                  _ axElement: UIElement,
@@ -143,6 +159,8 @@ final class OSXWindowDelegate<
         self.appDelegate = appDelegate
         self.notifier = notifier
         self.axElement = axElement
+
+        self.queue = appDelegate.queue
 
         // Create a promise for the attribute dictionary we'll get from getMultipleAttributes.
         let (initPromise, seal) = Promise<[AXSwift.Attribute: Any]>.pending()

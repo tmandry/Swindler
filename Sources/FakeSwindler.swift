@@ -18,11 +18,12 @@ public class FakeState {
     fileprivate typealias Delegate =
         OSXStateDelegate<TestUIElement, AppElement, FakeObserver>
 
-    public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
+    public static func initialize(screens: [FakeScreen] = [FakeScreen()],
+                                  queue: DispatchQueue = DispatchQueue.main) -> Promise<FakeState> {
         let appObserver = FakeApplicationObserver()
         let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
         return firstly {
-            Delegate.initialize(appObserver: appObserver, screens: screens)
+            Delegate.initialize(appObserver: appObserver, screens: screens, queue: queue)
         }.map { delegate in
             FakeState(delegate, appObserver)
         }

@@ -10,7 +10,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
 
         var notifier: TestNotifier!
         beforeEach {
-            notifier = TestNotifier()
+            notifier = TestNotifier(queue: swindlerQueue)
         }
 
         describe("initialize") {
@@ -84,7 +84,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
                 weak var notifier: TestNotifier?
                 var appDelegate: AppDelegate?
                 waitUntil { done in
-                    let n = TestNotifier()
+                    let n = TestNotifier(queue: swindlerQueue)
                     notifier = n
                     AppDelegate.initialize(
                         axElement: appElement, stateDelegate: StubStateDelegate(), notifier: n
@@ -171,7 +171,7 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
             var notifier: TestNotifier!
             beforeEach {
                 appElement = AdversaryApplicationElement()
-                notifier = TestNotifier()
+                notifier = TestNotifier(queue: swindlerQueue)
             }
             beforeEach { AdversaryObserver.reset() }
 
@@ -400,7 +400,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
         }
 
         beforeEach {
-            notifier = TestNotifier()
+            notifier = TestNotifier(queue: swindlerQueue)
             appElement = AdversaryApplicationElement()
             initializeApp()
         }
