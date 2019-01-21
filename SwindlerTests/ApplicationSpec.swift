@@ -5,12 +5,12 @@ import Nimble
 import AXSwift
 import PromiseKit
 
-class OSXApplicationDelegateInitializeSpec: QuickSpec {
-    override func spec() {
+class OSXApplicationDelegateInitializeSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         var notifier: TestNotifier!
         beforeEach {
-            notifier = TestNotifier(queue: swindlerQueue)
+            notifier = TestNotifier(queue: self.swindlerQueue)
         }
 
         describe("initialize") {
@@ -84,7 +84,7 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
                 weak var notifier: TestNotifier?
                 var appDelegate: AppDelegate?
                 waitUntil { done in
-                    let n = TestNotifier(queue: swindlerQueue)
+                    let n = TestNotifier(queue: self.swindlerQueue)
                     notifier = n
                     AppDelegate.initialize(
                         axElement: appElement, stateDelegate: StubStateDelegate(), notifier: n
@@ -163,15 +163,15 @@ class OSXApplicationDelegateInitializeSpec: QuickSpec {
     }
 }
 
-class OSXApplicationDelegateNotificationSpec: QuickSpec {
-    override func spec() {
+class OSXApplicationDelegateNotificationSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         describe("AXUIElement notifications") {
             var appElement: AdversaryApplicationElement!
             var notifier: TestNotifier!
             beforeEach {
                 appElement = AdversaryApplicationElement()
-                notifier = TestNotifier(queue: swindlerQueue)
+                notifier = TestNotifier(queue: self.swindlerQueue)
             }
             beforeEach { AdversaryObserver.reset() }
 
@@ -370,8 +370,8 @@ class OSXApplicationDelegateNotificationSpec: QuickSpec {
     }
 }
 
-class OSXApplicationDelegateSpec: QuickSpec {
-    override func spec() {
+class OSXApplicationDelegateSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         var appDelegate: OSXApplicationDelegate<
             TestUIElement, AdversaryApplicationElement, FakeObserver
@@ -400,7 +400,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
         }
 
         beforeEach {
-            notifier = TestNotifier(queue: swindlerQueue)
+            notifier = TestNotifier(queue: self.swindlerQueue)
             appElement = AdversaryApplicationElement()
             initializeApp()
         }
@@ -568,8 +568,8 @@ class OSXApplicationDelegateSpec: QuickSpec {
                     // dispatch_async to wait for WindowCreated doesn't always work, so we defeat
                     // that here.
                     observer.emit(.mainWindowChanged, forElement: windowElement)
-                    DispatchQueue.main.async {
-                        DispatchQueue.main.async {
+                    self.swindlerQueue.async {
+                        self.swindlerQueue.async {
                             observer.emit(.windowCreated, forElement: windowElement)
                         }
                     }

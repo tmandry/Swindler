@@ -6,11 +6,11 @@ class StubStateDelegate: StateDelegate {
     var frontmostApplication: WriteableProperty<OfOptionalType<Swindler.Application>>!
     var knownWindows: [WindowDelegate] = []
     var systemScreens: SystemScreenDelegate { return fakeScreens }
-    var notifier: EventNotifier = EventNotifier(queue: swindlerQueue)
+    var notifier: EventNotifier = EventNotifier(queue: swindlerTestQueue)
 
     var fakeScreens: FakeSystemScreenDelegate = FakeSystemScreenDelegate(screens: [])
 
-    var queue: DispatchQueue { return swindlerQueue }
+    var queue: DispatchQueue { return swindlerTestQueue }
 }
 
 class StubApplicationDelegate: ApplicationDelegate {
@@ -26,7 +26,7 @@ class StubApplicationDelegate: ApplicationDelegate {
     var isFrontmost: WriteableProperty<OfType<Bool>>!
     var isHidden: WriteableProperty<OfType<Bool>>!
 
-    var queue: DispatchQueue { return swindlerQueue }
+    var queue: DispatchQueue { return swindlerTestQueue }
 
     func equalTo(_ other: ApplicationDelegate) -> Bool { return self === other }
 }
@@ -46,7 +46,7 @@ class StubWindowDelegate: WindowDelegate {
     let position_ = StubPropertyDelegate(value: CGPoint.zero)
     let size_ = StubPropertyDelegate(value: CGSize.zero)
 
-    var queue: DispatchQueue { return swindlerQueue }
+    var queue: DispatchQueue { return swindlerTestQueue }
 
     init() {
         let notifier = TestPropertyNotifier()
@@ -68,7 +68,7 @@ class StubScreenDelegate: ScreenDelegate {
         applicationFrame = frame
     }
 
-    var queue: DispatchQueue { return swindlerQueue }
+    var queue: DispatchQueue { return swindlerTestQueue }
 
     var debugDescription: String { return "StubScreenDelegate" }
 

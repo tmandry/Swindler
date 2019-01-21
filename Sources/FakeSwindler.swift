@@ -18,14 +18,14 @@ public class FakeState {
     fileprivate typealias Delegate =
         OSXStateDelegate<TestUIElement, AppElement, FakeObserver>
 
-    public static func initialize(screens: [FakeScreen] = [FakeScreen()],
-                                  queue: DispatchQueue = DispatchQueue.main) -> Promise<FakeState> {
+    public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
         let appObserver = FakeApplicationObserver()
         let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
         return firstly {
-            Delegate.initialize(appObserver: appObserver, screens: screens, queue: queue)
+            Delegate.initialize(appObserver: appObserver, screens: screens,
+                                queue: globalSwindlerQueue)
         }.map { delegate in
-            FakeState(delegate, appObserver)
+            FakeState(delegate, appObserver, globalSwindlerQueue)
         }
     }
 
@@ -47,10 +47,15 @@ public class FakeState {
     fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
 
-    private init(_ delegate: Delegate, _ appObserver: FakeApplicationObserver) {
+    let queue: DispatchQueue
+
+    private init(_ delegate: Delegate,
+                 _ appObserver: FakeApplicationObserver,
+                 _ queue: DispatchQueue) {
         self.state = State(delegate: delegate)
         self.delegate = delegate
         self.appObserver = appObserver
+        self.queue = queue
     }
 }
 
@@ -248,7 +253,8 @@ public class FakeScreen {
     }
 
     public init(frame: CGRect, applicationFrame: CGRect) {
-        delegate = FakeScreenDelegate(frame: frame, applicationFrame: applicationFrame)
+        delegate = FakeScreenDelegate(frame: frame, applicationFrame: applicationFrame,
+                                      queue: globalSwindlerQueue)
     }
     public convenience init(frame: CGRect, menuBarHeight: Int, dockHeight: Int) {
         let af = CGRect(x: frame.origin.x,

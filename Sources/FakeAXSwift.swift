@@ -342,8 +342,8 @@ class FakeObserver: ObserverType {
                 passedElement: TestUIElement) {
         let watched = watchedElements[watchedElement] ?? []
         if watched.contains(notification) {
-            let queue = PromiseKit.conf.Q.return ?? DispatchQueue.main
-            queue.async {
+            // AX observer notifications always go to the run loop on the main thread.
+            DispatchQueue.main.async {
                 self.callback(self, passedElement, notification)
             }
         }

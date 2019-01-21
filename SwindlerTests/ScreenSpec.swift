@@ -29,16 +29,16 @@ public func ==<NSScreenT>(lhs: OSXScreenDelegate<NSScreenT>, rhs: OSXScreenDeleg
 }
 extension OSXScreenDelegate: Equatable {}
 
-class OSXSystemScreenDelegateSpec: QuickSpec {
-    override func spec() {
+class OSXSystemScreenDelegateSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         describe("handleScreenChange") {
 
             var screen1: OSXScreenDelegate<StubNSScreen>!
             var screen2: OSXScreenDelegate<StubNSScreen>!
             beforeEach {
-                screen1 = OSXScreenDelegate(nsScreen: StubNSScreen(1), queue: swindlerQueue)
-                screen2 = OSXScreenDelegate(nsScreen: StubNSScreen(2), queue: swindlerQueue)
+                screen1 = OSXScreenDelegate(nsScreen: StubNSScreen(1), queue: self.swindlerQueue)
+                screen2 = OSXScreenDelegate(nsScreen: StubNSScreen(2), queue: self.swindlerQueue)
             }
 
             context("when nothing changes") {
@@ -90,7 +90,7 @@ class OSXSystemScreenDelegateSpec: QuickSpec {
                     oldNSScreen.frame = CGRect(x: 0, y: 0, width: 1280, height: 1080)
                     let event = handleScreenChange(
                         newScreens: [screen1],
-                        oldScreens: [OSXScreenDelegate(nsScreen: oldNSScreen, queue: swindlerQueue)]
+                        oldScreens: [OSXScreenDelegate(nsScreen: oldNSScreen, queue: self.swindlerQueue)]
                     )
                     expect(event.addedScreens).to(haveCount(0))
                     expect(event.removedScreens).to(haveCount(0))
@@ -107,7 +107,7 @@ class OSXSystemScreenDelegateSpec: QuickSpec {
                     let event = handleScreenChange(
                         newScreens: [screen1, screen2],
                         oldScreens: [
-                            OSXScreenDelegate(nsScreen: oldNSScreen1, queue: swindlerQueue),
+                            OSXScreenDelegate(nsScreen: oldNSScreen1, queue: self.swindlerQueue),
                             screen2
                         ]
                     )

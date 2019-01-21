@@ -1,7 +1,8 @@
 import AXSwift
 import PromiseKit
 
-fileprivate var globalSwindlerQueue: DispatchQueue = DispatchQueue.main
+// Don't use directly. Only internal because FakeSwindler needs it.
+internal var globalSwindlerQueue: DispatchQueue = DispatchQueue.main
 
 public func configureSwindlerQueue(qos: DispatchQoS = .userInteractive) -> DispatchQueue {
     globalSwindlerQueue = DispatchQueue(label: "Swindler", qos: qos)

@@ -48,8 +48,8 @@ class FakeApplicationObserver: ApplicationObserverType {
     }
 }
 
-class OSXStateDelegateSpec: QuickSpec {
-    override func spec() {
+class OSXStateDelegateSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         beforeEach { TestApplicationElement.allApps = [] }
         beforeEach { FakeObserver.observers = [] }
@@ -60,7 +60,7 @@ class OSXStateDelegateSpec: QuickSpec {
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
             let stateDel = OSXStateDelegate<
                 TestUIElement, TestApplicationElement, TestObserver
-            >(appObserver, screenDel, swindlerQueue)
+            >(appObserver, screenDel, self.swindlerQueue)
             waitUntil { done in
                 stateDel.frontmostApplication.initialized.done { done() }.cauterize()
             }

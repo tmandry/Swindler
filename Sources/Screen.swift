@@ -101,7 +101,7 @@ final class FakeScreenDelegate: ScreenDelegate {
     let applicationFrame: CGRect
     let queue: DispatchQueue
 
-    init(frame: CGRect, applicationFrame: CGRect, queue: DispatchQueue = DispatchQueue.main) {
+    init(frame: CGRect, applicationFrame: CGRect, queue: DispatchQueue) {
         self.frame = frame
         self.applicationFrame = applicationFrame
         self.queue = queue
