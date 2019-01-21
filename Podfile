@@ -7,7 +7,7 @@ use_frameworks!
 project 'Swindler'
 
 target 'SwindlerTests' do
-  pod 'Quick',  '~> 1.2.0'
+  pod 'Quick', git: 'https://github.com/pcantrell/Quick.git', branch: 'around-each'
   pod 'Nimble', '~> 7.3.1'
 end
 

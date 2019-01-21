@@ -2,30 +2,37 @@ PODS:
   - AXSwift (0.2.3)
   - Nimble (7.3.1)
   - PromiseKit/CorePromise (6.7.1)
-  - Quick (1.2.0)
+  - Quick (1.3.1)
 
 DEPENDENCIES:
   - AXSwift (from `./AXSwift`)
   - Nimble (~> 7.3.1)
   - PromiseKit/CorePromise (~> 6.0)
-  - Quick (~> 1.2.0)
+  - Quick (from `https://github.com/pcantrell/Quick.git`, branch `around-each`)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
     - Nimble
     - PromiseKit
-    - Quick
 
 EXTERNAL SOURCES:
   AXSwift:
     :path: "./AXSwift"
+  Quick:
+    :branch: around-each
+    :git: https://github.com/pcantrell/Quick.git
+
+CHECKOUT OPTIONS:
+  Quick:
+    :commit: eeaddb112fc486b1e3699a5985e6a68dd5bc56d8
+    :git: https://github.com/pcantrell/Quick.git
 
 SPEC CHECKSUMS:
-  AXSwift: d49fe05ca04f983196c5caedfc88f617922ae671
+  AXSwift: b84e5e2de171f1bf42ad5458ea9c6f0a73342c56
   Nimble: 04f732da099ea4d153122aec8c2a88fd0c7219ae
   PromiseKit: ef376fb8b4e92edfeb66bd403b983eaa07fbde0c
-  Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08
+  Quick: 741ba045f19fd3c783014e64882f8a72525661c8
 
-PODFILE CHECKSUM: 43bf31a341af28c11e1feb4fd05f8c9670b59b58
+PODFILE CHECKSUM: d10ed734b5c31159872da800ca78ce1012c9e781
 
-COCOAPODS: 1.6.0.beta.2
+COCOAPODS: 1.5.3
