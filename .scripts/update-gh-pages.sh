@@ -12,9 +12,10 @@ REPO=`git config remote.origin.url`
 
 RELEASE="$TRAVIS_BRANCH"
 PERMALINK="$SHA"
-if [ "$TRAVIS_TAG" != "" ]; then
-    RELEASE="$TRAVIS_TAG"
-    PERMALINK="$TRAVIS_TAG"
+TAG=$(git name-rev --tags --name-only $SHA)
+if [ "$TAG" != "undefined" ]; then
+    RELEASE="$TAG"
+    PERMALINK="$TAG"
 fi
 
 if [ "$RELEASE" == "" ]; then exit 1; fi
@@ -53,7 +54,7 @@ pushd "$CHECKOUT_PATH"
 
     # If this looks like a release tag, update the `latest` symlink to point to it.
     LATEST_CANDIDATE_PATTERN='^[0-9]+[.][0-9]+[.][0-9]+$'
-    if [[ "$TRAVIS_TAG" =~ $LATEST_CANDIDATE_PATTERN ]]; then
+    if [[ "$TAG" =~ $LATEST_CANDIDATE_PATTERN ]]; then
         echo " ==> Updating latest symlink to $RELEASE"
         ln -sf "$RELEASE" "$DOC_URL_ROOT/latest"
         git add "$DOC_URL_ROOT/latest"

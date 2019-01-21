@@ -2,6 +2,37 @@ import Quick
 import Nimble
 import PromiseKit
 
+let swindlerQueue = DispatchQueue.main
+
+var swindlerTestQueue: DispatchQueue!
+
+class SwindlerSpec: QuickSpec {
+    var swindlerQueue: DispatchQueue!
+
+    let serialQueue = DispatchQueue(label: "SwindlerTest")
+
+    final override func spec() {
+        context("on main queue") {
+            beforeEach {
+                self.swindlerQueue = DispatchQueue.main
+                swindlerTestQueue = self.swindlerQueue
+                PromiseKit.conf.Q = (map: self.swindlerQueue, return: self.swindlerQueue)
+            }
+            specWithQueues()
+        }
+        //context("on dedicated queue") {
+        //    beforeEach {
+        //        self.swindlerQueue = self.serialQueue
+        //        PromiseKit.conf.Q = (map: self.swindlerQueue, return: self.swindlerQueue)
+        //    }
+        //    specWithQueues()
+        //}
+    }
+
+    // Override this.
+    func specWithQueues() { }
+}
+
 func waitUntil(_ expression: @autoclosure @escaping () throws -> Bool,
                file: String = #file,
                line: UInt = #line) {

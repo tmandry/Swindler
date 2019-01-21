@@ -4,9 +4,18 @@ import PromiseKit
 
 /// A physical display.
 public final class Screen: Equatable, CustomDebugStringConvertible {
-    internal let delegate: ScreenDelegate
+    private let delegate_: ScreenDelegate
+    private let queue_: DispatchQueue
+
+    var delegate: ScreenDelegate {
+        dispatchPrecondition(condition: .onQueue(queue_))
+        return delegate_
+    }
+
     internal init(delegate: ScreenDelegate) {
-        self.delegate = delegate
+        delegate_ = delegate
+        queue_ = delegate_.queue
+        dispatchPrecondition(condition: .onQueue(queue_))
     }
 
     public var debugDescription: String { return delegate.debugDescription }
@@ -55,6 +64,7 @@ func calculateMaxY(_ screens: [ScreenDelegate]) -> CGFloat {
 protocol ScreenDelegate: class, CustomDebugStringConvertible {
     var frame: CGRect { get }
     var applicationFrame: CGRect { get }
+    var queue: DispatchQueue { get }
 
     func equalTo(_ other: ScreenDelegate) -> Bool
 }
@@ -89,10 +99,12 @@ struct FakeSystemScreenDelegate: SystemScreenDelegate {
 final class FakeScreenDelegate: ScreenDelegate {
     let frame: CGRect
     let applicationFrame: CGRect
+    let queue: DispatchQueue
 
-    init(frame: CGRect, applicationFrame: CGRect) {
+    init(frame: CGRect, applicationFrame: CGRect, queue: DispatchQueue) {
         self.frame = frame
         self.applicationFrame = applicationFrame
+        self.queue = queue
     }
 
     func equalTo(_ other: ScreenDelegate) -> Bool { return false }
@@ -127,8 +139,8 @@ extension NSScreen: NSScreenType {
     }
 }
 
-private func createDelegates() -> [OSXScreenDelegate<NSScreen>] {
-    return NSScreen.screens.map{ OSXScreenDelegate(nsScreen: $0) }
+private func createDelegates(_ queue: DispatchQueue) -> [OSXScreenDelegate<NSScreen>] {
+    return NSScreen.screens.map{ OSXScreenDelegate(nsScreen: $0, queue: queue) }
 }
 
 class OSXSystemScreenDelegate: SystemScreenDelegate {
@@ -140,10 +152,13 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
 
     private var handler: Optional<(ScreenLayoutChangedEvent) -> Void>
 
-    init() {
+    let queue: DispatchQueue
+
+    init(queue: DispatchQueue) {
         lock_ = NSLock()
-        delegates = createDelegates()
+        delegates = createDelegates(queue)
         screens_ = delegates.map{ $0 as ScreenDelegate }
+        self.queue = queue
 
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
@@ -161,7 +176,7 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
     private func handleScreenLayoutChange() {
         // Make a new screen delegate for every screen, because NSScreen objects can become
         // stale.
-        let newScreens = createDelegates()
+        let newScreens = createDelegates(queue)
 
         let event = handleScreenChange(newScreens: newScreens, oldScreens: delegates)
 
@@ -230,10 +245,13 @@ final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
     // fail if the display switches graphics cards.
     fileprivate let directDisplayID: CGDirectDisplayID
 
-    init(nsScreen: NSScreenT) {
+    let queue: DispatchQueue
+
+    init(nsScreen: NSScreenT, queue: DispatchQueue) {
         self.nsScreen = nsScreen
         frame = nsScreen.frame
         directDisplayID = numberForScreen(nsScreen)
+        self.queue = queue
     }
 
     func equalTo(_ other: ScreenDelegate) -> Bool {
@@ -254,9 +272,6 @@ final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
     let frame: CGRect
 
     var applicationFrame: CGRect { return nsScreen.visibleFrame }
-}
-
-extension OSXScreenDelegate {
 }
 
 private func numberForScreen<NSScreenT: NSScreenType>(_ nsScreen: NSScreenT) -> CGDirectDisplayID {

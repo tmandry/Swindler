@@ -5,6 +5,7 @@
 // TODO: Rename TestXyz classes to FakeXyz.
 
 import AXSwift
+import PromiseKit
 
 /// A dictionary of AX attributes.
 ///
@@ -341,8 +342,9 @@ class FakeObserver: ObserverType {
                 passedElement: TestUIElement) {
         let watched = watchedElements[watchedElement] ?? []
         if watched.contains(notification) {
-            performOnMainThread {
-                callback(self, passedElement, notification)
+            // AX observer notifications always go to the run loop on the main thread.
+            DispatchQueue.main.async {
+                self.callback(self, passedElement, notification)
             }
         }
     }
@@ -390,16 +392,5 @@ final private class WeakBox<A: AnyObject> {
     weak var unbox: A?
     init(_ value: A) {
         unbox = value
-    }
-}
-
-/// Performs the given action on the main thread, synchronously, regardless of the current thread.
-private func performOnMainThread(_ action: () -> Void) {
-    if Thread.current.isMainThread {
-        action()
-    } else {
-        DispatchQueue.main.sync {
-            action()
-        }
     }
 }

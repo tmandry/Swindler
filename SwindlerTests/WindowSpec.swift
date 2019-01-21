@@ -9,8 +9,8 @@ import PromiseKit
 // ensure it doesn't get destroyed. Same for app -> state. See #3.
 private let stubApplicationDelegate = StubApplicationDelegate()
 
-class OSXWindowDelegateInitializeSpec: QuickSpec {
-    override func spec() {
+class OSXWindowDelegateInitializeSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         typealias WinDelegate = OSXWindowDelegate<
             TestUIElement, TestApplicationElement, TestObserver
@@ -26,7 +26,7 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
             let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
             let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])
             return WinDelegate.initialize(appDelegate: stubApplicationDelegate,
-                                          notifier: TestNotifier(),
+                                          notifier: TestNotifier(queue: self.swindlerQueue),
                                           axElement: winElement,
                                           observer: TestObserver(),
                                           systemScreens: systemScreens)
@@ -126,8 +126,8 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
     }
 }
 
-class OSXWindowDelegateNotificationSpec: QuickSpec {
-    override func spec() {
+class OSXWindowDelegateNotificationSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         describe("AXUIElement notifications") {
             beforeEach { AdversaryObserver.reset() }
@@ -156,7 +156,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                 return AppDelegate
                     .initialize(axElement: appElement,
                                 stateDelegate: StubStateDelegate(),
-                                notifier: TestNotifier())
+                                notifier: TestNotifier(queue: self.swindlerQueue))
                     .map { appDelegate -> WinDelegate in
                         observer = appDelegate.observer
                         guard let winDelegate = appDelegate.knownWindows.first
@@ -225,8 +225,8 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
     }
 }
 
-class OSXWindowDelegateSpec: QuickSpec {
-    override func spec() {
+class OSXWindowDelegateSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         typealias WinDelegate = OSXWindowDelegate<
             TestUIElement, TestApplicationElement, TestObserver
@@ -241,7 +241,7 @@ class OSXWindowDelegateSpec: QuickSpec {
             windowElement.attrs[.size]     = CGSize(width: 100, height: 100)
             windowElement.attrs[.title]    = "a window"
 
-            notifier = TestNotifier()
+            notifier = TestNotifier(queue: self.swindlerQueue)
             waitUntil { done in
                 let screen = FakeScreen(frame: CGRect(x: 0, y: 0, width: 1000, height: 1000))
                 let systemScreens = FakeSystemScreenDelegate(screens: [screen.delegate])

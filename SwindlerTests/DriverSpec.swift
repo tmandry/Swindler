@@ -6,8 +6,8 @@ import AXSwift
 import PromiseKit
 
 /// Tests that integrate the whole OS X driver instead of testing just one piece.
-class OSXDriverSpec: QuickSpec {
-    override func spec() {
+class OSXDriverSpec: SwindlerSpec {
+    override func specWithQueues() {
 
         beforeEach { TestApplicationElement.allApps = [] }
         beforeEach { FakeObserver.observers = [] }
@@ -28,7 +28,7 @@ class OSXDriverSpec: QuickSpec {
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
             state = State(delegate: OSXStateDelegate<
                 TestUIElement, TestApplicationElement, FakeObserver
-            >(appObserver: StubApplicationObserver(), screens: screenDel))
+            >(StubApplicationObserver(), screenDel, self.swindlerQueue))
             observer = FakeObserver.observers.first!
             observer.emit(.windowCreated, forElement: windowElement)
             expect(state.knownWindows.count).toEventually(equal(1))

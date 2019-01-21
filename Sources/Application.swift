@@ -5,15 +5,28 @@ import PromiseKit
 
 /// A running application.
 public final class Application {
-    internal let delegate: ApplicationDelegate
+    private let delegate_: ApplicationDelegate
 
     // An Application holds a strong reference to the State (and therefore the StateDelegate).
     // It should not be held internally by delegates, or it would create a reference cycle.
     internal var state_: State!
 
+    private let queue_: DispatchQueue
+
+    var delegate: ApplicationDelegate {
+        dispatchPrecondition(condition: .onQueue(queue_))
+        return delegate_
+    }
+
+    var delegateUnchecked: ApplicationDelegate {
+        return delegate_
+    }
+
     internal init(delegate: ApplicationDelegate, stateDelegate: StateDelegate) {
-        self.delegate = delegate
+        delegate_ = delegate
         state_ = State(delegate: stateDelegate)
+        queue_ = delegate_.queue
+        dispatchPrecondition(condition: .onQueue(queue_))
     }
 
     /// This initializer only fails if the StateDelegate has been destroyed.
@@ -78,6 +91,8 @@ protocol ApplicationDelegate: class {
     var focusedWindow: Property<OfOptionalType<Window>>! { get }
     var isHidden: WriteableProperty<OfType<Bool>>! { get }
 
+    var queue: DispatchQueue { get }
+
     func equalTo(_ other: ApplicationDelegate) -> Bool
 }
 
@@ -102,7 +117,7 @@ final class OSXApplicationDelegate<
 
     // Used internally for deferring code until an OSXWindowDelegate has been initialized for a
     // given UIElement.
-    fileprivate var newWindowHandler = NewWindowHandler<UIElement>()
+    fileprivate var newWindowHandler: NewWindowHandler<UIElement>
 
     fileprivate var initialized: Promise<Void>!
 
@@ -119,6 +134,8 @@ final class OSXApplicationDelegate<
     var knownWindows: [WindowDelegate] {
         return windows.map({ $0 as WindowDelegate })
     }
+
+    let queue: DispatchQueue
 
     /// Initializes the object and returns it as a Promise that resolves once it's ready.
     static func initialize(
@@ -139,7 +156,11 @@ final class OSXApplicationDelegate<
         self.axElement = axElement.toElement
         self.stateDelegate = stateDelegate
         self.notifier = notifier
-        processIdentifier = try axElement.pid()
+        self.processIdentifier = try axElement.pid()
+
+        self.queue = stateDelegate.queue
+
+        self.newWindowHandler = NewWindowHandler<UIElement>(queue: queue)
 
         let notifications: [AXNotification] = [
             .windowCreated,
@@ -168,14 +189,16 @@ final class OSXApplicationDelegate<
             MainWindowPropertyDelegate(axElement,
                                        windowFinder: self,
                                        windowDelegate: WinDelegate.self,
-                                       initProperties),
+                                       initProperties,
+                                       queue: queue),
             withEvent: ApplicationMainWindowChangedEvent.self,
             receivingObject: Application.self,
             notifier: self)
         focusedWindow = Property(
             WindowPropertyAdapter(AXPropertyDelegate(axElement, .focusedWindow, initProperties),
                                   windowFinder: self,
-                                  windowDelegate: WinDelegate.self),
+                                  windowDelegate: WinDelegate.self,
+                                  queue: queue),
             withEvent: ApplicationFocusedWindowChangedEvent.self,
             receivingObject: Application.self,
             notifier: self)
@@ -210,7 +233,10 @@ final class OSXApplicationDelegate<
         do {
             weak var weakSelf = self
             observer = try Observer(processID: processIdentifier, callback: { o, e, n in
-                weakSelf?.handleEvent(observer: o, element: e, notification: n)
+                guard let this = weakSelf else { return }
+                this.queue.async {
+                    this.handleEvent(observer: o, element: e, notification: n)
+                }
             })
         } catch {
             return Promise(error: error)
@@ -303,7 +329,7 @@ extension OSXApplicationDelegate {
     fileprivate func handleEvent(observer: Observer.Context,
                                  element: UIElement,
                                  notification: AXSwift.AXNotification) {
-        assert(Thread.current.isMainThread)
+        dispatchPrecondition(condition: .onQueue(queue))
         log.trace("Received \(notification) on \(element)")
 
         switch notification {
@@ -484,21 +510,26 @@ extension OSXApplicationDelegate: CustomStringConvertible {
 
 /// Stores internal new window handlers for OSXApplicationDelegate.
 private struct NewWindowHandler<UIElement: Equatable> {
+    private let queue: DispatchQueue
     fileprivate var handlers: [HandlerType<UIElement>] = []
+
+    init(queue: DispatchQueue) {
+        self.queue = queue
+    }
 
     mutating func performAfterWindowCreatedForElement(_ windowElement: UIElement,
                                                       handler: @escaping () -> Void) {
-        assert(Thread.current.isMainThread)
+        dispatchPrecondition(condition: .onQueue(queue))
         handlers.append(HandlerType(windowElement: windowElement, handler: handler))
     }
 
     mutating func removeAllForUIElement(_ windowElement: UIElement) {
-        assert(Thread.current.isMainThread)
+        dispatchPrecondition(condition: .onQueue(queue))
         handlers = handlers.filter({ $0.windowElement != windowElement })
     }
 
     mutating func windowCreated(_ windowElement: UIElement) {
-        assert(Thread.current.isMainThread)
+        dispatchPrecondition(condition: .onQueue(queue))
         handlers.filter({ $0.windowElement == windowElement }).forEach { entry in
             entry.handler()
         }
@@ -552,11 +583,13 @@ private final class MainWindowPropertyDelegate<
     init(_ appElement: AppElement,
          windowFinder: WinFinder,
          windowDelegate: WinDelegate.Type,
-         _ initPromise: Promise<[Attribute: Any]>) {
+         _ initPromise: Promise<[Attribute: Any]>,
+         queue: DispatchQueue) {
         readDelegate = WindowPropertyAdapter(
             AXPropertyDelegate(appElement, .mainWindow, initPromise),
             windowFinder: windowFinder,
-            windowDelegate: windowDelegate)
+            windowDelegate: windowDelegate,
+            queue: queue)
     }
 
     func initialize() -> Promise<Window?> {
@@ -569,17 +602,18 @@ private final class MainWindowPropertyDelegate<
 
     func writeValue(_ newValue: Window) throws {
         // Extract the element from the window delegate.
-        guard let winDelegate = newValue.delegate as? WinDelegate else {
-            throw PropertyError.illegalValue
-        }
-        // Check early to see if the element is still valid. If it becomes invalid after this check,
-        // the same error will get thrown, it will just take longer.
-        guard winDelegate.isValid else {
+        // Note: This is happening on a background thread, so only properties that don't change
+        // should be accessed (the axElement).
+        guard let winDelegate = newValue.delegateUnchecked as? WinDelegate else {
             throw PropertyError.illegalValue
         }
 
-        // Note: This is happening on a background thread, so only properties that don't change
-        // should be accessed (the axElement).
+        // Check early to see if the element is still valid. If it becomes invalid after this check,
+        // the same error will get thrown, it will just take longer.
+        // Since this is just an optimization, it's okay if we read a stale `isValid` value.
+        guard winDelegate.isValid else {
+            throw PropertyError.illegalValue
+        }
 
         // To set the main window, we have to access the .main attribute of the window element and
         // set it to true.
@@ -602,16 +636,28 @@ private final class WindowPropertyAdapter<
     let delegate: Delegate
     weak var windowFinder: WinFinder?
 
-    init(_ delegate: Delegate, windowFinder: WinFinder, windowDelegate: WinDelegate.Type) {
+    let queue: DispatchQueue
+
+    init(_ delegate: Delegate,
+         windowFinder: WinFinder,
+         windowDelegate: WinDelegate.Type,
+         queue: DispatchQueue) {
         self.delegate = delegate
         self.windowFinder = windowFinder
+        self.queue = queue
     }
 
     func readValue() throws -> Window? {
         guard let element = try delegate.readValue() else {
             return nil
         }
-        let window = findWindowByElement(element)
+
+        var window: Window?
+        dispatchPrecondition(condition: .notOnQueue(queue))
+        queue.sync {
+            window = self.windowFinder?.findWindowByElement(element)
+        }
+
         if window == nil {
             // This can happen if, for instance, the window was destroyed since the refresh was
             // requested.
@@ -632,20 +678,8 @@ private final class WindowPropertyAdapter<
             guard let element = maybeElement else {
                 return nil
             }
-            return self.findWindowByElement(element)
+            dispatchPrecondition(condition: .onQueue(self.queue))
+            return self.windowFinder?.findWindowByElement(element)
         }
-    }
-
-    fileprivate func findWindowByElement(_ element: Delegate.T) -> Window? {
-        // Avoid using locks by forcing calls out to `windowFinder` to happen on the main thead.
-        var window: Window?
-        if Thread.current.isMainThread {
-            window = windowFinder?.findWindowByElement(element)
-        } else {
-            DispatchQueue.main.sync {
-                window = self.windowFinder?.findWindowByElement(element)
-            }
-        }
-        return window
     }
 }

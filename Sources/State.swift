@@ -1,11 +1,24 @@
 import AXSwift
 import PromiseKit
 
+// Don't use directly. Only internal because FakeSwindler needs it.
+internal var globalSwindlerQueue: DispatchQueue = DispatchQueue.main
+
+public func configureSwindlerQueue(qos: DispatchQoS = .userInteractive) -> DispatchQueue {
+    globalSwindlerQueue = DispatchQueue(label: "Swindler", qos: qos)
+    return globalSwindlerQueue
+}
+
 /// Initializes a new Swindler state and returns it in a Promise.
 public func initialize() -> Promise<State> {
+    return initialize(withQueue: globalSwindlerQueue)
+}
+
+internal func initialize(withQueue queue: DispatchQueue) -> Promise<State> {
     return OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>.initialize(
         appObserver: ApplicationObserver(),
-        screens: OSXSystemScreenDelegate()
+        screens: OSXSystemScreenDelegate(queue: queue),
+        queue: queue
     ).map { delegate in
        State(delegate: delegate)
     }
@@ -16,9 +29,18 @@ public func initialize() -> Promise<State> {
 /// The state represents the entire state of the OS, including all known windows, applications, and
 /// spaces.
 public final class State {
-    let delegate: StateDelegate
+    private let delegate_: StateDelegate
+    private let queue_: DispatchQueue
+
+    var delegate: StateDelegate {
+        dispatchPrecondition(condition: .onQueue(queue_))
+        return delegate_
+    }
+
     init(delegate: StateDelegate) {
-        self.delegate = delegate
+        delegate_ = delegate
+        queue_ = delegate_.queue
+        dispatchPrecondition(condition: .onQueue(queue_))
     }
 
     /// The currently running applications.
@@ -59,6 +81,8 @@ protocol StateDelegate: class {
     var systemScreens: SystemScreenDelegate { get }
 
     var notifier: EventNotifier { get }
+
+    var queue: DispatchQueue { get }
 }
 
 // MARK: - OSXStateDelegate
@@ -76,6 +100,11 @@ protocol ApplicationObserverType {
 class EventNotifier {
     private typealias EventHandler = (EventType) -> Void
     private var eventHandlers: [String: [EventHandler]] = [:]
+    private var queue: DispatchQueue
+
+    init(queue: DispatchQueue) {
+        self.queue = queue
+    }
 
     func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
         let notification = Event.typeName
@@ -88,7 +117,7 @@ class EventNotifier {
     }
 
     func notify<Event: EventType>(_ event: Event) {
-        assert(Thread.current.isMainThread)
+        dispatchPrecondition(condition: .onQueue(queue))
         if let handlers = eventHandlers[Event.typeName] {
             for handler in handlers {
                 handler(event)
@@ -198,25 +227,31 @@ final class OSXStateDelegate<
 
     fileprivate var initialized: Promise<Void>!
 
+    let queue: DispatchQueue
+
     // TODO: retry instead of ignoring an app/window when timeouts are encountered during
     // initialization?
 
     static func initialize<S: SystemScreenDelegate>(
         appObserver: ApplicationObserverType,
-        screens: S
+        screens: S,
+        queue: DispatchQueue
     ) -> Promise<OSXStateDelegate> {
         return firstly { () -> Promise<OSXStateDelegate> in
-            let delegate = OSXStateDelegate(appObserver: appObserver, screens: screens)
+            let delegate = OSXStateDelegate(appObserver, screens, queue)
             return delegate.initialized.map { delegate }
         }
     }
 
     // TODO make private
-    init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens ssd: S) {
+    init<S: SystemScreenDelegate>(_ appObserver: ApplicationObserverType,
+                                  _ ssd: S,
+                                  _ queue: DispatchQueue) {
         log.debug("Initializing Swindler")
 
-        notifier = EventNotifier()
+        notifier = EventNotifier(queue: queue)
         systemScreens = ssd
+        self.queue = queue
 
         ssd.onScreenLayoutChanged { event in
             self.notifier.notify(event)
@@ -235,7 +270,8 @@ final class OSXStateDelegate<
             FrontmostApplicationPropertyDelegate(
                 appFinder: self,
                 appObserver: appObserver,
-                initPromise: propertyInitPromise),
+                initPromise: propertyInitPromise,
+                queue: queue),
             withEvent: FrontmostApplicationChangedEvent.self,
             receivingObject: State.self,
             notifier: self)
@@ -363,20 +399,35 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
     weak var appFinder: AppFinder?
     let appObserver: ApplicationObserverType
     let initPromise: Promise<Void>
-    init(appFinder: AppFinder, appObserver: ApplicationObserverType, initPromise: Promise<Void>) {
+    let queue: DispatchQueue
+
+    init(appFinder: AppFinder, appObserver: ApplicationObserverType, initPromise: Promise<Void>,
+         queue: DispatchQueue) {
         self.appFinder = appFinder
         self.appObserver = appObserver
         self.initPromise = initPromise
+        self.queue = queue
     }
 
     func readValue() -> Application? {
+        var app: Application?
+        dispatchPrecondition(condition: .notOnQueue(queue))
+        queue.sync {
+            app = self.getValue()
+        }
+
+        return app
+    }
+
+    private func getValue() -> Application? {
+        dispatchPrecondition(condition: .onQueue(queue))
         guard let pid = appObserver.frontmostApplicationPID else { return nil }
-        guard let app = findAppByPID(pid) else { return nil }
+        guard let app = appFinder?.findAppByPID(pid) else { return nil }
         return app
     }
 
     func writeValue(_ newValue: Application) throws {
-        let pid = newValue.delegate.processIdentifier
+        let pid = newValue.delegateUnchecked.processIdentifier
         do {
             try appObserver.makeApplicationFrontmost(pid!)
         } catch {
@@ -387,20 +438,6 @@ private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
 
     func initialize() -> Promise<Application?> {
         // No need to run in background, the call happens instantly.
-        return initPromise.map { self.readValue() }
-    }
-
-    fileprivate func findAppByPID(_ pid: pid_t) -> Application? {
-        // TODO: extract into runOnMainThread util
-        // Avoid using locks by forcing calls out to `windowFinder` to happen on the main thead.
-        var app: Application?
-        if Thread.current.isMainThread {
-            app = appFinder?.findAppByPID(pid)
-        } else {
-            DispatchQueue.main.sync {
-                app = self.appFinder?.findAppByPID(pid)
-            }
-        }
-        return app
+        return initPromise.map { self.getValue() }
     }
 }
