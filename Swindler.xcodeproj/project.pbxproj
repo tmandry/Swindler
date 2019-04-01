@@ -392,7 +392,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-frameworks.sh",
+				"${SRCROOT}/Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
 				"${BUILT_PRODUCTS_DIR}/Quick/Quick.framework",
 				"${BUILT_PRODUCTS_DIR}/AXSwift/AXSwift.framework",
@@ -407,7 +407,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-frameworks.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		2B2CE8EA59D79FDC978CCDE4 /* [CP] Check Pods Manifest.lock */ = {
@@ -480,7 +480,7 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample-frameworks.sh",
+				"${SRCROOT}/Pods/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/AXSwift/AXSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
 			);
@@ -493,7 +493,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample-frameworks.sh\"\n";
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
