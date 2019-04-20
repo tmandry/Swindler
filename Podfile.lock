@@ -1,6 +1,6 @@
 PODS:
   - AXSwift (0.2.3)
-  - Nimble (7.3.1)
+  - Nimble (7.3.4)
   - PromiseKit/CorePromise (6.7.1)
   - Quick (1.2.0)
 
@@ -21,8 +21,8 @@ EXTERNAL SOURCES:
     :path: "./AXSwift"
 
 SPEC CHECKSUMS:
-  AXSwift: b84e5e2de171f1bf42ad5458ea9c6f0a73342c56
-  Nimble: 04f732da099ea4d153122aec8c2a88fd0c7219ae
+  AXSwift: d49fe05ca04f983196c5caedfc88f617922ae671
+  Nimble: 051e3d8912d40138fa5591c78594f95fb172af37
   PromiseKit: ef376fb8b4e92edfeb66bd403b983eaa07fbde0c
   Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08
 
