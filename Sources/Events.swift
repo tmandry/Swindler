@@ -40,6 +40,7 @@ extension StatePropertyEventType {
 }
 
 public struct FrontmostApplicationChangedEvent: StatePropertyEventType {
+    public typealias Object = State
     public typealias PropertyType = Application?
     public let external: Bool
     public let state: State
@@ -78,6 +79,7 @@ extension WindowPropertyEventType {
 }
 
 public struct WindowFrameChangedEvent: WindowPropertyEventType {
+    public typealias Object = Window
     public typealias PropertyType = CGRect
     public let external: Bool
     public let window: Window
@@ -86,6 +88,7 @@ public struct WindowFrameChangedEvent: WindowPropertyEventType {
 }
 
 public struct WindowTitleChangedEvent: WindowPropertyEventType {
+    public typealias Object = Window
     public typealias PropertyType = String
     public let external: Bool
     public let window: Window
@@ -94,6 +97,7 @@ public struct WindowTitleChangedEvent: WindowPropertyEventType {
 }
 
 public struct WindowMinimizedChangedEvent: WindowPropertyEventType {
+    public typealias Object = Window
     public typealias PropertyType = Bool
     public let external: Bool
     public let window: Window
@@ -112,6 +116,7 @@ extension ApplicationPropertyEventType {
 }
 
 public struct ApplicationIsHiddenChangedEvent: ApplicationPropertyEventType {
+    public typealias Object = Application
     public typealias PropertyType = Bool
     public let external: Bool
     public let application: Application
@@ -120,6 +125,7 @@ public struct ApplicationIsHiddenChangedEvent: ApplicationPropertyEventType {
 }
 
 public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventType {
+    public typealias Object = Application
     public typealias PropertyType = Window?
     public let external: Bool
     public let application: Application
@@ -128,6 +134,7 @@ public struct ApplicationMainWindowChangedEvent: ApplicationPropertyEventType {
 }
 
 public struct ApplicationFocusedWindowChangedEvent: ApplicationPropertyEventType {
+    public typealias Object = Application
     public typealias PropertyType = Window?
     public let external: Bool
     public let application: Application
