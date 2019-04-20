@@ -4,6 +4,11 @@
 Breaking changes
 - Upgraded to PromiseKit 6; see the [migration guide](https://promisekit.org/news/2018/02/PromiseKit-6.0-Released/)
 
+0.0.4
+=====
+
+- Fixed compile on Xcode 10.2.
+
 0.0.3
 =====
 
