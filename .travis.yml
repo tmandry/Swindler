@@ -9,10 +9,18 @@ script:
   - xcodebuild -workspace Swindler.xcworkspace -scheme Swindler build test
   - xcodebuild -workspace Swindler.xcworkspace -scheme SwindlerExample build
 
+matrix:
+  include:
+    - osx_image: xcode10.2
+      env: DEPLOY_ENABLED=1
+    - osx_image: xcode10.1
+    - osx_image: xcode10
+    - osx_image: xcode9.4
+
 deploy:
   - provider: script
     script: bash .scripts/update-gh-pages.sh
     skip_cleanup: true
     on:
         all_branches: true
-        condition: '"$TRAVIS_BRANCH" == "master" || "$TRAVIS_TAG" != ""'
+        condition: '"$DEPLOY_ENABLED" == 1 && ("$TRAVIS_BRANCH" == "master" || "$TRAVIS_TAG" != "")'
