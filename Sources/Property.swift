@@ -249,13 +249,6 @@ public class Property<TypeSpec: PropertyTypeSpec> {
 
 /// A property that can be set. Writes happen asynchronously.
 public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
-    // Due to a Swift bug I have to override this.
-    override init<Impl: PropertyDelegate, Notifier: PropertyNotifier>(
-        _ delegate: Impl, notifier: Notifier
-    ) where Impl.T == NonOptionalType {
-        super.init(delegate, notifier: notifier)
-    }
-
     /// The value of the property. Reading is instant and synchronous, but writing is asynchronous
     /// and the value will not be updated until the write is complete. Use `set` to retrieve a
     /// promise.
