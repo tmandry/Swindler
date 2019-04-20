@@ -31,223 +31,272 @@
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
       "line": 43,
+      "symbol": "FrontmostApplicationChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 44,
       "symbol": "FrontmostApplicationChangedEvent.PropertyType",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 45,
+      "line": 46,
       "symbol": "FrontmostApplicationChangedEvent.state",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 50,
+      "line": 51,
       "symbol": "ApplicationLaunchedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 52,
+      "line": 53,
       "symbol": "ApplicationLaunchedEvent.application",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 55,
+      "line": 56,
       "symbol": "ApplicationTerminatedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 57,
+      "line": 58,
       "symbol": "ApplicationTerminatedEvent.application",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 60,
+      "line": 61,
       "symbol": "WindowCreatedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 62,
+      "line": 63,
       "symbol": "WindowCreatedEvent.window",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 65,
+      "line": 66,
       "symbol": "WindowDestroyedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 67,
+      "line": 68,
       "symbol": "WindowDestroyedEvent.window",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 80,
+      "line": 81,
       "symbol": "WindowFrameChangedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 81,
-      "symbol": "WindowFrameChangedEvent.PropertyType",
+      "line": 82,
+      "symbol": "WindowFrameChangedEvent.Object",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
       "line": 83,
+      "symbol": "WindowFrameChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 85,
       "symbol": "WindowFrameChangedEvent.window",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 88,
+      "line": 90,
       "symbol": "WindowTitleChangedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 89,
+      "line": 91,
+      "symbol": "WindowTitleChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 92,
       "symbol": "WindowTitleChangedEvent.PropertyType",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 91,
+      "line": 94,
       "symbol": "WindowTitleChangedEvent.window",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 96,
+      "line": 99,
       "symbol": "WindowMinimizedChangedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 97,
+      "line": 100,
+      "symbol": "WindowMinimizedChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 101,
       "symbol": "WindowMinimizedChangedEvent.PropertyType",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 99,
+      "line": 103,
       "symbol": "WindowMinimizedChangedEvent.window",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 114,
+      "line": 118,
       "symbol": "ApplicationIsHiddenChangedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 115,
+      "line": 119,
+      "symbol": "ApplicationIsHiddenChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 120,
       "symbol": "ApplicationIsHiddenChangedEvent.PropertyType",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 117,
+      "line": 122,
       "symbol": "ApplicationIsHiddenChangedEvent.application",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 122,
+      "line": 127,
       "symbol": "ApplicationMainWindowChangedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 123,
+      "line": 128,
+      "symbol": "ApplicationMainWindowChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 129,
       "symbol": "ApplicationMainWindowChangedEvent.PropertyType",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 125,
+      "line": 131,
       "symbol": "ApplicationMainWindowChangedEvent.application",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 130,
+      "line": 136,
       "symbol": "ApplicationFocusedWindowChangedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 131,
+      "line": 137,
+      "symbol": "ApplicationFocusedWindowChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 138,
       "symbol": "ApplicationFocusedWindowChangedEvent.PropertyType",
       "symbol_kind": "source.lang.swift.decl.typealias",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 133,
+      "line": 140,
       "symbol": "ApplicationFocusedWindowChangedEvent.application",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 138,
+      "line": 145,
       "symbol": "ScreenLayoutChangedEvent",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 140,
+      "line": 147,
       "symbol": "ScreenLayoutChangedEvent.addedScreens",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 141,
+      "line": 148,
       "symbol": "ScreenLayoutChangedEvent.removedScreens",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
-      "line": 144,
+      "line": 151,
       "symbol": "ScreenLayoutChangedEvent.unchangedScreens",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
