@@ -1,0 +1,656 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Application.swift",
+      "line": 29,
+      "symbol": "Application.processIdentifier",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Application.swift",
+      "line": 30,
+      "symbol": "Application.bundleIdentifier",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Application.swift",
+      "line": 58,
+      "symbol": "==(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 42,
+      "symbol": "FrontmostApplicationChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 43,
+      "symbol": "FrontmostApplicationChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 44,
+      "symbol": "FrontmostApplicationChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 46,
+      "symbol": "FrontmostApplicationChangedEvent.state",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 51,
+      "symbol": "ApplicationLaunchedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 53,
+      "symbol": "ApplicationLaunchedEvent.application",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 56,
+      "symbol": "ApplicationTerminatedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 58,
+      "symbol": "ApplicationTerminatedEvent.application",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 61,
+      "symbol": "WindowCreatedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 63,
+      "symbol": "WindowCreatedEvent.window",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 66,
+      "symbol": "WindowDestroyedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 68,
+      "symbol": "WindowDestroyedEvent.window",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 81,
+      "symbol": "WindowFrameChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 82,
+      "symbol": "WindowFrameChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 83,
+      "symbol": "WindowFrameChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 85,
+      "symbol": "WindowFrameChangedEvent.window",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 90,
+      "symbol": "WindowTitleChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 91,
+      "symbol": "WindowTitleChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 92,
+      "symbol": "WindowTitleChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 94,
+      "symbol": "WindowTitleChangedEvent.window",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 99,
+      "symbol": "WindowMinimizedChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 100,
+      "symbol": "WindowMinimizedChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 101,
+      "symbol": "WindowMinimizedChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 103,
+      "symbol": "WindowMinimizedChangedEvent.window",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 118,
+      "symbol": "ApplicationIsHiddenChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 119,
+      "symbol": "ApplicationIsHiddenChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 120,
+      "symbol": "ApplicationIsHiddenChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 122,
+      "symbol": "ApplicationIsHiddenChangedEvent.application",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 127,
+      "symbol": "ApplicationMainWindowChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 128,
+      "symbol": "ApplicationMainWindowChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 129,
+      "symbol": "ApplicationMainWindowChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 131,
+      "symbol": "ApplicationMainWindowChangedEvent.application",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 136,
+      "symbol": "ApplicationFocusedWindowChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 137,
+      "symbol": "ApplicationFocusedWindowChangedEvent.Object",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 138,
+      "symbol": "ApplicationFocusedWindowChangedEvent.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 140,
+      "symbol": "ApplicationFocusedWindowChangedEvent.application",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 145,
+      "symbol": "ScreenLayoutChangedEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 147,
+      "symbol": "ScreenLayoutChangedEvent.addedScreens",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 148,
+      "symbol": "ScreenLayoutChangedEvent.removedScreens",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Events.swift",
+      "line": 151,
+      "symbol": "ScreenLayoutChangedEvent.unchangedScreens",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeAXSwift.swift",
+      "line": null,
+      "symbol": "TestWindowElement",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": null,
+      "symbol": "FakeWindow",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 17,
+      "symbol": "FakeState",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 21,
+      "symbol": "FakeState.initialize(screens:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 31,
+      "symbol": "FakeState.state",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 33,
+      "symbol": "FakeState.frontmostApplication",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 77,
+      "symbol": "FakeApplication",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 83,
+      "symbol": "FakeApplication.application",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 90,
+      "symbol": "FakeApplication.isHidden",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 94,
+      "symbol": "FakeApplication.mainWindow",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 106,
+      "symbol": "FakeApplication.focusedWindow",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 123,
+      "symbol": "FakeApplication.init(parent:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 134,
+      "symbol": "FakeApplication.createWindow()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 139,
+      "symbol": "==(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 144,
+      "symbol": "FakeWindowBuilder",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 147,
+      "symbol": "FakeWindowBuilder.init(parent:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 151,
+      "symbol": "FakeWindowBuilder.setTitle(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 152,
+      "symbol": "FakeWindowBuilder.setFrame(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 153,
+      "symbol": "FakeWindowBuilder.setPosition(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 155,
+      "symbol": "FakeWindowBuilder.setSize(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 156,
+      "symbol": "FakeWindowBuilder.setMinimized(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 160,
+      "symbol": "FakeWindowBuilder.setFullscreen(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 165,
+      "symbol": "FakeWindowBuilder.build()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 175,
+      "symbol": "FakeWindow",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 178,
+      "symbol": "FakeWindow.parent",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 179,
+      "symbol": "FakeWindow.window",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 185,
+      "symbol": "FakeWindow.title",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 189,
+      "symbol": "FakeWindow.frame",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 193,
+      "symbol": "FakeWindow.isMinimized",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 197,
+      "symbol": "FakeWindow.isFullscreen",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 231,
+      "symbol": "==(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 242,
+      "symbol": "FakeScreen",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 243,
+      "symbol": "FakeScreen.screen",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 249,
+      "symbol": "FakeScreen.init(frame:applicationFrame:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 252,
+      "symbol": "FakeScreen.init(frame:menuBarHeight:dockHeight:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 259,
+      "symbol": "FakeScreen.init(frame:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/FakeSwindler.swift",
+      "line": 262,
+      "symbol": "FakeScreen.init()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 80,
+      "symbol": "OfType.NonOptionalType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 82,
+      "symbol": "OfType.equal(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 83,
+      "symbol": "OfType.toPropertyType(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 91,
+      "symbol": "OfType.toOptionalType(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 98,
+      "symbol": "OfOptionalType.NonOptionalType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 100,
+      "symbol": "OfOptionalType.equal(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 101,
+      "symbol": "OfOptionalType.toPropertyType(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 102,
+      "symbol": "OfOptionalType.toOptionalType(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 111,
+      "symbol": "Property.PropertyType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 112,
+      "symbol": "Property.NonOptionalType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Property.swift",
+      "line": 113,
+      "symbol": "Property.OptionalType",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Screen.swift",
+      "line": 22,
+      "symbol": "==(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/travis/build/tmandry/Swindler/Sources/Window.swift",
+      "line": 74,
+      "symbol": "==(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.free",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/travis/build/tmandry/Swindler"
+}
