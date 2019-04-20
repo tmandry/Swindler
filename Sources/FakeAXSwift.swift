@@ -62,7 +62,10 @@ class TestUIElement: UIElementType, Hashable {
         TestUIElement.elementCount += 1
         id = TestUIElement.elementCount
     }
-    var hashValue: Int { return id }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 
     func pid() throws -> pid_t { return processID }
     func attribute<T>(_ attr: Attribute) throws -> T? {

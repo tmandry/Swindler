@@ -6,7 +6,7 @@ enum OSXDriverError: Error {
     case unknownWindow(element: Any)
     case windowIgnored(element: Any)
     case runningApplicationNotFound(processID: pid_t)
-    case screensNotAvailable()
+    case screensNotAvailable
 }
 
 // Handle unexpected errors with detailed logging, and abort when in debug mode.
