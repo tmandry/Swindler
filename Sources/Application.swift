@@ -242,18 +242,19 @@ final class OSXApplicationDelegate<
             // Initialize OSXWindowDelegates from the window elements.
             let windowPromises = windowElements.map({ windowElement in
                 self.createWindowForElementIfNotExists(windowElement)
+                    // Log any errors we encounter, but don't fail.
+                    .recover { (error: Error) -> Promise<WinDelegate?> in
+                        log.debug({
+                            let description: String =
+                                (try? windowElement.attribute(.description) ?? "") ?? ""
+                            return "Couldn't initialize window for element \(windowElement) "
+                                 + "(\(description)) of \(self): \(error)"
+                        }())
+                        return Promise<WinDelegate?>.value(nil)
+                    }
             })
-
-            return successes(windowPromises, onError: { index, error in
-                // Log any errors we encounter, but don't fail.
-                let windowElement = windowElements[index]
-                log.debug({
-                    let description: String =
-                        (try? windowElement.attribute(.description) ?? "") ?? ""
-                    return "Couldn't initialize window for element \(windowElement) "
-                         + "(\(description)) of \(self): \(error)"
-                }())
-            }).asVoid()
+            
+            return when(fulfilled: windowPromises).asVoid()
         }
     }
 
