@@ -18,14 +18,14 @@ class TestNotifier: EventNotifier {
     }
 
     @discardableResult
-    func expectEvent<T: EventType>(_ type: T.Type, file: String = #file, line: UInt = #line) -> T? {
+    func expectEvent<T: EventType>(_ type: T.Type, file: FileString = #file, line: UInt = #line) -> T? {
         expect(self.getEventOfType(type), file: file, line: line)
             .toEventuallyNot(beNil(), description: "expected event of type \(type)")
         return getEventOfType(type)
     }
 
     @discardableResult
-    func waitUntilEvent<T: EventType>(_ type: T.Type, file: String = #file, line: UInt = #line)
+    func waitUntilEvent<T: EventType>(_ type: T.Type, file: FileString = #file, line: UInt = #line)
     -> T? {
         var event: T?
         func getEvent() -> Bool {

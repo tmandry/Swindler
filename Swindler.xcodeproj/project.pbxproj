@@ -3,13 +3,18 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		2F00BBD92142F32700457FB2 /* FakeSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F00BBD82142F32700457FB2 /* FakeSpec.swift */; };
 		2F00BBDB21432A9000457FB2 /* FakeAXSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F00BBDA21432A9000457FB2 /* FakeAXSwift.swift */; };
 		2F00BBDD2143769C00457FB2 /* FakeSwindler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F00BBDC2143769C00457FB2 /* FakeSwindler.swift */; };
+		2F474E2D2560DD8600C55402 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2F474E2C2560DD8600C55402 /* PromiseKit */; };
+		2F474E382560DDD600C55402 /* AXSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F474E372560DDD600C55402 /* AXSwift.framework */; };
+		2F474E392560DDD600C55402 /* AXSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2F474E372560DDD600C55402 /* AXSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2F474E3F2560E08400C55402 /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = 2F474E3E2560E08400C55402 /* Quick */; };
+		2F474E442560E0AC00C55402 /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = 2F474E432560E0AC00C55402 /* Nimble */; };
 		2F55343D1C0AC86500B87C42 /* Successes+PromiseKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */; };
 		2F61898F1C22718E00C422C0 /* ApplicationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */; };
 		2F6189901C22718E00C422C0 /* StateSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F61898C1C22718E00C422C0 /* StateSpec.swift */; };
@@ -37,9 +42,6 @@
 		2FD2D0681C67EC8700D0355D /* ScreenSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD2D0671C67EC8700D0355D /* ScreenSpec.swift */; };
 		2FEEA29C1C1D36B000CD515E /* Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2F86CEC61BD60117007E8C29 /* Swindler.framework */; };
 		2FEEA2E31C1E6E9200CD515E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FEEA2E21C1E6E9200CD515E /* Log.swift */; };
-		5C38DE3FBCECC5C0A5AC903B /* Pods_SwindlerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95F8A5C2288829AB1B277B04 /* Pods_SwindlerTests.framework */; };
-		6E7C0BA95ED211D168CD3058 /* Pods_Swindler.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 67B294155BAF709C01A3A7D2 /* Pods_Swindler.framework */; };
-		BAB205C9E67B0A04C5B48938 /* Pods_SwindlerExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC881B514AADAF10E329E46D /* Pods_SwindlerExample.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,10 +54,25 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		2F474E3A2560DDD600C55402 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2F474E392560DDD600C55402 /* AXSwift.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		2F00BBD82142F32700457FB2 /* FakeSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FakeSpec.swift; sourceTree = "<group>"; };
 		2F00BBDA21432A9000457FB2 /* FakeAXSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FakeAXSwift.swift; sourceTree = "<group>"; };
 		2F00BBDC2143769C00457FB2 /* FakeSwindler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FakeSwindler.swift; sourceTree = "<group>"; };
+		2F474E372560DDD600C55402 /* AXSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = AXSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F55343C1C0AC86500B87C42 /* Successes+PromiseKit.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Successes+PromiseKit.swift"; sourceTree = "<group>"; };
 		2F61898B1C22718E00C422C0 /* ApplicationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ApplicationSpec.swift; sourceTree = "<group>"; };
 		2F61898C1C22718E00C422C0 /* StateSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StateSpec.swift; sourceTree = "<group>"; };
@@ -91,15 +108,6 @@
 		2FEEA2C41C1E09A300CD515E /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		2FEEA2E21C1E6E9200CD515E /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		2FEF3F171C20017300C89067 /* AXSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AXSwift.framework; path = "../../Library/Developer/Xcode/DerivedData/Swindler-azuobwjvfcuxujafcskujfxfoylf/Build/Products/Debug/AXSwift.framework"; sourceTree = "<group>"; };
-		65F7E114E06A3008C7ACD928 /* Pods-Swindler.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Swindler.release.xcconfig"; path = "Pods/Target Support Files/Pods-Swindler/Pods-Swindler.release.xcconfig"; sourceTree = "<group>"; };
-		67B294155BAF709C01A3A7D2 /* Pods_Swindler.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Swindler.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		95F8A5C2288829AB1B277B04 /* Pods_SwindlerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwindlerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9770BE09728506004DE2AFFE /* Pods-SwindlerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests.debug.xcconfig"; sourceTree = "<group>"; };
-		B8301D2BD952877F659DD278 /* Pods-SwindlerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests.release.xcconfig"; sourceTree = "<group>"; };
-		BF5A7C04CB1300C0D8C4180B /* Pods-SwindlerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerExample.debug.xcconfig"; path = "Pods/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample.debug.xcconfig"; sourceTree = "<group>"; };
-		EBB05393530FC0EC1221E1DD /* Pods-SwindlerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwindlerExample.release.xcconfig"; path = "Pods/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample.release.xcconfig"; sourceTree = "<group>"; };
-		F97BEFE14949AF716E467C2C /* Pods-Swindler.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Swindler.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Swindler/Pods-Swindler.debug.xcconfig"; sourceTree = "<group>"; };
-		FC881B514AADAF10E329E46D /* Pods_SwindlerExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwindlerExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,7 +115,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6E7C0BA95ED211D168CD3058 /* Pods_Swindler.framework in Frameworks */,
+				2F474E2D2560DD8600C55402 /* PromiseKit in Frameworks */,
+				2F474E382560DDD600C55402 /* AXSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -115,8 +124,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2F474E442560E0AC00C55402 /* Nimble in Frameworks */,
+				2F474E3F2560E08400C55402 /* Quick in Frameworks */,
 				2F86CED11BD60117007E8C29 /* Swindler.framework in Frameworks */,
-				5C38DE3FBCECC5C0A5AC903B /* Pods_SwindlerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,26 +135,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				2FEEA29C1C1D36B000CD515E /* Swindler.framework in Frameworks */,
-				BAB205C9E67B0A04C5B48938 /* Pods_SwindlerExample.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2ED6BEB08FAAAAE7356D1099 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				9770BE09728506004DE2AFFE /* Pods-SwindlerTests.debug.xcconfig */,
-				B8301D2BD952877F659DD278 /* Pods-SwindlerTests.release.xcconfig */,
-				F97BEFE14949AF716E467C2C /* Pods-Swindler.debug.xcconfig */,
-				65F7E114E06A3008C7ACD928 /* Pods-Swindler.release.xcconfig */,
-				BF5A7C04CB1300C0D8C4180B /* Pods-SwindlerExample.debug.xcconfig */,
-				EBB05393530FC0EC1221E1DD /* Pods-SwindlerExample.release.xcconfig */,
-			);
-			name = Pods;
-			sourceTree = "<group>";
-		};
 		2F6189961C22736800C422C0 /* support */ = {
 			isa = PBXGroup;
 			children = (
@@ -164,7 +160,6 @@
 				2F86CEEA1BD6EC32007E8C29 /* SwindlerExample */,
 				2F86CEC71BD60117007E8C29 /* Products */,
 				9E4447A2F5E7EB6E92464F87 /* Frameworks */,
-				2ED6BEB08FAAAAE7356D1099 /* Pods */,
 			);
 			indentWidth = 4;
 			sourceTree = "<group>";
@@ -233,13 +228,11 @@
 		9E4447A2F5E7EB6E92464F87 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2F474E372560DDD600C55402 /* AXSwift.framework */,
 				2FEF3F171C20017300C89067 /* AXSwift.framework */,
 				2FEEA2C41C1E09A300CD515E /* AppKit.framework */,
 				2FEEA2AC1C1E041200CD515E /* XCTest.framework */,
 				2F7F01091C1A608C00C97949 /* AXSwift.framework */,
-				67B294155BAF709C01A3A7D2 /* Pods_Swindler.framework */,
-				95F8A5C2288829AB1B277B04 /* Pods_SwindlerTests.framework */,
-				FC881B514AADAF10E329E46D /* Pods_SwindlerExample.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -262,17 +255,20 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2F86CEDA1BD60117007E8C29 /* Build configuration list for PBXNativeTarget "Swindler" */;
 			buildPhases = (
-				8E36A92A205B734E955F4CCB /* [CP] Check Pods Manifest.lock */,
 				2F86CEC11BD60117007E8C29 /* Sources */,
 				2F86CEC21BD60117007E8C29 /* Frameworks */,
 				2F86CEC31BD60117007E8C29 /* Headers */,
 				2F86CEC41BD60117007E8C29 /* Resources */,
+				2F474E3A2560DDD600C55402 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = Swindler;
+			packageProductDependencies = (
+				2F474E2C2560DD8600C55402 /* PromiseKit */,
+			);
 			productName = Swindler;
 			productReference = 2F86CEC61BD60117007E8C29 /* Swindler.framework */;
 			productType = "com.apple.product-type.framework";
@@ -281,11 +277,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2F86CEDD1BD60117007E8C29 /* Build configuration list for PBXNativeTarget "SwindlerTests" */;
 			buildPhases = (
-				2B2CE8EA59D79FDC978CCDE4 /* [CP] Check Pods Manifest.lock */,
 				2F86CECC1BD60117007E8C29 /* Sources */,
 				2F86CECD1BD60117007E8C29 /* Frameworks */,
 				2F86CECE1BD60117007E8C29 /* Resources */,
-				28F08B90D76E7CF0B881A3A9 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -293,6 +287,10 @@
 				2F86CED31BD60117007E8C29 /* PBXTargetDependency */,
 			);
 			name = SwindlerTests;
+			packageProductDependencies = (
+				2F474E3E2560E08400C55402 /* Quick */,
+				2F474E432560E0AC00C55402 /* Nimble */,
+			);
 			productName = SwindlerTests;
 			productReference = 2F86CED01BD60117007E8C29 /* SwindlerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -301,11 +299,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2F86CEF31BD6EC32007E8C29 /* Build configuration list for PBXNativeTarget "SwindlerExample" */;
 			buildPhases = (
-				C150BB6AEC81BCA13C23D47C /* [CP] Check Pods Manifest.lock */,
 				2F86CEE51BD6EC32007E8C29 /* Sources */,
 				2F86CEE61BD6EC32007E8C29 /* Frameworks */,
 				2F86CEE71BD6EC32007E8C29 /* Resources */,
-				D43F51B45C6151778306F6EB /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -350,6 +346,11 @@
 				Base,
 			);
 			mainGroup = 2F86CEBC1BD60117007E8C29;
+			packageReferences = (
+				2F474E2B2560DD8600C55402 /* XCRemoteSwiftPackageReference "PromiseKit" */,
+				2F474E3D2560E08400C55402 /* XCRemoteSwiftPackageReference "Quick" */,
+				2F474E422560E0AC00C55402 /* XCRemoteSwiftPackageReference "Nimble" */,
+			);
 			productRefGroup = 2F86CEC71BD60117007E8C29 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -385,115 +386,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		28F08B90D76E7CF0B881A3A9 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
-				"${BUILT_PRODUCTS_DIR}/Quick/Quick.framework",
-				"${BUILT_PRODUCTS_DIR}/AXSwift/AXSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Quick.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AXSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PromiseKit.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SwindlerTests/Pods-SwindlerTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		2B2CE8EA59D79FDC978CCDE4 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SwindlerTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		8E36A92A205B734E955F4CCB /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Swindler-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		C150BB6AEC81BCA13C23D47C /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-SwindlerExample-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		D43F51B45C6151778306F6EB /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AXSwift/AXSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/PromiseKit/PromiseKit.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AXSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PromiseKit.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SwindlerExample/Pods-SwindlerExample-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2F86CEC11BD60117007E8C29 /* Sources */ = {
@@ -655,7 +547,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -663,7 +556,6 @@
 		};
 		2F86CEDB1BD60117007E8C29 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F97BEFE14949AF716E467C2C /* Pods-Swindler.debug.xcconfig */;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -673,7 +565,11 @@
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" -DSWINDLER_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.Swindler;
@@ -687,7 +583,6 @@
 		};
 		2F86CEDC1BD60117007E8C29 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 65F7E114E06A3008C7ACD928 /* Pods-Swindler.release.xcconfig */;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -697,7 +592,11 @@
 				FRAMEWORK_VERSION = A;
 				INFOPLIST_FILE = Sources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.Swindler;
@@ -711,11 +610,14 @@
 		};
 		2F86CEDE1BD60117007E8C29 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9770BE09728506004DE2AFFE /* Pods-SwindlerTests.debug.xcconfig */;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" -DSWINDLER_LOG_INFO";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.SwindlerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -725,11 +627,14 @@
 		};
 		2F86CEDF1BD60117007E8C29 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B8301D2BD952877F659DD278 /* Pods-SwindlerTests.release.xcconfig */;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" -DSWINDLER_LOG_INFO";
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.SwindlerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -739,12 +644,14 @@
 		};
 		2F86CEF41BD6EC32007E8C29 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BF5A7C04CB1300C0D8C4180B /* Pods-SwindlerExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerExample/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.SwindlerExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -754,12 +661,14 @@
 		};
 		2F86CEF51BD6EC32007E8C29 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EBB05393530FC0EC1221E1DD /* Pods-SwindlerExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = SwindlerExample/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.tylermandry.SwindlerExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -807,6 +716,51 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2F474E2B2560DD8600C55402 /* XCRemoteSwiftPackageReference "PromiseKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mxcl/PromiseKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.13.3;
+			};
+		};
+		2F474E3D2560E08400C55402 /* XCRemoteSwiftPackageReference "Quick" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Quick/Quick";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
+		2F474E422560E0AC00C55402 /* XCRemoteSwiftPackageReference "Nimble" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Quick/Nimble";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.3.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2F474E2C2560DD8600C55402 /* PromiseKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2F474E2B2560DD8600C55402 /* XCRemoteSwiftPackageReference "PromiseKit" */;
+			productName = PromiseKit;
+		};
+		2F474E3E2560E08400C55402 /* Quick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2F474E3D2560E08400C55402 /* XCRemoteSwiftPackageReference "Quick" */;
+			productName = Quick;
+		};
+		2F474E432560E0AC00C55402 /* Nimble */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2F474E422560E0AC00C55402 /* XCRemoteSwiftPackageReference "Nimble" */;
+			productName = Nimble;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2F86CEBD1BD60117007E8C29 /* Project object */;
 }

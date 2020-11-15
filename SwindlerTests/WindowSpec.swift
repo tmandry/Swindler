@@ -168,7 +168,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                     }
             }
 
-            xcontext("when a property value changes right before observing it") {
+            xcontext("when a property value changes right before observing it", flags: [:]) {
                 it("is read correctly") { () -> Promise<Void> in
                     windowElement.attrs[.minimized] = false
 
@@ -182,7 +182,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                 }
             }
 
-            xcontext("when a property value changes right after observing it") {
+            xcontext("when a property value changes right after observing it", flags: [:]) {
                 // The difference between a property changing before or after observing is simply
                 // whether an event is emitted or not.
                 it("is updated correctly") { () -> Promise<Void> in
@@ -201,7 +201,7 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                 }
             }
 
-            xcontext("when a property value changes right after reading it") {
+            xcontext("when a property value changes right after reading it", flags: [:]) {
                 it("is updated correctly") { () -> Promise<Void> in
                     windowElement.attrs[.minimized] = false
 
