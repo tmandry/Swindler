@@ -144,6 +144,7 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
         lock_ = NSLock()
         delegates = createDelegates()
         screens_ = delegates.map{ $0 as ScreenDelegate }
+        handler = nil
 
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,

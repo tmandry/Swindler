@@ -17,7 +17,7 @@ func unexpectedError(_ error: String, file: String = #file, line: Int = #line) {
 
 func unexpectedError<UIElement: UIElementType>(
     _ error: String, onElement element: UIElement, file: String = #file, line: Int = #line) {
-    let application = try? NSRunningApplication(processIdentifier: element.pid())
+    let application = ((try? NSRunningApplication(processIdentifier: element.pid())) as NSRunningApplication??)
     log.error("unexpected error: \(error) on element: \(element) of application: "
             + "\(String(describing: application)) at \(file):\(line)")
     assertionFailure()
