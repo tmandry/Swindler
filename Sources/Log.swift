@@ -1,3 +1,5 @@
+import Foundation
+
 /// Internal logger.
 internal private(set) var log = Log()
 

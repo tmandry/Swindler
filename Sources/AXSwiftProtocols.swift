@@ -2,6 +2,7 @@
 // If a method from AXSwift is needed, it can be added to the corresponding protocol.
 
 import AXSwift
+import Cocoa
 
 /// Protocol that wraps AXSwift.UIElement.
 protocol UIElementType: Equatable {

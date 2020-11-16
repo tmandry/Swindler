@@ -1,3 +1,5 @@
+import Cocoa
+
 /// The protocol for all event structs.
 ///
 /// Usually not used directly. Used as a bound by `State.on(...)`.

@@ -1,4 +1,5 @@
 import AXSwift
+import Cocoa
 import PromiseKit
 
 enum OSXDriverError: Error {

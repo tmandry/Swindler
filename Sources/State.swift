@@ -1,4 +1,5 @@
 import AXSwift
+import Cocoa
 import PromiseKit
 
 /// Initializes a new Swindler state and returns it in a Promise.

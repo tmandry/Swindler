@@ -1,3 +1,4 @@
+import Foundation
 import AXSwift
 import PromiseKit
 
@@ -24,17 +25,17 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
                 try axElement.attribute(attribute)
             }
             return readFilter(value)
-        } catch AXSwift.AXError.cannotComplete {
+        } catch AXError.cannotComplete {
             // If messaging timeout unspecified, we'll pass -1.
             var time = UIElement.globalMessagingTimeout
             if time == 0 {
                 time = -1.0
             }
             throw PropertyError.timeout(time: TimeInterval(time))
-        } catch AXSwift.AXError.invalidUIElement {
+        } catch AXError.invalidUIElement {
             log.debug("Got invalidUIElement for element \(axElement) "
                     + "when attempting to read \(attribute)")
-            throw PropertyError.invalidObject(cause: AXSwift.AXError.invalidUIElement)
+            throw PropertyError.invalidObject(cause: AXError.invalidUIElement)
         } catch let error {
             unexpectedError(error)
             throw PropertyError.invalidObject(cause: error)
@@ -46,21 +47,21 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
             return try traceRequest(axElement, "setAttribute", attribute, newValue) {
                 try axElement.setAttribute(attribute, value: newValue)
             }
-        } catch AXSwift.AXError.illegalArgument {
+        } catch AXError.illegalArgument {
             throw PropertyError.illegalValue
-        } catch AXSwift.AXError.cannotComplete {
+        } catch AXError.cannotComplete {
             // If messaging timeout unspecified, we'll pass -1.
             var time = UIElement.globalMessagingTimeout
             if time == 0 {
                 time = -1.0
             }
             throw PropertyError.timeout(time: TimeInterval(time))
-        } catch AXSwift.AXError.failure {
-            throw PropertyError.failure(cause: AXSwift.AXError.failure)
-        } catch AXSwift.AXError.invalidUIElement {
+        } catch AXError.failure {
+            throw PropertyError.failure(cause: AXError.failure)
+        } catch AXError.invalidUIElement {
             log.debug("Got invalidUIElement for element \(axElement) "
                     + "when attempting to write \(attribute)")
-            throw PropertyError.invalidObject(cause: AXSwift.AXError.invalidUIElement)
+            throw PropertyError.invalidObject(cause: AXError.invalidUIElement)
         } catch let error {
             unexpectedError(error)
             throw PropertyError.invalidObject(cause: error)
@@ -75,7 +76,7 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
             return self.readFilter(Optional(value as! T))
         }.recover { error -> Promise<T?> in
             switch error {
-            case AXSwift.AXError.cannotComplete:
+            case AXError.cannotComplete:
                 // If messaging timeout unspecified, we'll pass -1.
                 var time = UIElement.globalMessagingTimeout
                 if time == 0 {

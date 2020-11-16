@@ -1,4 +1,5 @@
 import AXSwift
+import Cocoa
 import PromiseKit
 
 /// A PropertyNotifier handles property events and directs them to the right place.

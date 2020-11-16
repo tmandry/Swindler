@@ -1,6 +1,7 @@
 # Xcode
 
 ## Build generated
+.build/
 build/
 docs/
 DerivedData

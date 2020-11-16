@@ -1,3 +1,4 @@
+import Cocoa
 import PromiseKit
 
 // MARK: - Screen

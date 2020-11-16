@@ -1,5 +1,6 @@
 @testable import Swindler
 import AXSwift
+import Foundation
 
 class TestObserver: ObserverType {
     typealias UIElement = TestUIElement
