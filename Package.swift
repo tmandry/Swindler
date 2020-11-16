@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -29,6 +29,9 @@ let package = Package(
             name: "Swindler",
             dependencies: ["AXSwift", "PromiseKit"],
             path: "Sources"),
+        .target(name: "SwindlerExample",
+            dependencies: ["Swindler"],
+            path: "SwindlerExample"),
         .testTarget(
             name: "SwindlerTests",
             dependencies: ["Swindler", "PromiseKit", "Quick", "Nimble"],
