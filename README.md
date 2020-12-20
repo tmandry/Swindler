@@ -165,9 +165,9 @@ You can see the entire [planned API here](https://github.com/tmandry/Swindler/bl
 
 ## Development
 
-Swindler uses Cococapods for Dependency management.
-[Follow the instructions](https://guides.cocoapods.org/using/getting-started.html) to install Cocoapods.
-This should give you the `pod` command for use in the shell.
+Swindler uses [Swift Package Manager](https://swift.org/package-manager/).
+
+### Building the project
 
 Clone the project, then in your shell run:
 
@@ -175,10 +175,18 @@ Clone the project, then in your shell run:
 $ cd Swindler
 $ git submodule init
 $ git submodule update
-$ pod install
 ```
 
 At this point you should be able to build Swindler in Xcode and start on your way!
+
+### Using the command line
+You can run the example project from the command line.
+
+```
+swift run
+```
+
+
 
 ## Contact
 
