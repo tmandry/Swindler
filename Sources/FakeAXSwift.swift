@@ -227,6 +227,13 @@ final class EmittingTestApplicationElement: TestApplicationElementBase, Applicat
         }
     }
 
+    func addWindow(_ window: EmittingTestWindowElement) {
+        // TODO update attrs[.window]
+        for observer in observers {
+            observer.unbox?.emit(.windowCreated, forElement: window)
+        }
+    }
+
     private var observers: [WeakBox<FakeObserver>]
 
     override func addObserver(_ observer: FakeObserver) {
@@ -310,6 +317,12 @@ class EmittingTestWindowElement: TestWindowElement {
         observers.append(WeakBox(observer))
     }
 
+    func destroy() {
+        for observer in observers {
+            observer.unbox?.emit(.uiElementDestroyed, forElement: self)
+        }
+    }
+
     // Useful hack to store companion objects (like FakeWindow).
     weak var companion: AnyObject?
 }
@@ -317,17 +330,12 @@ class EmittingTestWindowElement: TestWindowElement {
 class FakeObserver: ObserverType {
     typealias Context = FakeObserver
     typealias UIElement = TestUIElement
-    static var observers: [Context] = []
     var callback: Callback!
     var lock: NSLock = NSLock()
     var watchedElements: [TestUIElement: [AXNotification]] = [:]
 
-    //static var observers: [FakeObserverBase] = []
-
     required init(processID: pid_t, callback: @escaping Callback) throws {
         self.callback = callback
-        //try ObserverType.init(processID: processID, callback: callback)
-        FakeObserver.observers.append(self)
     }
 
     func addNotification(_ notification: AXNotification, forElement element: TestUIElement) throws {

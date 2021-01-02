@@ -22,8 +22,6 @@ class StubApplicationObserver: ApplicationObserverType {
 class OSXStateDelegateSpec: QuickSpec {
     override func spec() {
 
-        beforeEach { FakeObserver.observers = [] }
-
         func initialize()
         -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver, StubApplicationObserver> {
             initialize(StubApplicationObserver())
