@@ -44,7 +44,7 @@ final class AdversaryObserver: FakeObserver {
 }
 
 /// Allows defining adversarial actions when an attribute is read.
-final class AdversaryApplicationElement: TestApplicationElementBase, ApplicationElementType {
+final class AdversaryApplicationElement: TestApplicationElement {
     static var allApps: [AdversaryApplicationElement] = []
     static func all() -> [AdversaryApplicationElement] {
       return AdversaryApplicationElement.allApps

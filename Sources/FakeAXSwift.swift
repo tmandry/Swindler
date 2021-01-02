@@ -141,11 +141,11 @@ func ==(lhs: TestUIElement, rhs: TestUIElement) -> Bool {
     return lhs.id == rhs.id
 }
 
-class TestApplicationElementBase: TestUIElement {
+class TestApplicationElement: TestUIElement, ApplicationElementType {
     typealias UIElementType = TestUIElement
     var toElement: TestUIElement { return self }
 
-    init(processID: pid_t?, id: Int? = nil) {
+    init(processID: pid_t? = nil, id: Int? = nil) {
         super.init()
         if let id = id {
             self.id = id
@@ -192,13 +192,7 @@ class TestApplicationElementBase: TestUIElement {
     }
 }
 
-// ApplicationElementType requires static func all() -> [Self], which must be handled in each
-// (final) leaf class.
-final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
-    init() { super.init(processID: nil) }
-}
-
-final class EmittingTestApplicationElement: TestApplicationElementBase, ApplicationElementType {
+final class EmittingTestApplicationElement: TestApplicationElement {
     init() {
         observers = []
         super.init(processID: EmittingTestApplicationElement.nextPID)
@@ -245,8 +239,8 @@ final class EmittingTestApplicationElement: TestApplicationElementBase, Applicat
 }
 
 class TestWindowElement: TestUIElement {
-    var app: TestApplicationElementBase
-    init(forApp app: TestApplicationElementBase) {
+    var app: TestApplicationElement
+    init(forApp app: TestApplicationElement) {
         self.app = app
         super.init()
         processID = app.processID
@@ -267,7 +261,7 @@ class TestWindowElement: TestUIElement {
             // Setting .main to false does nothing.
             guard value as! Bool == true else { return }
 
-            // Let TestApplicationElementBase.setAttribute do the heavy lifting, and return.
+            // Let TestApplicationElement.setAttribute do the heavy lifting, and return.
             try app.setAttribute(.mainWindow, value: self)
             return
         }
@@ -284,7 +278,7 @@ extension TestWindowElement: CustomDebugStringConvertible {
 }
 
 class EmittingTestWindowElement: TestWindowElement {
-    override init(forApp app: TestApplicationElementBase) {
+    override init(forApp app: TestApplicationElement) {
         observers = []
         super.init(forApp: app)
     }
