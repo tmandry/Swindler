@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "AXSwift",
+        "repositoryURL": "https://github.com/tmandry/AXSwift.git",
+        "state": {
+          "branch": null,
+          "revision": "dbf34341fd9a5892a5f8a646699c82308ae40c42",
+          "version": "0.3.1"
+        }
+      },
+      {
         "package": "Nimble",
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
@@ -12,7 +21,7 @@
       },
       {
         "package": "PromiseKit",
-        "repositoryURL": "https://github.com/mxcl/PromiseKit",
+        "repositoryURL": "https://github.com/mxcl/PromiseKit.git",
         "state": {
           "branch": null,
           "revision": "aea48ea1855f5d82e2dffa6027afce3aab8f3dd7",
