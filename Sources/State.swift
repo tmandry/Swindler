@@ -4,7 +4,12 @@ import PromiseKit
 
 /// Initializes a new Swindler state and returns it in a Promise.
 public func initialize() -> Promise<State> {
-    return OSXStateDelegate<AXSwift.UIElement, AXSwift.Application, AXSwift.Observer>.initialize(
+    return OSXStateDelegate<
+        AXSwift.UIElement,
+        AXSwift.Application,
+        AXSwift.Observer,
+        ApplicationObserver
+    >.initialize(
         appObserver: ApplicationObserver(),
         screens: OSXSystemScreenDelegate()
     ).map { delegate in
@@ -71,6 +76,10 @@ protocol ApplicationObserverType {
     func onApplicationLaunched(_ handler: @escaping (pid_t) -> Void)
     func onApplicationTerminated(_ handler: @escaping (pid_t) -> Void)
     func makeApplicationFrontmost(_ pid: pid_t) throws
+
+    associatedtype ApplicationElement: ApplicationElementType
+    func allApplications() -> [ApplicationElement]
+    func appElement(forProcessID processID: pid_t) -> ApplicationElement?
 }
 
 /// Simple pubsub.
@@ -170,18 +179,36 @@ struct ApplicationObserver: ApplicationObserverType {
             log.debug("Failed to activate application \(app), it probably quit")
         }
     }
+
+    typealias ApplicationElement = AXSwift.Application
+
+    func allApplications() -> [ApplicationElement] {
+        AXSwift.Application.all()
+    }
+
+    func appElement(forProcessID processID: pid_t) -> ApplicationElement? {
+        return AXSwift.Application(forProcessID: processID)
+    }
 }
 
 /// Implements StateDelegate using the AXUIElement API.
 final class OSXStateDelegate<
-    UIElement, ApplicationElement: ApplicationElementType, Observer: ObserverType
->: StateDelegate
-    where Observer.UIElement == UIElement, ApplicationElement.UIElement == UIElement {
+    UIElement,
+    ApplicationElement,
+    Observer: ObserverType,
+    ApplicationObserver: ApplicationObserverType
+>: StateDelegate where
+    Observer.UIElement == UIElement,
+    ApplicationElement.UIElement == UIElement,
+    ApplicationObserver.ApplicationElement == ApplicationElement
+{
     typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
     typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
 
     fileprivate var applicationsByPID: [pid_t: AppDelegate] = [:]
     var notifier: EventNotifier
+
+    fileprivate var appObserver: ApplicationObserver
 
     // For convenience/readability.
     fileprivate var applications: Dictionary<pid_t, AppDelegate>.Values {
@@ -203,7 +230,7 @@ final class OSXStateDelegate<
     // initialization?
 
     static func initialize<S: SystemScreenDelegate>(
-        appObserver: ApplicationObserverType,
+        appObserver: ApplicationObserver,
         screens: S
     ) -> Promise<OSXStateDelegate> {
         return firstly { () -> Promise<OSXStateDelegate> in
@@ -213,17 +240,18 @@ final class OSXStateDelegate<
     }
 
     // TODO make private
-    init<S: SystemScreenDelegate>(appObserver: ApplicationObserverType, screens ssd: S) {
+    init<S: SystemScreenDelegate>(appObserver: ApplicationObserver, screens ssd: S) {
         log.debug("Initializing Swindler")
 
         notifier = EventNotifier()
         systemScreens = ssd
+        self.appObserver = appObserver
 
         ssd.onScreenLayoutChanged { event in
             self.notifier.notify(event)
         }
 
-        let appPromises = ApplicationElement.all().map { appElement in
+        let appPromises = appObserver.allApplications().map { appElement in
             watchApplication(appElement: appElement)
             .asVoid()
             .recover { error -> Void in
@@ -296,7 +324,7 @@ final class OSXStateDelegate<
 
 extension OSXStateDelegate {
     fileprivate func onApplicationLaunch(_ pid: pid_t) {
-        guard let appElement = ApplicationElement(forProcessID: pid) else {
+        guard let appElement = appObserver.appElement(forProcessID: pid) else {
             return
         }
         watchApplication(appElement: appElement).done { appDelegate in
@@ -358,13 +386,15 @@ extension OSXStateDelegate: AppFinder {
     }
 }
 
-private final class FrontmostApplicationPropertyDelegate: PropertyDelegate {
+private final class FrontmostApplicationPropertyDelegate<
+    ApplicationObserver: ApplicationObserverType
+>: PropertyDelegate {
     typealias T = Application
 
     weak var appFinder: AppFinder?
-    let appObserver: ApplicationObserverType
+    let appObserver: ApplicationObserver
     let initPromise: Promise<Void>
-    init(appFinder: AppFinder, appObserver: ApplicationObserverType, initPromise: Promise<Void>) {
+    init(appFinder: AppFinder, appObserver: ApplicationObserver, initPromise: Promise<Void>) {
         self.appFinder = appFinder
         self.appObserver = appObserver
         self.initPromise = initPromise

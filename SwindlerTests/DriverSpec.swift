@@ -10,13 +10,13 @@ import PromiseKit
 class OSXDriverSpec: QuickSpec {
     override func spec() {
 
-        beforeEach { TestApplicationElement.allApps = [] }
         beforeEach { FakeObserver.observers = [] }
 
         // Set up a state with a single application containing a single window.
         var appElement: TestApplicationElement!
         var windowElement: TestWindowElement!
         var observer: FakeObserver!
+        var appObserver: StubApplicationObserver!
         var state: State!
         beforeEach {
             appElement = TestApplicationElement()
@@ -24,12 +24,13 @@ class OSXDriverSpec: QuickSpec {
             windowElement.attrs[.position] = CGPoint(x: 5, y: 5)
             appElement.attrs[.windows] = [windowElement as TestUIElement]
             appElement.attrs[.mainWindow] = windowElement
-            TestApplicationElement.allApps = [appElement]
+            appObserver = StubApplicationObserver()
+            appObserver.allApps = [appElement]
 
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
             state = State(delegate: OSXStateDelegate<
-                TestUIElement, TestApplicationElement, FakeObserver
-            >(appObserver: StubApplicationObserver(), screens: screenDel))
+                TestUIElement, TestApplicationElement, FakeObserver, StubApplicationObserver
+            >(appObserver: appObserver, screens: screenDel))
             observer = FakeObserver.observers.first!
             observer.emit(.windowCreated, forElement: windowElement)
             expect(state.knownWindows.count).toEventually(equal(1))

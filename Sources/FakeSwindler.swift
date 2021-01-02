@@ -17,7 +17,7 @@ fileprivate typealias AppElement = EmittingTestApplicationElement
 
 public class FakeState {
     fileprivate typealias Delegate =
-        OSXStateDelegate<TestUIElement, AppElement, FakeObserver>
+        OSXStateDelegate<TestUIElement, AppElement, FakeObserver, FakeApplicationObserver>
 
     public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
         let appObserver = FakeApplicationObserver()
@@ -34,7 +34,7 @@ public class FakeState {
     public var frontmostApplication: FakeApplication? {
         get {
             guard let pid = appObserver.frontmostApplicationPID else { return nil }
-            guard let elem = try! AppElement.all().first(where: { try $0.pid() == pid }) else {
+            guard let elem = appObserver.appElement(forProcessID: pid) else {
                 return nil
             }
             return Optional(elem.companion as! FakeApplication)
@@ -124,6 +124,7 @@ public class FakeApplication {
     public init(parent: FakeState) {
         self.parent = parent
         element = AppElement()
+        parent.appObserver.allApps.append(element)
         processId = element.processID
         isHidden = false
         delegate = try! Delegate(element, parent.delegate, parent.delegate.notifier)

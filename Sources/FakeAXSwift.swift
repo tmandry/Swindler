@@ -196,14 +196,6 @@ class TestApplicationElementBase: TestUIElement {
 // (final) leaf class.
 final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
     init() { super.init(processID: nil) }
-    init?(forProcessID processID: pid_t) {
-        guard let _ = TestApplicationElement.all().first(where: {$0.processID == processID}) else {
-            return nil
-        }
-        super.init(processID: processID)
-    }
-    static var allApps: [TestApplicationElement] = []
-    static func all() -> [TestApplicationElement] { return TestApplicationElement.allApps }
 }
 
 final class EmittingTestApplicationElement: TestApplicationElementBase, ApplicationElementType {
@@ -211,22 +203,8 @@ final class EmittingTestApplicationElement: TestApplicationElementBase, Applicat
         observers = []
         super.init(processID: EmittingTestApplicationElement.nextPID)
         EmittingTestApplicationElement.nextPID += 1
-        EmittingTestApplicationElement.allApps.append(self)
     }
     static var nextPID: pid_t = 1
-
-    init?(forProcessID processID: pid_t) {
-        observers = []
-        let apps = EmittingTestApplicationElement.all()
-        guard let other = apps.first(where: {$0.processID == processID}) else {
-            return nil
-        }
-        super.init(processID: processID, id: other.id)
-    }
-    static var allApps: [EmittingTestApplicationElement] = []
-    static func all() -> [EmittingTestApplicationElement] {
-        return EmittingTestApplicationElement.allApps
-    }
 
     override func setAttribute(_ attribute: Attribute, value: Any) throws {
         try super.setAttribute(attribute, value: value)
@@ -422,6 +400,15 @@ class FakeApplicationObserver: ApplicationObserverType {
 
     func makeApplicationFrontmost(_ pid: pid_t) throws {
         setFrontmost(pid)
+    }
+
+    typealias ApplicationElement = EmittingTestApplicationElement
+    var allApps: [ApplicationElement] = []
+    func allApplications() -> [EmittingTestApplicationElement] {
+        return allApps
+    }
+    func appElement(forProcessID processID: pid_t) -> EmittingTestApplicationElement? {
+        return allApps.first(where: {$0.processID == processID})
     }
 }
 

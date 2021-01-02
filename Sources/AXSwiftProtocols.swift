@@ -38,10 +38,6 @@ extension AXSwift.Observer: ObserverType {
 protocol ApplicationElementType: UIElementType {
     associatedtype UIElement: UIElementType
 
-    init?(forProcessID processID: pid_t)
-
-    static func all() -> [Self]
-
     // Until the Swift type system improves, I don't see a way around this.
     var toElement: UIElement { get }
 }

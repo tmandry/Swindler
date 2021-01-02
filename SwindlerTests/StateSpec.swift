@@ -12,55 +12,29 @@ class StubApplicationObserver: ApplicationObserverType {
     func onApplicationLaunched(_ handler: @escaping (pid_t) -> Void) {}
     func onApplicationTerminated(_ handler: @escaping (pid_t) -> Void) {}
     func makeApplicationFrontmost(_ pid: pid_t) throws {}
-}
 
-class FakeApplicationObserver: ApplicationObserverType {
-    private var frontmost_: pid_t?
-    var frontmostApplicationPID: pid_t? { return frontmost_ }
-
-    private var frontmostHandlers: [() -> Void] = []
-    func onFrontmostApplicationChanged(_ handler: @escaping () -> Void) {
-        frontmostHandlers.append(handler)
-    }
-
-    private var launchHandlers: [(pid_t) -> Void] = []
-    func onApplicationLaunched(_ handler: @escaping (pid_t) -> Void) {
-        launchHandlers.append(handler)
-    }
-
-    private var terminateHandlers: [(pid_t) -> Void] = []
-    func onApplicationTerminated(_ handler: @escaping (pid_t) -> Void) {
-        terminateHandlers.append(handler)
-    }
-
-    func makeApplicationFrontmost(_ pid: pid_t) throws {
-        setFrontmost(pid)
-    }
-
-    fileprivate func setFrontmost(_ pid: pid_t?) {
-        frontmost_ = pid
-        frontmostHandlers.forEach { $0() }
-    }
-    fileprivate func launch(_ pid: pid_t) {
-        launchHandlers.forEach { $0(pid) }
-    }
-    fileprivate func terminate(_ pid: pid_t) {
-        terminateHandlers.forEach { $0(pid) }
-    }
+    typealias ApplicationElement = TestApplicationElement
+    var allApps: [ApplicationElement] = []
+    func allApplications() -> [TestApplicationElement] { return allApps }
+    func appElement(forProcessID processID: pid_t) -> ApplicationElement? { return nil }
 }
 
 class OSXStateDelegateSpec: QuickSpec {
     override func spec() {
 
-        beforeEach { TestApplicationElement.allApps = [] }
         beforeEach { FakeObserver.observers = [] }
 
-        func initialize(
-            _ appObserver: ApplicationObserverType = StubApplicationObserver()
-        ) -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver> {
+        func initialize()
+        -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver, StubApplicationObserver> {
+            initialize(StubApplicationObserver())
+        }
+
+        func initialize<AppObserver: ApplicationObserverType>(
+            _ appObserver: AppObserver
+        ) -> OSXStateDelegate<TestUIElement, AppObserver.ApplicationElement, TestObserver, AppObserver> {
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
             let stateDel = OSXStateDelegate<
-                TestUIElement, TestApplicationElement, TestObserver
+                TestUIElement, AppObserver.ApplicationElement, TestObserver, AppObserver
             >(appObserver: appObserver, screens: screenDel)
             waitUntil { done in
                 stateDel.frontmostApplication.initialized.done { done() }.cauterize()
@@ -69,23 +43,35 @@ class OSXStateDelegateSpec: QuickSpec {
         }
 
         func initializeWithApp(
-            appObserver: ApplicationObserverType = FakeApplicationObserver()
-        ) -> OSXStateDelegate<TestUIElement, TestApplicationElement, TestObserver> {
-            let appElement = TestApplicationElement()
+            appObserver: FakeApplicationObserver = FakeApplicationObserver()
+        ) -> OSXStateDelegate<TestUIElement, EmittingTestApplicationElement, TestObserver, FakeApplicationObserver> {
+            let appElement = EmittingTestApplicationElement()
             appElement.processID = 1234
-            TestApplicationElement.allApps = [appElement]
-
+            appObserver.allApps = [appElement]
             let stateDelegate = initialize(appObserver)
-            waitUntil(stateDelegate.runningApplications.count == 1)
             return stateDelegate
         }
 
+        func initializeWithApps(
+            _ apps: [EmittingTestApplicationElement],
+            appObserver: FakeApplicationObserver = FakeApplicationObserver()
+        ) -> OSXStateDelegate<TestUIElement, EmittingTestApplicationElement, TestObserver, FakeApplicationObserver> {
+            appObserver.allApps = apps
+            return initialize(appObserver)
+        }
+
         context("during initialization") {
-            func initializeUsingObserver<Obs: ObserverType>(_ elementObserver: Obs.Type)
-                -> OSXStateDelegate<TestUIElement, TestApplicationElement, Obs> {
+            func initializeUsingObserver<Obs: ObserverType>(
+                _ elementObserver: Obs.Type,
+                apps: [TestApplicationElement]
+            )
+                -> OSXStateDelegate<TestUIElement, TestApplicationElement, Obs, StubApplicationObserver>
+            {
                 let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
-                return OSXStateDelegate<TestUIElement, TestApplicationElement, Obs>(
-                    appObserver: StubApplicationObserver(),
+                let observer = StubApplicationObserver()
+                observer.allApps = apps
+                return OSXStateDelegate(
+                    appObserver: observer,
                     screens: screenDel
                 )
             }
@@ -99,9 +85,9 @@ class OSXStateDelegateSpec: QuickSpec {
                     }
                 }
 
-                TestApplicationElement.allApps = [TestApplicationElement(),
-                                                  TestApplicationElement()]
-                _ = initializeUsingObserver(MyTestObserver.self)
+                _ = initializeUsingObserver(
+                    MyTestObserver.self,
+                    apps: [TestApplicationElement(), TestApplicationElement()])
 
                 expect(MyTestObserver.numObservers)
                     .to(equal(2), description: "should be 2 observers")
@@ -115,8 +101,7 @@ class OSXStateDelegateSpec: QuickSpec {
                     }
                 }
 
-                TestApplicationElement.allApps = [TestApplicationElement()]
-                _ = initializeUsingObserver(MyTestObserver.self)
+                _ = initializeUsingObserver(MyTestObserver.self, apps: [TestApplicationElement()])
                 // test that it doesn't crash
             }
 
@@ -128,10 +113,8 @@ class OSXStateDelegateSpec: QuickSpec {
         }
 
         context("when there is an application") {
-            beforeEach { TestApplicationElement.allApps = [TestApplicationElement()] }
-
             xit("doesn't leak memory") {
-                weak var stateDelegate = initialize()
+                weak var stateDelegate = initializeWithApp()
 
                 // For some reason when `stateDelegate` is captured in an autoclosure, it prevents
                 // the object from being freed until the closure is freed. This explicit closure
@@ -145,10 +128,8 @@ class OSXStateDelegateSpec: QuickSpec {
 
         describe("runningApplications") {
             context("after initialization") {
-                beforeEach { TestApplicationElement.allApps = [TestApplicationElement()] }
-
                 it("contains the running applications") {
-                    let stateDelegate = initialize()
+                    let stateDelegate = initializeWithApp()
                     expect(stateDelegate.runningApplications).toEventually(haveCount(1))
                 }
 
@@ -158,15 +139,14 @@ class OSXStateDelegateSpec: QuickSpec {
                         let stateDelegate = initializeWithApp(appObserver: appObserver)
                         waitUntil(stateDelegate.runningApplications.count == 1)
 
-                        let newApp = TestApplicationElement()
-                        TestApplicationElement.allApps.append(newApp)
+                        let newApp = EmittingTestApplicationElement()
+                        appObserver.allApps.append(newApp)
                         appObserver.launch(newApp.processID)
 
                         expect(stateDelegate.runningApplications).toEventually(haveCount(2))
                     }
 
                     it("emits an event") {
-
                         let appObserver = FakeApplicationObserver()
                         let stateDelegate = initializeWithApp(appObserver: appObserver)
                         waitUntil(stateDelegate.runningApplications.count == 1)
@@ -175,8 +155,8 @@ class OSXStateDelegateSpec: QuickSpec {
                             count += 1
                         }
 
-                        let newApp = TestApplicationElement()
-                        TestApplicationElement.allApps.append(newApp)
+                        let newApp = EmittingTestApplicationElement()
+                        appObserver.allApps.append(newApp)
                         appObserver.launch(newApp.processID)
 
                         expect(count).toEventually(equal(1))
@@ -189,8 +169,8 @@ class OSXStateDelegateSpec: QuickSpec {
                         let stateDelegate = initializeWithApp(appObserver: appObserver)
                         waitUntil(stateDelegate.runningApplications.count == 1)
 
-                        let app = TestApplicationElement.allApps[0]
-                        TestApplicationElement.allApps = []
+                        let app = appObserver.allApps[0]
+                        appObserver.allApps = []
                         appObserver.terminate(app.processID)
 
                         expect(stateDelegate.runningApplications).toEventually(haveCount(0))
@@ -198,7 +178,6 @@ class OSXStateDelegateSpec: QuickSpec {
                 }
 
                 it("emits an event") {
-
                     let appObserver = FakeApplicationObserver()
                     let stateDelegate = initializeWithApp(appObserver: appObserver)
                     waitUntil(stateDelegate.runningApplications.count == 1)
@@ -207,8 +186,8 @@ class OSXStateDelegateSpec: QuickSpec {
                         count += 1
                     }
 
-                    let app = TestApplicationElement.allApps[0]
-                    TestApplicationElement.allApps = []
+                    let app = appObserver.allApps[0]
+                    appObserver.allApps = []
                     appObserver.terminate(app.processID)
 
                     expect(count).toEventually(equal(1))
@@ -219,7 +198,7 @@ class OSXStateDelegateSpec: QuickSpec {
         describe("frontmostApplication") {
             func getPID(_ app: Swindler.Application?) -> pid_t? {
                 typealias AppDelegate = OSXApplicationDelegate<
-                    TestUIElement, TestApplicationElement, TestObserver
+                    TestUIElement, EmittingTestApplicationElement, TestObserver
                 >
                 return (app?.delegate as! AppDelegate?)?.processIdentifier
             }
@@ -283,9 +262,9 @@ class OSXStateDelegateSpec: QuickSpec {
 
                 context("when the system does not change the frontmost application") {
                     it("returns the old value in the promise") { () -> Promise<Void> in
-                        let state = State(
-                            delegate: initializeWithApp(appObserver: StubApplicationObserver())
-                        )
+                        let appObserver = StubApplicationObserver()
+                        appObserver.allApps = [TestApplicationElement()]
+                        let state = State(delegate: initialize(appObserver))
                         return state.frontmostApplication.set(state.runningApplications.first!)
                             .done { app in
                                 expect(app).to(beNil())
