@@ -9,9 +9,8 @@ import Cocoa
 
 /// A dictionary of AX attributes.
 ///
-/// This struct models redundancies in the data model (frame, position, and
-/// size).
-struct Attributes {
+/// Models redundancies in the data model (frame, position, and size).
+class Attributes {
     private var values: [Attribute: Any] = [:]
 
     subscript(attr: Attribute) -> Any? {
@@ -42,8 +41,42 @@ struct Attributes {
         }
     }
 
-    mutating func removeValue(forKey: Attribute) {
+    func removeValue(forKey: Attribute) {
         values.removeValue(forKey: forKey)
+    }
+}
+
+extension Attributes: CustomDebugStringConvertible {
+    var debugDescription: String {
+        return "\(values)"
+    }
+}
+
+class SyncAttributes {
+    private var attrs: Attributes = Attributes()
+    private var lock: NSRecursiveLock = NSRecursiveLock()
+
+    func with<R>(_ f: (Attributes) -> R) -> R {
+        lock.lock()
+        defer { lock.unlock() }
+        return f(attrs)
+    }
+
+    subscript(attr: Attribute) -> Any? {
+        get { return with({ $0[attr] }) }
+        set { with({ $0[attr] = newValue }) }
+    }
+
+    func removeValue(forKey attr: Attribute) {
+        with({ $0.removeValue(forKey: attr) })
+    }
+}
+
+extension SyncAttributes: CustomDebugStringConvertible {
+    var debugDescription: String {
+        lock.lock()
+        defer { lock.unlock() }
+        return "\(attrs)"
     }
 }
 
@@ -54,12 +87,11 @@ class TestUIElement: UIElementType, Hashable {
 
     var id: Int
     var processID: pid_t = 0
-    var attrs: Attributes
+    var attrs: SyncAttributes = SyncAttributes()
 
     var throwInvalid: Bool = false
 
     init() {
-        attrs = Attributes()
         TestUIElement.elementCount += 1
         id = TestUIElement.elementCount
     }
@@ -85,11 +117,13 @@ class TestUIElement: UIElementType, Hashable {
     }
     func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute: Any] {
         if throwInvalid { throw AXError.invalidUIElement }
-        var result: [Attribute: Any] = [:]
-        for attr in attributes {
-            result[attr] = attrs[attr]
+        return attrs.with { attrs in
+            var result: [Attribute: Any] = [:]
+            for attr in attributes {
+                result[attr] = attrs[attr]
+            }
+            return result
         }
-        return result
     }
     func setAttribute(_ attr: Attribute, value: Any) throws {
         if throwInvalid { throw AXError.invalidUIElement }
@@ -117,30 +151,39 @@ class TestApplicationElementBase: TestUIElement {
             self.id = id
         }
         self.processID = processID ?? Int32(self.id)
-        attrs[.role] = AXSwift.Role.application.rawValue
-        attrs[.windows] = Array<TestUIElement>()
-        attrs[.frontmost] = false
-        attrs[.hidden] = false
+        attrs.with { attrs in
+            attrs[.role] = AXSwift.Role.application.rawValue
+            attrs[.windows] = Array<TestUIElement>()
+            attrs[.frontmost] = false
+            attrs[.hidden] = false
+        }
     }
 
-    override func setAttribute(_ attribute: Attribute, value: Any) throws {
-        // Synchronize .mainWindow with .main on the window.
+    override func setAttribute(_ attribute: Attribute, value newValue: Any) throws {
         if attribute == .mainWindow {
-            if let oldWindowElement = attrs[.mainWindow] as! TestWindowElement? {
-                oldWindowElement.attrs[.main] = false
+            // Synchronize .mainWindow with .main on the window.
+            attrs.with { attrs in
+                let newWindowElement = newValue as! TestWindowElement
+                let oldWindowElement = attrs[.mainWindow] as! TestWindowElement? ?? newWindowElement
+                newWindowElement.attrs.with { newWindowAttrs in
+                    // NOTE: This works if old and new are the same because we're using NSRecursiveLock.
+                    oldWindowElement.attrs.with { oldWindowAttrs in
+                        oldWindowAttrs[.main] = false
+                        newWindowAttrs[.main] = true
+
+                        attrs[.mainWindow] = newValue
+
+                        // Propagate .mainWindow changes to .focusedWindow also.
+                        // This is what happens 99% of the time, but it is still possible to set
+                        // .focusedWindow only.
+                        attrs[.focusedWindow] = newValue
+                    }
+                }
             }
-            let newWindowElement = value as! TestWindowElement
-            newWindowElement.attrs[.main] = true
+            return
         }
 
-        try super.setAttribute(attribute, value: value)
-
-        // Propagate .mainWindow changes to .focusedWindow also.
-        // This is what happens 99% of the time, but it is still possible to set
-        // .focusedWindow only.
-        if attribute == .mainWindow {
-            try self.setAttribute(.focusedWindow, value: value)
-        }
+        try super.setAttribute(attribute, value: newValue)
     }
 
     internal var windows: [TestUIElement] {
@@ -222,13 +265,15 @@ class TestWindowElement: TestUIElement {
         self.app = app
         super.init()
         processID = app.processID
-        attrs[.role] = AXSwift.Role.window.rawValue
-        attrs[.frame] = CGRect(x: 0, y: 0, width: 100, height: 100)
-        attrs[.title] = "Window \(id)"
-        attrs[.minimized] = false
-        attrs[.main] = true
-        attrs[.focused] = true
-        attrs[.fullScreen] = false
+        attrs.with { attrs in
+            attrs[.role] = AXSwift.Role.window.rawValue
+            attrs[.frame] = CGRect(x: 0, y: 0, width: 100, height: 100)
+            attrs[.title] = "Window \(id)"
+            attrs[.minimized] = false
+            attrs[.main] = true
+            attrs[.focused] = true
+            attrs[.fullScreen] = false
+        }
     }
 
     override func setAttribute(_ attribute: Attribute, value: Any) throws {
@@ -236,7 +281,10 @@ class TestWindowElement: TestUIElement {
         if attribute == .main {
             // Setting .main to false does nothing.
             guard value as! Bool == true else { return }
+
+            // Let TestApplicationElementBase.setAttribute do the heavy lifting, and return.
             try app.setAttribute(.mainWindow, value: self)
+            return
         }
 
         try super.setAttribute(attribute, value: value)
