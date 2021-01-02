@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = 'Swindler'
-  s.version      = '0.0.4'
+  s.version      = '0.0.5'
   s.summary      = 'macOS window management framework, written in Swift'
 
   # This description is used to generate tags and improve search results.
@@ -21,7 +21,8 @@ Pod::Spec.new do |s|
   s.author             = { 'Tyler Mandry' => 'tmandry@gmail.com' }
   s.social_media_url   = 'http://twitter.com/tmandry'
 
-  s.platform     = :osx, '10.10'
+  s.platform      = :osx, '10.10'
+  s.swift_version = '5.0'
 
   s.source       = { git: 'https://github.com/tmandry/Swindler.git', tag: s.version.to_s }
 
