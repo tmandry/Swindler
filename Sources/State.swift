@@ -205,7 +205,7 @@ final class OSXStateDelegate<
     typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
     typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
 
-    fileprivate var applicationsByPID: [pid_t: AppDelegate] = [:]
+    var applicationsByPID: [pid_t: AppDelegate] = [:]
     var notifier: EventNotifier
 
     fileprivate var appObserver: ApplicationObserver

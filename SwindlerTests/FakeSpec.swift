@@ -73,6 +73,7 @@ class FakeSpec: QuickSpec {
         }
 
         describe("FakeApplication") {
+            var fakeState: FakeState!
             var fakeApp: FakeApplication!
             var fakeWindow1: FakeWindow!
             var fakeWindow2: FakeWindow!
@@ -80,6 +81,7 @@ class FakeSpec: QuickSpec {
             beforeEach {
                 waitUntil { done in
                     FakeState.initialize().then { state -> Promise<(FakeWindow, FakeWindow)> in
+                        fakeState = state
                         fakeApp = FakeApplication(parent: state)
                         return when(fulfilled:
                             FakeWindowBuilder(parent: fakeApp).build(),
@@ -91,6 +93,9 @@ class FakeSpec: QuickSpec {
                         done()
                     }.cauterize()
                 }
+                // TODO: It's unfortunate this is necessary; we should just return a Promise for
+                // building applications too.
+                expect(fakeState.state.runningApplications).toEventually(haveCount(1))
             }
 
             it("sees changes from Swindler") {
@@ -123,38 +128,71 @@ class FakeSpec: QuickSpec {
                 fakeApp.isHidden = true
                 expect(fakeApp.application.isHidden.value).toEventually(equal(true))
             }
+
+            it("changes are mirrored in the Application object returned by Swindler State") {
+                fakeApp.application.mainWindow.value = fakeWindow1.window
+                expect(fakeState.state.runningApplications[0].mainWindow.value).toEventually(equal(fakeWindow1.window))
+                fakeApp.application.mainWindow.value = fakeWindow2.window
+                expect(fakeState.state.runningApplications[0].mainWindow.value).toEventually(equal(fakeWindow2.window))
+            }
         }
 
         describe("FakeState") {
-            var fakeState: FakeState!
-            var fakeApp1: FakeApplication!
-            var fakeApp2: FakeApplication!
+            context("") {
+                var fakeState: FakeState!
+                var fakeApp1: FakeApplication!
+                var fakeApp2: FakeApplication!
+                beforeEach {
+                    waitUntil { done in
+                        FakeState.initialize().done { fs in
+                            fakeState = fs
+                            fakeApp1 = FakeApplication(parent: fakeState)
+                            fakeApp2 = FakeApplication(parent: fakeState)
+                            done()
+                        }.cauterize()
+                    }
+                    expect(fakeState.state.runningApplications).toEventually(haveCount(2))
+                }
 
-            beforeEach {
-                waitUntil { done in
-                    FakeState.initialize().done { fs in
-                        fakeState = fs
-                        fakeApp1 = FakeApplication(parent: fakeState)
-                        fakeApp2 = FakeApplication(parent: fakeState)
-                        done()
-                    }.cauterize()
+                it("sees changes from Swindler objects") {
+                    fakeState.state.frontmostApplication.value = fakeApp1.application
+                    expect(fakeState.frontmostApplication).toEventually(equal(fakeApp1))
+                    fakeState.state.frontmostApplication.value = fakeApp2.application
+                    expect(fakeState.frontmostApplication).toEventually(equal(fakeApp2))
+                }
+
+                it("publishes changes to Swindler objects") {
+                    fakeState.frontmostApplication = fakeApp1
+                    expect(fakeState.state.frontmostApplication.value).toEventually(
+                        equal(fakeApp1.application))
+                    fakeState.frontmostApplication = fakeApp2
+                    expect(fakeState.state.frontmostApplication.value).toEventually(
+                        equal(fakeApp2.application))
                 }
             }
 
-            it("sees changes from Swindler") {
-                fakeState.state.frontmostApplication.value = fakeApp1.application
-                expect(fakeState.frontmostApplication).toEventually(equal(fakeApp1))
-                fakeState.state.frontmostApplication.value = fakeApp2.application
-                expect(fakeState.frontmostApplication).toEventually(equal(fakeApp2))
-            }
+            context("") {
+                var fakeState: FakeState!
+                var fakeApp: FakeApplication!
+                beforeEach {
+                    waitUntil { done in
+                        FakeState.initialize().done { fs in
+                            fakeState = fs
+                            fakeApp = FakeApplication(parent: fakeState)
+                            done()
+                        }.cauterize()
+                    }
+                    expect(fakeState.state.runningApplications).toEventually(haveCount(1))
+                }
 
-            it("publishes changes to Swindler") {
-                fakeState.frontmostApplication = fakeApp1
-                expect(fakeState.state.frontmostApplication.value).toEventually(
-                    equal(fakeApp1.application))
-                fakeState.frontmostApplication = fakeApp2
-                expect(fakeState.state.frontmostApplication.value).toEventually(
-                    equal(fakeApp2.application))
+                it("registers objects with Swindler state") {
+                    let app = fakeState.state.runningApplications[0]
+                    expect(fakeApp.isHidden).to(beFalse())
+                    expect(app.isHidden.value).to(beFalse())
+                    fakeApp.isHidden = true
+                    expect(fakeApp.isHidden).to(beTrue())
+                    expect(app.isHidden.value).toEventually(beTrue())
+                }
             }
         }
     }

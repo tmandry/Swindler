@@ -127,10 +127,13 @@ public class FakeApplication {
         parent.appObserver.allApps.append(element)
         processId = element.processID
         isHidden = false
-        delegate = try! Delegate(element, parent.delegate, parent.delegate.notifier)
+        let (d, initialized) = try! Delegate.initializeForTest(element, parent.delegate, parent.delegate.notifier)
+        delegate = d
+        initialized.tap { _ in
+            parent.delegate.applicationsByPID[self.processId] = self.delegate
+        }.cauterize()
 
         element.companion = self
-        parent.appObserver.launch(processId)
     }
 
     public func createWindow() -> FakeWindowBuilder {

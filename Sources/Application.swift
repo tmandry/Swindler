@@ -121,6 +121,15 @@ final class OSXApplicationDelegate<
         return windows.map({ $0 as WindowDelegate })
     }
 
+    static func initializeForTest(
+        _ axElement: ApplicationElement,
+        _ stateDelegate: StateDelegate,
+        _ notifier: EventNotifier
+    ) throws -> (OSXApplicationDelegate, Promise<OSXApplicationDelegate>) {
+        let appDelegate = try OSXApplicationDelegate(axElement, stateDelegate, notifier)
+        return (appDelegate, appDelegate.initialized.map { appDelegate })
+    }
+
     /// Initializes the object and returns it as a Promise that resolves once it's ready.
     static func initialize(
         axElement: ApplicationElement,
@@ -128,12 +137,12 @@ final class OSXApplicationDelegate<
         notifier: EventNotifier
     ) -> Promise<OSXApplicationDelegate> {
         return firstly { () -> Promise<OSXApplicationDelegate> in // capture thrown errors in promise chain
-            let appDelegate = try OSXApplicationDelegate(axElement, stateDelegate, notifier)
-            return appDelegate.initialized.map { appDelegate }
+            let (_, promise) = try initializeForTest(axElement, stateDelegate, notifier)
+            return promise
         }
     }
 
-    init(_ axElement: ApplicationElement,
+    private init(_ axElement: ApplicationElement,
          _ stateDelegate: StateDelegate,
          _ notifier: EventNotifier) throws {
         // TODO: filter out applications by activation policy
