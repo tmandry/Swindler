@@ -78,7 +78,10 @@ struct Log {
         } else {
             output = string
         }
-        print(output, to: &stderrStream)
+        // stderr seems to get thrown away by `swift test`, so we print to stdout
+        // for now.
+        // print(output, to: &stderrStream)
+        print(output)
     }
 
 }
