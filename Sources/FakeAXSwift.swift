@@ -202,19 +202,19 @@ final class EmittingTestApplicationElement: TestApplicationElement {
 
     override func setAttribute(_ attribute: Attribute, value: Any) throws {
         try super.setAttribute(attribute, value: value)
-        let notification = { () -> AXNotification? in
+        let notifications = { () -> [AXNotification] in
             switch attribute {
             case .mainWindow:
-                return .mainWindowChanged
+                return [.mainWindowChanged, .focusedWindowChanged]
             case .focusedWindow:
-                return .focusedWindowChanged
+                return [.focusedWindowChanged]
             case .hidden:
-                return (value as? Bool == true) ? .applicationHidden : .applicationShown
+                return (value as? Bool == true) ? [.applicationHidden] : [.applicationShown]
             default:
-                return nil
+                return []
             }
         }()
-        if let notification = notification {
+        for notification in notifications {
             for observer in observers {
                 observer.unbox?.emit(notification, forElement: self)
             }

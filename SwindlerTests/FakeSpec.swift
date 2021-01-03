@@ -135,6 +135,15 @@ class FakeSpec: QuickSpec {
                 fakeApp.application.mainWindow.value = fakeWindow2.window
                 expect(fakeState.state.runningApplications[0].mainWindow.value).toEventually(equal(fakeWindow2.window))
             }
+
+            it("updates focusedWindow when mainWindow changes") {
+                fakeApp.mainWindow = fakeWindow1
+                expect(fakeApp.application.mainWindow.value).toEventually(equal(fakeWindow1.window))
+                expect(fakeApp.application.focusedWindow.value).toEventually(equal(fakeWindow1.window))
+                fakeApp.mainWindow = fakeWindow2
+                expect(fakeApp.application.mainWindow.value).toEventually(equal(fakeWindow2.window))
+                expect(fakeApp.application.focusedWindow.value).toEventually(equal(fakeWindow2.window))
+            }
         }
 
         describe("FakeState") {
