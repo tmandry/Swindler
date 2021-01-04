@@ -19,7 +19,6 @@ class OSXWindowDelegateInitializeSpec: QuickSpec {
 
         var windowElement: TestWindowElement!
         beforeEach {
-            TestApplicationElement.allApps = []
             windowElement = TestWindowElement(forApp: TestApplicationElement())
         }
 
@@ -152,14 +151,12 @@ class OSXWindowDelegateNotificationSpec: QuickSpec {
                 appElement.windows.append(windowElement)
             }
 
-            var observer: AdversaryObserver!
             func initialize() -> Promise<WinDelegate> {
                 return AppDelegate
                     .initialize(axElement: appElement,
                                 stateDelegate: StubStateDelegate(),
                                 notifier: TestNotifier())
                     .map { appDelegate -> WinDelegate in
-                        observer = appDelegate.observer
                         guard let winDelegate = appDelegate.knownWindows.first
                                                 as! WinDelegate? else {
                             throw TestError("Window delegate was not initialized by application "

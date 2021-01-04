@@ -133,7 +133,7 @@ final class OSXApplicationDelegate<
         }
     }
 
-    init(_ axElement: ApplicationElement,
+    private init(_ axElement: ApplicationElement,
          _ stateDelegate: StateDelegate,
          _ notifier: EventNotifier) throws {
         // TODO: filter out applications by activation policy
@@ -327,6 +327,7 @@ extension OSXApplicationDelegate {
         }
     }
 
+    // Also used by FakeSwindler.
     internal func addWindowElement(_ windowElement: UIElement) -> Promise<WinDelegate?> {
         return firstly {
             createWindowForElementIfNotExists(windowElement)

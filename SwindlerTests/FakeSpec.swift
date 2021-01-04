@@ -13,16 +13,16 @@ class FakeSpec: QuickSpec {
 
             beforeEach {
                 waitUntil { done in
-                    FakeState.initialize().then { state -> Promise<FakeWindow> in
-                        let app = FakeApplication(parent: state)
-                        return FakeWindowBuilder(parent: app)
+                    FakeState.initialize()
+                        .then { FakeApplicationBuilder(parent: $0).build() }
+                        .then { FakeWindowBuilder(parent: $0)
                             .setTitle("I'm a test window")
                             .setPosition(CGPoint(x: 100, y: 100))
                             .build()
-                    }.done { fw -> () in
-                        fake = fw
-                        done()
-                    }.cauterize()
+                        }.done { fw -> () in
+                            fake = fw
+                            done()
+                        }.cauterize()
                 }
             }
 
@@ -73,23 +73,23 @@ class FakeSpec: QuickSpec {
         }
 
         describe("FakeApplication") {
+            var fakeState: FakeState!
             var fakeApp: FakeApplication!
             var fakeWindow1: FakeWindow!
             var fakeWindow2: FakeWindow!
 
             beforeEach {
                 waitUntil { done in
-                    FakeState.initialize().then { state -> Promise<(FakeWindow, FakeWindow)> in
-                        fakeApp = FakeApplication(parent: state)
-                        return when(fulfilled:
-                            FakeWindowBuilder(parent: fakeApp).build(),
-                            FakeWindowBuilder(parent: fakeApp).build()
-                        )
-                    }.done { (fw1, fw2) in
-                        fakeWindow1 = fw1
-                        fakeWindow2 = fw2
-                        done()
-                    }.cauterize()
+                    FakeState.initialize()
+                        .map { fakeState = $0 }
+                        .then { FakeApplicationBuilder(parent: fakeState).build() }
+                        .map { fakeApp = $0 }
+                        .then { FakeWindowBuilder(parent: fakeApp).build() }
+                        .map { fakeWindow1 = $0 }
+                        .then { FakeWindowBuilder(parent: fakeApp).build() }
+                        .map { fakeWindow2 = $0 }
+                        .done { done() }
+                        .cauterize()
                 }
             }
 
@@ -123,38 +123,107 @@ class FakeSpec: QuickSpec {
                 fakeApp.isHidden = true
                 expect(fakeApp.application.isHidden.value).toEventually(equal(true))
             }
+
+            it("changes are mirrored in the Application object returned by Swindler State") {
+                fakeApp.application.mainWindow.value = fakeWindow1.window
+                expect(fakeState.state.runningApplications[0].mainWindow.value).toEventually(equal(fakeWindow1.window))
+                fakeApp.application.mainWindow.value = fakeWindow2.window
+                expect(fakeState.state.runningApplications[0].mainWindow.value).toEventually(equal(fakeWindow2.window))
+            }
+
+            it("updates focusedWindow when mainWindow changes") {
+                fakeApp.mainWindow = fakeWindow1
+                expect(fakeApp.application.mainWindow.value).toEventually(equal(fakeWindow1.window))
+                expect(fakeApp.application.focusedWindow.value).toEventually(equal(fakeWindow1.window))
+                fakeApp.mainWindow = fakeWindow2
+                expect(fakeApp.application.mainWindow.value).toEventually(equal(fakeWindow2.window))
+                expect(fakeApp.application.focusedWindow.value).toEventually(equal(fakeWindow2.window))
+            }
+
+            it("emits events when new windows are created") { () -> Promise<()> in
+                var events: [WindowCreatedEvent] = []
+                fakeState.state.on { (event: WindowCreatedEvent) in
+                    events.append(event)
+                }
+                return FakeWindowBuilder(parent: fakeApp)
+                    .build()
+                    .done { win in
+                        expect(events).to(haveCount(1))
+                        expect(events.first!.window).to(equal(win.window))
+                    }
+            }
         }
 
         describe("FakeState") {
-            var fakeState: FakeState!
-            var fakeApp1: FakeApplication!
-            var fakeApp2: FakeApplication!
+            context("") {
+                var fakeState: FakeState!
+                var fakeApp1: FakeApplication!
+                var fakeApp2: FakeApplication!
+                beforeEach {
+                    waitUntil { done in
+                        FakeState.initialize()
+                            .map { fakeState = $0 }
+                            .then { FakeApplicationBuilder(parent: fakeState).build() }
+                            .map { fakeApp1 = $0 }
+                            .then { FakeApplicationBuilder(parent: fakeState).build() }
+                            .map { fakeApp2 = $0 }
+                            .done { done() }
+                            .cauterize()
+                    }
+                }
 
-            beforeEach {
-                waitUntil { done in
-                    FakeState.initialize().done { fs in
-                        fakeState = fs
-                        fakeApp1 = FakeApplication(parent: fakeState)
-                        fakeApp2 = FakeApplication(parent: fakeState)
-                        done()
-                    }.cauterize()
+                it("sees changes from Swindler objects") {
+                    fakeState.state.frontmostApplication.value = fakeApp1.application
+                    expect(fakeState.frontmostApplication).toEventually(equal(fakeApp1))
+                    fakeState.state.frontmostApplication.value = fakeApp2.application
+                    expect(fakeState.frontmostApplication).toEventually(equal(fakeApp2))
+                }
+
+                it("publishes changes to Swindler objects") {
+                    fakeState.frontmostApplication = fakeApp1
+                    expect(fakeState.state.frontmostApplication.value).toEventually(
+                        equal(fakeApp1.application))
+                    fakeState.frontmostApplication = fakeApp2
+                    expect(fakeState.state.frontmostApplication.value).toEventually(
+                        equal(fakeApp2.application))
                 }
             }
 
-            it("sees changes from Swindler") {
-                fakeState.state.frontmostApplication.value = fakeApp1.application
-                expect(fakeState.frontmostApplication).toEventually(equal(fakeApp1))
-                fakeState.state.frontmostApplication.value = fakeApp2.application
-                expect(fakeState.frontmostApplication).toEventually(equal(fakeApp2))
-            }
+            context("") {
+                var fakeState: FakeState!
+                var fakeApp: FakeApplication!
+                beforeEach {
+                    waitUntil { done in
+                        FakeState.initialize()
+                            .map { fakeState = $0 }
+                            .then { FakeApplicationBuilder(parent: fakeState).build() }
+                            .map { fakeApp = $0 }
+                            .done { done() }
+                            .cauterize()
+                    }
+                }
 
-            it("publishes changes to Swindler") {
-                fakeState.frontmostApplication = fakeApp1
-                expect(fakeState.state.frontmostApplication.value).toEventually(
-                    equal(fakeApp1.application))
-                fakeState.frontmostApplication = fakeApp2
-                expect(fakeState.state.frontmostApplication.value).toEventually(
-                    equal(fakeApp2.application))
+                it("registers objects with Swindler state") {
+                    let app = fakeState.state.runningApplications[0]
+                    expect(fakeApp.isHidden).to(beFalse())
+                    expect(app.isHidden.value).to(beFalse())
+                    fakeApp.isHidden = true
+                    expect(fakeApp.isHidden).to(beTrue())
+                    expect(app.isHidden.value).toEventually(beTrue())
+                }
+
+                it("emits events when new applications are created") { () -> Promise<()> in
+                    var events: [ApplicationLaunchedEvent] = []
+                    fakeState.state.on { (event: ApplicationLaunchedEvent) in
+                        events.append(event)
+                    }
+                    return FakeApplicationBuilder(parent: fakeState)
+                        .build()
+                        .done { app in
+                            expect(events).to(haveCount(1))
+                            expect(events.first!.application).to(equal(app.application))
+                        }
+                }
             }
         }
     }

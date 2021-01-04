@@ -9,9 +9,8 @@ import Cocoa
 
 /// A dictionary of AX attributes.
 ///
-/// This struct models redundancies in the data model (frame, position, and
-/// size).
-struct Attributes {
+/// Models redundancies in the data model (frame, position, and size).
+class Attributes {
     private var values: [Attribute: Any] = [:]
 
     subscript(attr: Attribute) -> Any? {
@@ -42,8 +41,42 @@ struct Attributes {
         }
     }
 
-    mutating func removeValue(forKey: Attribute) {
+    func removeValue(forKey: Attribute) {
         values.removeValue(forKey: forKey)
+    }
+}
+
+extension Attributes: CustomDebugStringConvertible {
+    var debugDescription: String {
+        return "\(values)"
+    }
+}
+
+class SyncAttributes {
+    private var attrs: Attributes = Attributes()
+    private var lock: NSRecursiveLock = NSRecursiveLock()
+
+    func with<R>(_ f: (Attributes) -> R) -> R {
+        lock.lock()
+        defer { lock.unlock() }
+        return f(attrs)
+    }
+
+    subscript(attr: Attribute) -> Any? {
+        get { return with({ $0[attr] }) }
+        set { with({ $0[attr] = newValue }) }
+    }
+
+    func removeValue(forKey attr: Attribute) {
+        with({ $0.removeValue(forKey: attr) })
+    }
+}
+
+extension SyncAttributes: CustomDebugStringConvertible {
+    var debugDescription: String {
+        lock.lock()
+        defer { lock.unlock() }
+        return "\(attrs)"
     }
 }
 
@@ -54,12 +87,11 @@ class TestUIElement: UIElementType, Hashable {
 
     var id: Int
     var processID: pid_t = 0
-    var attrs: Attributes
+    var attrs: SyncAttributes = SyncAttributes()
 
     var throwInvalid: Bool = false
 
     init() {
-        attrs = Attributes()
         TestUIElement.elementCount += 1
         id = TestUIElement.elementCount
     }
@@ -85,11 +117,13 @@ class TestUIElement: UIElementType, Hashable {
     }
     func getMultipleAttributes(_ attributes: [AXSwift.Attribute]) throws -> [Attribute: Any] {
         if throwInvalid { throw AXError.invalidUIElement }
-        var result: [Attribute: Any] = [:]
-        for attr in attributes {
-            result[attr] = attrs[attr]
+        return attrs.with { attrs in
+            var result: [Attribute: Any] = [:]
+            for attr in attributes {
+                result[attr] = attrs[attr]
+            }
+            return result
         }
-        return result
     }
     func setAttribute(_ attr: Attribute, value: Any) throws {
         if throwInvalid { throw AXError.invalidUIElement }
@@ -107,40 +141,49 @@ func ==(lhs: TestUIElement, rhs: TestUIElement) -> Bool {
     return lhs.id == rhs.id
 }
 
-class TestApplicationElementBase: TestUIElement {
+class TestApplicationElement: TestUIElement, ApplicationElementType {
     typealias UIElementType = TestUIElement
     var toElement: TestUIElement { return self }
 
-    init(processID: pid_t?, id: Int? = nil) {
+    init(processID: pid_t? = nil, id: Int? = nil) {
         super.init()
         if let id = id {
             self.id = id
         }
         self.processID = processID ?? Int32(self.id)
-        attrs[.role] = AXSwift.Role.application.rawValue
-        attrs[.windows] = Array<TestUIElement>()
-        attrs[.frontmost] = false
-        attrs[.hidden] = false
+        attrs.with { attrs in
+            attrs[.role] = AXSwift.Role.application.rawValue
+            attrs[.windows] = Array<TestUIElement>()
+            attrs[.frontmost] = false
+            attrs[.hidden] = false
+        }
     }
 
-    override func setAttribute(_ attribute: Attribute, value: Any) throws {
-        // Synchronize .mainWindow with .main on the window.
+    override func setAttribute(_ attribute: Attribute, value newValue: Any) throws {
         if attribute == .mainWindow {
-            if let oldWindowElement = attrs[.mainWindow] as! TestWindowElement? {
-                oldWindowElement.attrs[.main] = false
+            // Synchronize .mainWindow with .main on the window.
+            attrs.with { attrs in
+                let newWindowElement = newValue as! TestWindowElement
+                let oldWindowElement = attrs[.mainWindow] as! TestWindowElement? ?? newWindowElement
+                newWindowElement.attrs.with { newWindowAttrs in
+                    // NOTE: This works if old and new are the same because we're using NSRecursiveLock.
+                    oldWindowElement.attrs.with { oldWindowAttrs in
+                        oldWindowAttrs[.main] = false
+                        newWindowAttrs[.main] = true
+
+                        attrs[.mainWindow] = newValue
+
+                        // Propagate .mainWindow changes to .focusedWindow also.
+                        // This is what happens 99% of the time, but it is still possible to set
+                        // .focusedWindow only.
+                        attrs[.focusedWindow] = newValue
+                    }
+                }
             }
-            let newWindowElement = value as! TestWindowElement
-            newWindowElement.attrs[.main] = true
+            return
         }
 
-        try super.setAttribute(attribute, value: value)
-
-        // Propagate .mainWindow changes to .focusedWindow also.
-        // This is what happens 99% of the time, but it is still possible to set
-        // .focusedWindow only.
-        if attribute == .mainWindow {
-            try self.setAttribute(.focusedWindow, value: value)
-        }
+        try super.setAttribute(attribute, value: newValue)
     }
 
     internal var windows: [TestUIElement] {
@@ -149,60 +192,39 @@ class TestApplicationElementBase: TestUIElement {
     }
 }
 
-// ApplicationElementType requires static func all() -> [Self], which must be handled in each
-// (final) leaf class.
-final class TestApplicationElement: TestApplicationElementBase, ApplicationElementType {
-    init() { super.init(processID: nil) }
-    init?(forProcessID processID: pid_t) {
-        guard let _ = TestApplicationElement.all().first(where: {$0.processID == processID}) else {
-            return nil
-        }
-        super.init(processID: processID)
-    }
-    static var allApps: [TestApplicationElement] = []
-    static func all() -> [TestApplicationElement] { return TestApplicationElement.allApps }
-}
-
-final class EmittingTestApplicationElement: TestApplicationElementBase, ApplicationElementType {
+final class EmittingTestApplicationElement: TestApplicationElement {
     init() {
         observers = []
         super.init(processID: EmittingTestApplicationElement.nextPID)
         EmittingTestApplicationElement.nextPID += 1
-        EmittingTestApplicationElement.allApps.append(self)
     }
     static var nextPID: pid_t = 1
 
-    init?(forProcessID processID: pid_t) {
-        observers = []
-        let apps = EmittingTestApplicationElement.all()
-        guard let other = apps.first(where: {$0.processID == processID}) else {
-            return nil
-        }
-        super.init(processID: processID, id: other.id)
-    }
-    static var allApps: [EmittingTestApplicationElement] = []
-    static func all() -> [EmittingTestApplicationElement] {
-        return EmittingTestApplicationElement.allApps
-    }
-
     override func setAttribute(_ attribute: Attribute, value: Any) throws {
         try super.setAttribute(attribute, value: value)
-        let notification = { () -> AXNotification? in
+        let notifications = { () -> [AXNotification] in
             switch attribute {
             case .mainWindow:
-                return .mainWindowChanged
+                return [.mainWindowChanged, .focusedWindowChanged]
             case .focusedWindow:
-                return .focusedWindowChanged
+                return [.focusedWindowChanged]
             case .hidden:
-                return (value as? Bool == true) ? .applicationHidden : .applicationShown
+                return (value as? Bool == true) ? [.applicationHidden] : [.applicationShown]
             default:
-                return nil
+                return []
             }
         }()
-        if let notification = notification {
+        for notification in notifications {
             for observer in observers {
                 observer.unbox?.emit(notification, forElement: self)
             }
+        }
+    }
+
+    func addWindow(_ window: EmittingTestWindowElement) {
+        // TODO update attrs[.window]
+        for observer in observers {
+            observer.unbox?.emit(.windowCreated, forElement: window)
         }
     }
 
@@ -217,18 +239,20 @@ final class EmittingTestApplicationElement: TestApplicationElementBase, Applicat
 }
 
 class TestWindowElement: TestUIElement {
-    var app: TestApplicationElementBase
-    init(forApp app: TestApplicationElementBase) {
+    var app: TestApplicationElement
+    init(forApp app: TestApplicationElement) {
         self.app = app
         super.init()
         processID = app.processID
-        attrs[.role] = AXSwift.Role.window.rawValue
-        attrs[.frame] = CGRect(x: 0, y: 0, width: 100, height: 100)
-        attrs[.title] = "Window \(id)"
-        attrs[.minimized] = false
-        attrs[.main] = true
-        attrs[.focused] = true
-        attrs[.fullScreen] = false
+        attrs.with { attrs in
+            attrs[.role] = AXSwift.Role.window.rawValue
+            attrs[.frame] = CGRect(x: 0, y: 0, width: 100, height: 100)
+            attrs[.title] = "Window \(id)"
+            attrs[.minimized] = false
+            attrs[.main] = true
+            attrs[.focused] = true
+            attrs[.fullScreen] = false
+        }
     }
 
     override func setAttribute(_ attribute: Attribute, value: Any) throws {
@@ -236,7 +260,10 @@ class TestWindowElement: TestUIElement {
         if attribute == .main {
             // Setting .main to false does nothing.
             guard value as! Bool == true else { return }
+
+            // Let TestApplicationElement.setAttribute do the heavy lifting, and return.
             try app.setAttribute(.mainWindow, value: self)
+            return
         }
 
         try super.setAttribute(attribute, value: value)
@@ -251,7 +278,7 @@ extension TestWindowElement: CustomDebugStringConvertible {
 }
 
 class EmittingTestWindowElement: TestWindowElement {
-    override init(forApp app: TestApplicationElementBase) {
+    override init(forApp app: TestApplicationElement) {
         observers = []
         super.init(forApp: app)
     }
@@ -284,6 +311,12 @@ class EmittingTestWindowElement: TestWindowElement {
         observers.append(WeakBox(observer))
     }
 
+    func destroy() {
+        for observer in observers {
+            observer.unbox?.emit(.uiElementDestroyed, forElement: self)
+        }
+    }
+
     // Useful hack to store companion objects (like FakeWindow).
     weak var companion: AnyObject?
 }
@@ -291,17 +324,12 @@ class EmittingTestWindowElement: TestWindowElement {
 class FakeObserver: ObserverType {
     typealias Context = FakeObserver
     typealias UIElement = TestUIElement
-    static var observers: [Context] = []
     var callback: Callback!
     var lock: NSLock = NSLock()
     var watchedElements: [TestUIElement: [AXNotification]] = [:]
 
-    //static var observers: [FakeObserverBase] = []
-
     required init(processID: pid_t, callback: @escaping Callback) throws {
         self.callback = callback
-        //try ObserverType.init(processID: processID, callback: callback)
-        FakeObserver.observers.append(self)
     }
 
     func addNotification(_ notification: AXNotification, forElement element: TestUIElement) throws {
@@ -374,6 +402,15 @@ class FakeApplicationObserver: ApplicationObserverType {
 
     func makeApplicationFrontmost(_ pid: pid_t) throws {
         setFrontmost(pid)
+    }
+
+    typealias ApplicationElement = EmittingTestApplicationElement
+    var allApps: [ApplicationElement] = []
+    func allApplications() -> [EmittingTestApplicationElement] {
+        return allApps
+    }
+    func appElement(forProcessID processID: pid_t) -> EmittingTestApplicationElement? {
+        return allApps.first(where: {$0.processID == processID})
     }
 }
 

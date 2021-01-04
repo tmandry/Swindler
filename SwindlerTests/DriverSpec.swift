@@ -10,28 +10,25 @@ import PromiseKit
 class OSXDriverSpec: QuickSpec {
     override func spec() {
 
-        beforeEach { TestApplicationElement.allApps = [] }
-        beforeEach { FakeObserver.observers = [] }
-
         // Set up a state with a single application containing a single window.
-        var appElement: TestApplicationElement!
-        var windowElement: TestWindowElement!
-        var observer: FakeObserver!
+        var appElement: EmittingTestApplicationElement!
+        var windowElement: EmittingTestWindowElement!
+        var appObserver: FakeApplicationObserver!
         var state: State!
         beforeEach {
-            appElement = TestApplicationElement()
-            windowElement = TestWindowElement(forApp: appElement)
+            appElement = EmittingTestApplicationElement()
+            windowElement = EmittingTestWindowElement(forApp: appElement)
             windowElement.attrs[.position] = CGPoint(x: 5, y: 5)
             appElement.attrs[.windows] = [windowElement as TestUIElement]
             appElement.attrs[.mainWindow] = windowElement
-            TestApplicationElement.allApps = [appElement]
+            appObserver = FakeApplicationObserver()
+            appObserver.allApps = [appElement]
 
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
             state = State(delegate: OSXStateDelegate<
-                TestUIElement, TestApplicationElement, FakeObserver
-            >(appObserver: StubApplicationObserver(), screens: screenDel))
-            observer = FakeObserver.observers.first!
-            observer.emit(.windowCreated, forElement: windowElement)
+                TestUIElement, EmittingTestApplicationElement, FakeObserver, FakeApplicationObserver
+            >(appObserver: appObserver, screens: screenDel))
+            appElement.addWindow(windowElement)
             expect(state.knownWindows.count).toEventually(equal(1))
         }
 
@@ -55,8 +52,8 @@ class OSXDriverSpec: QuickSpec {
                 state.on { (_: WindowCreatedEvent) in
                     callbacks += 1
                 }
-                let window = TestWindowElement(forApp: appElement)
-                observer.emit(.windowCreated, forElement: window)
+                let window = EmittingTestWindowElement(forApp: appElement)
+                appElement.addWindow(window)
                 expect(state.knownWindows).toEventually(haveCount(2))
                 expect(callbacks).to(equal(1), description: "callback should be called once")
             }
@@ -70,13 +67,13 @@ class OSXDriverSpec: QuickSpec {
                 state.on { (_: WindowDestroyedEvent) in
                     callbacks += 1
                 }
-                observer.emit(.uiElementDestroyed, forElement: windowElement)
+                windowElement.destroy()
                 expect(callbacks)
                     .toEventually(equal(1), description: "callback should be called once")
             }
 
             it("removes the window from knownWindows") {
-                observer.emit(.uiElementDestroyed, forElement: windowElement)
+                windowElement.destroy()
                 expect(state.knownWindows).toEventually(haveCount(0))
             }
 
@@ -89,8 +86,7 @@ class OSXDriverSpec: QuickSpec {
                 state.on { (_: WindowFrameChangedEvent) in
                     callbacks += 1
                 }
-                windowElement.attrs[.position] = CGPoint(x: 100, y: 100)
-                observer.emit(.moved, forElement: windowElement)
+                try! windowElement.setAttribute(.position, value: CGPoint(x: 100, y: 100))
                 expect(callbacks)
                     .toEventually(equal(1), description: "callback should be called once")
             }
@@ -104,8 +100,7 @@ class OSXDriverSpec: QuickSpec {
                 state.on { (_: WindowFrameChangedEvent) in
                     callbacks2 += 1
                 }
-                windowElement.attrs[.position] = CGPoint(x: 100, y: 100)
-                observer.emit(.moved, forElement: windowElement)
+                try! windowElement.setAttribute(.position, value: CGPoint(x: 100, y: 100))
                 expect(callbacks1)
                     .toEventually(equal(1), description: "callback1 should be called once")
                 expect(callbacks2)
