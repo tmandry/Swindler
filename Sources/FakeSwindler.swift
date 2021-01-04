@@ -76,8 +76,8 @@ public struct FakeApplicationBuilder {
 
     public func build() -> Promise<FakeApplication> {
         return app.parent.delegate.addAppElement(app.element).map { delegate in
-            app.delegate = delegate
-            return app
+            self.app.delegate = delegate
+            return self.app
         }
     }
 }
