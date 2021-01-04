@@ -61,20 +61,20 @@ public struct FakeApplicationBuilder {
         app = FakeApplication(parent: parent)
     }
 
-    func setProcessId(_ pid: pid_t) -> FakeApplicationBuilder {
+    public func setProcessId(_ pid: pid_t) -> FakeApplicationBuilder {
         app.processId = pid
         return self
     }
-    func setBundleId(_ bundleId: String?) -> FakeApplicationBuilder {
+    public func setBundleId(_ bundleId: String?) -> FakeApplicationBuilder {
         app.bundleId = bundleId
         return self
     }
-    func setHidden(_ hidden: Bool) -> FakeApplicationBuilder {
+    public func setHidden(_ hidden: Bool) -> FakeApplicationBuilder {
         app.isHidden = hidden
         return self
     }
 
-    func build() -> Promise<FakeApplication> {
+    public func build() -> Promise<FakeApplication> {
         return app.parent.delegate.addAppElement(app.element).map { delegate in
             app.delegate = delegate
             return app
