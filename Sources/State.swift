@@ -205,7 +205,7 @@ final class OSXStateDelegate<
     typealias WinDelegate = OSXWindowDelegate<UIElement, ApplicationElement, Observer>
     typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
 
-    var applicationsByPID: [pid_t: AppDelegate] = [:]
+    private var applicationsByPID: [pid_t: AppDelegate] = [:]
     var notifier: EventNotifier
 
     fileprivate var appObserver: ApplicationObserver
@@ -327,14 +327,20 @@ extension OSXStateDelegate {
         guard let appElement = appObserver.appElement(forProcessID: pid) else {
             return
         }
-        watchApplication(appElement: appElement).done { appDelegate in
+        addAppElement(appElement).catch { err in
+            log.error("Error while watching new application: \(String(describing: err))")
+        }
+    }
+
+    // Also used by FakeSwindler.
+    internal func addAppElement(_ appElement: ApplicationElement) -> Promise<AppDelegate> {
+        watchApplication(appElement: appElement).map { appDelegate in
             self.notifier.notify(ApplicationLaunchedEvent(
                 external: true,
                 application: Application(delegate: appDelegate, stateDelegate: self)
             ))
             self.frontmostApplication.refresh()
-        }.catch { err in
-            log.error("Error while watching new application: \(String(describing: err))")
+            return appDelegate
         }
     }
 

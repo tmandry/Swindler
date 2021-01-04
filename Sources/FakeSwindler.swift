@@ -75,12 +75,8 @@ public struct FakeApplicationBuilder {
     }
 
     func build() -> Promise<FakeApplication> {
-        // TODO do event firing
-        return FakeApplication.Delegate.initialize(
-            axElement: app.element, stateDelegate: app.parent.delegate, notifier: app.parent.delegate.notifier
-        ).map { delegate in
+        return app.parent.delegate.addAppElement(app.element).map { delegate in
             app.delegate = delegate
-            app.parent.delegate.applicationsByPID[app.processId] = delegate
             return app
         }
     }

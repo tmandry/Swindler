@@ -139,6 +139,19 @@ class FakeSpec: QuickSpec {
                 expect(fakeApp.application.mainWindow.value).toEventually(equal(fakeWindow2.window))
                 expect(fakeApp.application.focusedWindow.value).toEventually(equal(fakeWindow2.window))
             }
+
+            it("emits events when new windows are created") { () -> Promise<()> in
+                var events: [WindowCreatedEvent] = []
+                fakeState.state.on { (event: WindowCreatedEvent) in
+                    events.append(event)
+                }
+                return FakeWindowBuilder(parent: fakeApp)
+                    .build()
+                    .done { win in
+                        expect(events).to(haveCount(1))
+                        expect(events.first!.window).to(equal(win.window))
+                    }
+            }
         }
 
         describe("FakeState") {
@@ -197,6 +210,19 @@ class FakeSpec: QuickSpec {
                     fakeApp.isHidden = true
                     expect(fakeApp.isHidden).to(beTrue())
                     expect(app.isHidden.value).toEventually(beTrue())
+                }
+
+                it("emits events when new applications are created") { () -> Promise<()> in
+                    var events: [ApplicationLaunchedEvent] = []
+                    fakeState.state.on { (event: ApplicationLaunchedEvent) in
+                        events.append(event)
+                    }
+                    return FakeApplicationBuilder(parent: fakeState)
+                        .build()
+                        .done { app in
+                            expect(events).to(haveCount(1))
+                            expect(events.first!.application).to(equal(app.application))
+                        }
                 }
             }
         }

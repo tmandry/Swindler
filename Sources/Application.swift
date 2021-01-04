@@ -327,6 +327,7 @@ extension OSXApplicationDelegate {
         }
     }
 
+    // Also used by FakeSwindler.
     internal func addWindowElement(_ windowElement: UIElement) -> Promise<WinDelegate?> {
         return firstly {
             createWindowForElementIfNotExists(windowElement)
