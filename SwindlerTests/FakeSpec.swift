@@ -13,16 +13,16 @@ class FakeSpec: QuickSpec {
 
             beforeEach {
                 waitUntil { done in
-                    FakeState.initialize().then { state -> Promise<FakeWindow> in
-                        let app = FakeApplication(parent: state)
-                        return FakeWindowBuilder(parent: app)
+                    FakeState.initialize()
+                        .then { FakeApplicationBuilder(parent: $0).build() }
+                        .then { FakeWindowBuilder(parent: $0)
                             .setTitle("I'm a test window")
                             .setPosition(CGPoint(x: 100, y: 100))
                             .build()
-                    }.done { fw -> () in
-                        fake = fw
-                        done()
-                    }.cauterize()
+                        }.done { fw -> () in
+                            fake = fw
+                            done()
+                        }.cauterize()
                 }
             }
 
@@ -80,22 +80,17 @@ class FakeSpec: QuickSpec {
 
             beforeEach {
                 waitUntil { done in
-                    FakeState.initialize().then { state -> Promise<(FakeWindow, FakeWindow)> in
-                        fakeState = state
-                        fakeApp = FakeApplication(parent: state)
-                        return when(fulfilled:
-                            FakeWindowBuilder(parent: fakeApp).build(),
-                            FakeWindowBuilder(parent: fakeApp).build()
-                        )
-                    }.done { (fw1, fw2) in
-                        fakeWindow1 = fw1
-                        fakeWindow2 = fw2
-                        done()
-                    }.cauterize()
+                    FakeState.initialize()
+                        .map { fakeState = $0 }
+                        .then { FakeApplicationBuilder(parent: fakeState).build() }
+                        .map { fakeApp = $0 }
+                        .then { FakeWindowBuilder(parent: fakeApp).build() }
+                        .map { fakeWindow1 = $0 }
+                        .then { FakeWindowBuilder(parent: fakeApp).build() }
+                        .map { fakeWindow2 = $0 }
+                        .done { done() }
+                        .cauterize()
                 }
-                // TODO: It's unfortunate this is necessary; we should just return a Promise for
-                // building applications too.
-                expect(fakeState.state.runningApplications).toEventually(haveCount(1))
             }
 
             it("sees changes from Swindler") {
@@ -153,14 +148,15 @@ class FakeSpec: QuickSpec {
                 var fakeApp2: FakeApplication!
                 beforeEach {
                     waitUntil { done in
-                        FakeState.initialize().done { fs in
-                            fakeState = fs
-                            fakeApp1 = FakeApplication(parent: fakeState)
-                            fakeApp2 = FakeApplication(parent: fakeState)
-                            done()
-                        }.cauterize()
+                        FakeState.initialize()
+                            .map { fakeState = $0 }
+                            .then { FakeApplicationBuilder(parent: fakeState).build() }
+                            .map { fakeApp1 = $0 }
+                            .then { FakeApplicationBuilder(parent: fakeState).build() }
+                            .map { fakeApp2 = $0 }
+                            .done { done() }
+                            .cauterize()
                     }
-                    expect(fakeState.state.runningApplications).toEventually(haveCount(2))
                 }
 
                 it("sees changes from Swindler objects") {
@@ -185,13 +181,13 @@ class FakeSpec: QuickSpec {
                 var fakeApp: FakeApplication!
                 beforeEach {
                     waitUntil { done in
-                        FakeState.initialize().done { fs in
-                            fakeState = fs
-                            fakeApp = FakeApplication(parent: fakeState)
-                            done()
-                        }.cauterize()
+                        FakeState.initialize()
+                            .map { fakeState = $0 }
+                            .then { FakeApplicationBuilder(parent: fakeState).build() }
+                            .map { fakeApp = $0 }
+                            .done { done() }
+                            .cauterize()
                     }
-                    expect(fakeState.state.runningApplications).toEventually(haveCount(1))
                 }
 
                 it("registers objects with Swindler state") {

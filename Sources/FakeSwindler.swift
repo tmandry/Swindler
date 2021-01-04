@@ -54,26 +54,37 @@ public class FakeState {
     }
 }
 
-/*
 public struct FakeApplicationBuilder {
     private var app: FakeApplication
 
-    func setProcessid(_ pid: pid_t) -> FakeApplicationBuilder {
-        app.processid = pid
-        return self
+    public init(parent: FakeState) {
+        app = FakeApplication(parent: parent)
     }
-    func setBundleid(_ bundleID: String?) -> FakeApplicationBuilder {
-        app.bundleid = bundleID
-        return self
-    }
-    func setHidden(_ hidden: Bool) -> FakeApplicationBuilder { app.hidden = hidden; return self }
 
-    func build() -> FakeApplication {
-        // TODO do registration, event firing
-        return app
+    func setProcessId(_ pid: pid_t) -> FakeApplicationBuilder {
+        app.processId = pid
+        return self
+    }
+    func setBundleId(_ bundleId: String?) -> FakeApplicationBuilder {
+        app.bundleId = bundleId
+        return self
+    }
+    func setHidden(_ hidden: Bool) -> FakeApplicationBuilder {
+        app.isHidden = hidden
+        return self
+    }
+
+    func build() -> Promise<FakeApplication> {
+        // TODO do event firing
+        return FakeApplication.Delegate.initialize(
+            axElement: app.element, stateDelegate: app.parent.delegate, notifier: app.parent.delegate.notifier
+        ).map { delegate in
+            app.delegate = delegate
+            app.parent.delegate.applicationsByPID[app.processId] = delegate
+            return app
+        }
     }
 }
- */
 
 public class FakeApplication {
     fileprivate typealias Delegate =
@@ -121,17 +132,12 @@ public class FakeApplication {
 
     fileprivate var delegate: Delegate!
 
-    public init(parent: FakeState) {
+    fileprivate init(parent: FakeState) {
         self.parent = parent
         element = AppElement()
         parent.appObserver.allApps.append(element)
         processId = element.processID
         isHidden = false
-        let (d, initialized) = try! Delegate.initializeForTest(element, parent.delegate, parent.delegate.notifier)
-        delegate = d
-        initialized.tap { _ in
-            parent.delegate.applicationsByPID[self.processId] = self.delegate
-        }.cauterize()
 
         element.companion = self
     }
