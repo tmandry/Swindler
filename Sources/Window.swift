@@ -5,7 +5,7 @@ import PromiseKit
 
 /// A window.
 public final class Window {
-    internal let delegate: WindowDelegate
+    public let delegate: WindowDelegate
 
     // A Window holds a strong reference to the Application and therefore the ApplicationDelegate.
     // It should not be held internally by delegates, or it would create a reference cycle.
@@ -93,7 +93,7 @@ extension String {
     }
 }
 
-protocol WindowDelegate: class {
+public protocol WindowDelegate: class {
     var isValid: Bool { get }
 
     // Optional because a WindowDelegate shouldn't hold a strong reference to its parent
@@ -366,7 +366,7 @@ private final class FramePropertyDelegate<UIElement: UIElementType>: PropertyDel
 /// that `frame` and `size` are always consistent with each other.
 ///
 /// The purpose of this property is to support atomic writes to the `size` attribute of a window.
-final class SizeProperty: WriteableProperty<OfType<CGSize>> {
+public final class SizeProperty: WriteableProperty<OfType<CGSize>> {
     let frame: WriteableProperty<OfType<CGRect>>
 
     init<Impl: PropertyDelegate, Notifier: PropertyNotifier>(

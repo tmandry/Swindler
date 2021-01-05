@@ -52,7 +52,7 @@ public final class State {
 //
 // Our delegates differ from most Apple API delegates in that they are internal and are critical to
 // the functioning of the class, so they are not held with weak references.
-protocol StateDelegate: class {
+public protocol StateDelegate: class {
     var runningApplications: [ApplicationDelegate] { get }
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
@@ -73,7 +73,7 @@ protocol ApplicationObserverType {
 }
 
 /// Simple pubsub.
-class EventNotifier {
+public class EventNotifier {
     private typealias EventHandler = (EventType) -> Void
     private var eventHandlers: [String: [EventHandler]] = [:]
 

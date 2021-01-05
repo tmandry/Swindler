@@ -1,3 +1,8 @@
+# Preface: why this fork?
+This fork of the excellent Swindler by @tmandry is here for two reasons:
+- Continue using cocoapods
+- Public access to the `axElement` property 
+
 # Swindler
 _A Swift window management library for macOS_
 

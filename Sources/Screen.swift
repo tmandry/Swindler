@@ -23,7 +23,7 @@ public func ==(lhs: Screen, rhs: Screen) -> Bool {
     return lhs.delegate.equalTo(rhs.delegate)
 }
 
-protocol SystemScreenDelegate {
+public protocol SystemScreenDelegate {
     var lock_: NSLock { get }
     var screens_: [ScreenDelegate] { get }
 
@@ -52,7 +52,7 @@ func calculateMaxY(_ screens: [ScreenDelegate]) -> CGFloat {
     return maxY
 }
 
-protocol ScreenDelegate: class, CustomDebugStringConvertible {
+public protocol ScreenDelegate: class, CustomDebugStringConvertible {
     var frame: CGRect { get }
     var applicationFrame: CGRect { get }
 

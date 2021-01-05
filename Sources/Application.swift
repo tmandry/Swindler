@@ -66,7 +66,7 @@ extension Application: CustomStringConvertible {
     }
 }
 
-protocol ApplicationDelegate: class {
+public protocol ApplicationDelegate: class {
     var processIdentifier: pid_t! { get }
     var bundleIdentifier: String? { get }
 
@@ -529,7 +529,7 @@ extension OSXApplicationDelegate: WindowFinder {
     }
 }
 
-protocol OSXDelegateType {
+public protocol OSXDelegateType {
     associatedtype UIElement: UIElementType
     var axElement: UIElement { get }
     var isValid: Bool { get }

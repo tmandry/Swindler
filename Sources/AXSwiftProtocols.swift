@@ -4,7 +4,7 @@
 import AXSwift
 
 /// Protocol that wraps AXSwift.UIElement.
-protocol UIElementType: Equatable {
+public protocol UIElementType: Equatable {
     static var globalMessagingTimeout: Float { get }
 
     func pid() throws -> pid_t
