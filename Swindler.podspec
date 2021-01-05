@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
   s.name         = 'Swindler'
-  s.version      = '0.0.4'
-  s.summary      = 'macOS window management framework, written in Swift'
+  s.version      = '0.1.0'
+  s.summary      = 'A fork of tmandry's macOS window management framework'
 
   # This description is used to generate tags and improve search results.
   #   * Think: What does it do? Why did you write it? What is the focus?
@@ -13,13 +13,12 @@ Pod::Spec.new do |s|
     promise-based API on top of the low-level accessibility APIs.
                    DESC
 
-  s.homepage          = 'https://github.com/tmandry/Swindler'
+  s.homepage          = 'https://github.com/robertkarl/Swindler'
   s.documentation_url = "https://tmandry.github.io/Swindler/docs/#{s.version.to_s}"
 
   s.license      = { type: 'MIT', file: 'LICENSE' }
 
   s.author             = { 'Tyler Mandry' => 'tmandry@gmail.com' }
-  s.social_media_url   = 'http://twitter.com/tmandry'
 
   s.platform     = :osx, '10.10'
 

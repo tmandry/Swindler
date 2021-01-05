@@ -96,7 +96,7 @@ final class OSXApplicationDelegate<
     weak var stateDelegate: StateDelegate?
     fileprivate weak var notifier: EventNotifier?
 
-    internal let axElement: UIElement // internal for testing only
+    public let axElement: UIElement // internal for testing only
     internal var observer: Observer! // internal for testing only
     fileprivate var windows: [WinDelegate] = []
 

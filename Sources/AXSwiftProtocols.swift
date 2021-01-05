@@ -18,7 +18,7 @@ public protocol UIElementType: Equatable {
 extension AXSwift.UIElement: UIElementType {}
 
 /// Protocol that wraps AXSwift.Observer.
-protocol ObserverType {
+public protocol ObserverType {
     associatedtype UIElement: UIElementType
     associatedtype Context
 
@@ -29,12 +29,12 @@ protocol ObserverType {
     func removeNotification(_ notification: AXSwift.AXNotification, forElement: UIElement) throws
 }
 extension AXSwift.Observer: ObserverType {
-    typealias UIElement = AXSwift.UIElement
-    typealias Context = AXSwift.Observer
+    public typealias UIElement = AXSwift.UIElement
+    public typealias Context = AXSwift.Observer
 }
 
 /// Protocol that wraps AXSwift.Application.
-protocol ApplicationElementType: UIElementType {
+public protocol ApplicationElementType: UIElementType {
     associatedtype UIElement: UIElementType
 
     init?(forProcessID processID: pid_t)
@@ -45,6 +45,6 @@ protocol ApplicationElementType: UIElementType {
     var toElement: UIElement { get }
 }
 extension AXSwift.Application: ApplicationElementType {
-    typealias UIElement = AXSwift.UIElement
-    var toElement: UIElement { return self }
+    public typealias UIElement = AXSwift.UIElement
+    public var toElement: UIElement { return self }
 }
