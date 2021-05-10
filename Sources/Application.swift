@@ -226,6 +226,15 @@ final class OSXApplicationDelegate<
         }
     }
 
+    func onSpaceChanged() -> Promise<Void> {
+        return fetchWindows(after: .value(())).then { _ in
+            return when(resolved: [
+                self.mainWindow.refresh().asVoid(),
+                self.focusedWindow.refresh().asVoid(),
+            ]).asVoid()
+        }
+    }
+
     /// Called during initialization to fetch a list of window elements and initialize window
     /// delegates for them.
     fileprivate func fetchWindows(after promise: Promise<Void>) -> Promise<Void> {
@@ -266,13 +275,18 @@ final class OSXApplicationDelegate<
         guard let systemScreens = stateDelegate?.systemScreens else {
             return .value(nil)
         }
+        // Early return if the element already exists.
+        if self.windows.contains(where: { $0.axElement == axElement }) {
+            return .value(nil)
+        }
         return WinDelegate.initialize(
             appDelegate: self, notifier: notifier, axElement: axElement, observer: observer,
             systemScreens: systemScreens
         ).map { windowDelegate in
-            // This check needs to happen here, because it's possible (though rare) to call this
-            // method from two different places (fetchWindows and onWindowCreated) before
-            // initialization of either one is complete.
+            // This check needs to happen (again) here, because it's possible
+            // (though rare) to call this method from two different places
+            // (fetchWindows and onWindowCreated) before initialization of
+            // either one is complete.
             if self.windows.contains(where: { $0.axElement == axElement }) {
                 return nil
             }
@@ -305,7 +319,7 @@ extension OSXApplicationDelegate {
                                  element: UIElement,
                                  notification: AXSwift.AXNotification) {
         assert(Thread.current.isMainThread)
-        log.trace("Received \(notification) on \(element)")
+        log.notice("Received \(notification) on \(element)")
 
         switch notification {
         case .windowCreated:
@@ -355,13 +369,18 @@ extension OSXApplicationDelegate {
         } else {
             // We don't know about the element that has been passed. Wait until the window is
             // initialized.
-            newWindowHandler.performAfterWindowCreatedForElement(element) { property.refresh() }
+            //newWindowHandler.performAfterWindowCreatedForElement(element) { property.refresh() }
+            createWindowForElementIfNotExists(element)
+                .done { _ in property.refresh() }
+                .recover { err in
+                    log.error("Error while updating window property: \(err)")
+                }
 
             // In some cases, the element is actually IS the application element, but equality
             // checks inexplicably return false. (This has been observed for Finder.) In this case
             // we will never see a new window for this element. Asynchronously check the element
             // role to handle this case.
-            checkIfWindowPropertyElementIsActuallyApplication(element, property: property)
+            //checkIfWindowPropertyElementIsActuallyApplication(element, property: property)
         }
     }
 

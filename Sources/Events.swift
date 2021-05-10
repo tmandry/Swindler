@@ -152,3 +152,8 @@ public struct ScreenLayoutChangedEvent: EventType {
     public let changedScreens: [Screen]
     public let unchangedScreens: [Screen]
 }
+
+public struct SpaceChangedEvent: EventType {
+    public let external: Bool
+    public let id: Int
+}

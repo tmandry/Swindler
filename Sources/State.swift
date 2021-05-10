@@ -47,6 +47,11 @@ public final class State {
         return delegate.systemScreens.screens.map {Screen(delegate: $0)}
     }
 
+    /// A unique integer representing the current space.
+    public var space: Int {
+        delegate.space
+    }
+
     /// Calls `handler` when the specified `Event` occurs.
     public func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
         delegate.notifier.on(handler)
@@ -63,6 +68,7 @@ protocol StateDelegate: AnyObject {
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
     var systemScreens: SystemScreenDelegate { get }
+    var space: Int { get }
 
     var notifier: EventNotifier { get }
 }
@@ -75,6 +81,7 @@ protocol ApplicationObserverType {
     func onFrontmostApplicationChanged(_ handler: @escaping () -> Void)
     func onApplicationLaunched(_ handler: @escaping (pid_t) -> Void)
     func onApplicationTerminated(_ handler: @escaping (pid_t) -> Void)
+
     func makeApplicationFrontmost(_ pid: pid_t) throws
 
     associatedtype ApplicationElement: ApplicationElementType
@@ -209,6 +216,7 @@ final class OSXStateDelegate<
     var notifier: EventNotifier
 
     fileprivate var appObserver: ApplicationObserver
+    fileprivate var spaceObserver: SpaceObserver
 
     // For convenience/readability.
     fileprivate var applications: Dictionary<pid_t, AppDelegate>.Values {
@@ -223,6 +231,9 @@ final class OSXStateDelegate<
         return applications.flatMap({ $0.knownWindows })
     }
     var systemScreens: SystemScreenDelegate
+
+    var spaceId: Int!
+    var space: Int { spaceId }
 
     fileprivate var initialized: Promise<Void>!
 
@@ -246,6 +257,7 @@ final class OSXStateDelegate<
         notifier = EventNotifier()
         systemScreens = ssd
         self.appObserver = appObserver
+        spaceObserver = SpaceObserver()
 
         ssd.onScreenLayoutChanged { event in
             self.notifier.notify(event)
@@ -276,6 +288,20 @@ final class OSXStateDelegate<
         appObserver.onFrontmostApplicationChanged(frontmostApplication.issueRefresh)
         appObserver.onApplicationLaunched(onApplicationLaunch)
         appObserver.onApplicationTerminated(onApplicationTerminate)
+
+        spaceObserver.onSpaceChanged() { id in
+            log.notice("Space changed: \(id)")
+            self.spaceId = id
+            self.notifier.notify(SpaceChangedEvent(external: true, id: id))
+
+            let updateWindows = self.applications.map { app in app.onSpaceChanged() }
+            when(resolved: updateWindows).done { _ in
+                log.notice("Known windows updated")
+                // TODO: event
+            }.recover { error in
+                log.error("Couldn't update window list after space change: \(error)")
+            }
+        }
 
         // Must not allow frontmostApplication to initialize until the observer is in place.
         when(fulfilled: appPromises)
