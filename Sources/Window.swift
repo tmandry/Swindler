@@ -83,6 +83,11 @@ extension Window: CustomDebugStringConvertible {
         //+ "app=\(application.bundleIdentifier ?? "<unknown>"))"
     }
 }
+extension Window: CustomStringConvertible {
+    public var description: String {
+        "\"\(title.value.truncate(length: 30))\""
+    }
+}
 
 extension String {
     func truncate(length: Int, trailing: String = "…") -> String {
