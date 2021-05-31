@@ -1,3 +1,13 @@
+0.0.6 (Upcoming release)
+========================
+
+Breaking changes
+- macOS 10.12 is the minimum supported version.
+
+New features
+- OSLog is now supported for logging. Currently this doesn't do privacy redaction.
+  - To use, set the value of `SWINDLER_LOGGER`. This will disable stdout printing.
+
 0.0.4
 =====
 

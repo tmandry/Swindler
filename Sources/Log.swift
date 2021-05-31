@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+public var SWINDLER_LOGGER: OSLog?
 
 /// Internal logger.
 internal private(set) var log = Log()
@@ -70,18 +73,31 @@ struct Log {
 
     // Log on the given log level, using the given color if XcodeColors is enabled.
     fileprivate func log(_ string: String, level: Level, withColor: Color? = nil) {
-        var output = ""
-        if let color = withColor, COLOR_ENABLED {
-            let escape = "\u{001b}["
-            let reset = "\(escape)0m"
-            output = "\(escape)\(color.rawValue)m\(string)\(reset)"
+        if let logger = SWINDLER_LOGGER {
+            var type: OSLogType?
+            switch level {
+                case .debug: type = .debug
+                case .error: type = .error
+                case .info: type = .info
+                case .notice: type = .default
+                case .trace: type = .debug
+                case .warn: type = .default
+            }
+            os_log("%{public}@", log: logger, type: type!, string)
         } else {
-            output = string
+            var output = ""
+            if let color = withColor, COLOR_ENABLED {
+                let escape = "\u{001b}["
+                let reset = "\(escape)0m"
+                output = "\(escape)\(color.rawValue)m\(string)\(reset)"
+            } else {
+                output = string
+            }
+            // stderr seems to get thrown away by `swift test`, so we print to stdout
+            // for now.
+            print(output, to: &stderrStream)
+            print(output)
         }
-        // stderr seems to get thrown away by `swift test`, so we print to stdout
-        // for now.
-        // print(output, to: &stderrStream)
-        print(output)
     }
 
 }
