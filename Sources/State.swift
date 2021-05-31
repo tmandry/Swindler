@@ -58,7 +58,7 @@ public final class State {
 //
 // Our delegates differ from most Apple API delegates in that they are internal and are critical to
 // the functioning of the class, so they are not held with weak references.
-protocol StateDelegate: class {
+protocol StateDelegate: AnyObject {
     var runningApplications: [ApplicationDelegate] { get }
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
@@ -382,7 +382,7 @@ extension OSXStateDelegate: PropertyNotifier {
 
 // MARK: PropertyDelegates
 
-protocol AppFinder: class {
+protocol AppFinder: AnyObject {
     func findAppByPID(_ pid: pid_t) -> Application?
 }
 extension OSXStateDelegate: AppFinder {

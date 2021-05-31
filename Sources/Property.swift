@@ -3,7 +3,7 @@ import Cocoa
 import PromiseKit
 
 /// A PropertyNotifier handles property events and directs them to the right place.
-protocol PropertyNotifier: class {
+protocol PropertyNotifier: AnyObject {
     associatedtype Object
 
     /// Called when the property value has been updated.

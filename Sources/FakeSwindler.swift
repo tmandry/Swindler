@@ -273,7 +273,7 @@ public class FakeScreen {
     let delegate: FakeScreenDelegate
 }
 
-protocol TestObject: class {
+protocol TestObject: AnyObject {
     var isValid: Bool { get }
 }
 

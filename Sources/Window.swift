@@ -99,7 +99,7 @@ extension String {
     }
 }
 
-protocol WindowDelegate: class {
+protocol WindowDelegate: AnyObject {
     var isValid: Bool { get }
 
     // Optional because a WindowDelegate shouldn't hold a strong reference to its parent

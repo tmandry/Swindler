@@ -53,7 +53,7 @@ func calculateMaxY(_ screens: [ScreenDelegate]) -> CGFloat {
     return maxY
 }
 
-protocol ScreenDelegate: class, CustomDebugStringConvertible {
+protocol ScreenDelegate: AnyObject, CustomDebugStringConvertible {
     var frame: CGRect { get }
     var applicationFrame: CGRect { get }
 

@@ -67,7 +67,7 @@ extension Application: CustomStringConvertible {
     }
 }
 
-protocol ApplicationDelegate: class {
+protocol ApplicationDelegate: AnyObject {
     var processIdentifier: pid_t! { get }
     var bundleIdentifier: String? { get }
 
@@ -515,7 +515,7 @@ private struct HandlerType<UIElement> {
 // MARK: PropertyDelegates
 
 /// Used by WindowPropertyAdapter to match a UIElement to a Window object.
-protocol WindowFinder: class {
+protocol WindowFinder: AnyObject {
     // This would be more elegantly implemented by passing the list of delegates with every refresh
     // request, but currently we don't have a way of piping that through.
     associatedtype UIElement: UIElementType
