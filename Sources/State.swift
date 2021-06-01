@@ -49,8 +49,8 @@ public final class State {
     }
 
     /// A unique integer representing the current space.
-    public var space: Int {
-        delegate.space
+    public var currentSpaceId: Int {
+        delegate.currentSpaceId
     }
 
     /// Calls `handler` when the specified `Event` occurs.
@@ -69,7 +69,7 @@ protocol StateDelegate: AnyObject {
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
     var systemScreens: SystemScreenDelegate { get }
-    var space: Int { get }
+    var currentSpaceId: Int { get }
 
     var notifier: EventNotifier { get }
 }
@@ -234,7 +234,7 @@ final class OSXStateDelegate<
     var systemScreens: SystemScreenDelegate
 
     var spaceId: Int!
-    var space: Int { spaceId }
+    var currentSpaceId: Int { spaceId }
 
     fileprivate var initialized: Promise<Void>!
 

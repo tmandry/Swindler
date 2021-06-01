@@ -21,6 +21,7 @@ class FakeSpaceObserver: SpaceObserver {
     }
     var newSpaceId: Int = 2
     func onSpaceChanged(_ handler: @escaping (Int) -> Void) {
+        handler(spaceId)
         handlers.append(handler)
     }
 }

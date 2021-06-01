@@ -26,7 +26,7 @@ public class FakeState {
         return firstly {
             Delegate.initialize(appObserver, screens, spaces)
         }.map { delegate in
-            FakeState(delegate, appObserver)
+            FakeState(delegate, appObserver, spaces)
         }
     }
 
@@ -45,13 +45,27 @@ public class FakeState {
         }
     }
 
+    public var currentSpaceId: Int {
+        get { spaceObserver.spaceId }
+        set { spaceObserver.spaceId = newValue }
+    }
+    public var newSpaceId: Int {
+        spaceObserver.newSpaceId
+    }
+
     fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
+    var spaceObserver: FakeSpaceObserver
 
-    private init(_ delegate: Delegate, _ appObserver: FakeApplicationObserver) {
+    private init(
+        _ delegate: Delegate,
+        _ appObserver: FakeApplicationObserver,
+        _ spaces: FakeSpaceObserver
+    ) {
         self.state = State(delegate: delegate)
         self.delegate = delegate
         self.appObserver = appObserver
+        self.spaceObserver = spaces
     }
 }
 
