@@ -290,14 +290,14 @@ final class OSXStateDelegate<
         appObserver.onApplicationTerminated(onApplicationTerminate)
 
         spaceObserver.onSpaceChanged() { id in
-            log.notice("Space changed: \(id)")
+            log.info("Space changed: \(id)")
             self.spaceId = id
-            self.notifier.notify(SpaceChangedEvent(external: true, id: id))
+            self.notifier.notify(SpaceWillChangeEvent(external: true, id: id))
 
             let updateWindows = self.applications.map { app in app.onSpaceChanged() }
             when(resolved: updateWindows).done { _ in
                 log.notice("Known windows updated")
-                // TODO: event
+                self.notifier.notify(SpaceDidChangeEvent(external: true, id: id))
             }.recover { error in
                 log.error("Couldn't update window list after space change: \(error)")
             }

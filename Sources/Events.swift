@@ -153,7 +153,14 @@ public struct ScreenLayoutChangedEvent: EventType {
     public let unchangedScreens: [Screen]
 }
 
-public struct SpaceChangedEvent: EventType {
+/// The space has changed, but we have not yet updated the list of known windows.
+public struct SpaceWillChangeEvent: EventType {
+    public let external: Bool
+    public let id: Int
+}
+
+/// The space has changed, and the list of known windows is up to date.
+public struct SpaceDidChangeEvent: EventType {
     public let external: Bool
     public let id: Int
 }

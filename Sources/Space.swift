@@ -64,10 +64,9 @@ class SpaceObserver: NSObject, NSWindowDelegate {
 
     private func spaceChanged(_ handler: @escaping (Int) -> Void) {
         // TODO: One per screen
-        log.notice("space changed")
         //log.notice("active=\(win.isOnActiveSpace)")
         var visible = (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
-        log.notice("visible=\(visible)")
+        log.debug("visible=\(visible)")
         if visible.isEmpty {
             visible = [makeWindow()]
         }
