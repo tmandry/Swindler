@@ -8,6 +8,7 @@ class StubStateDelegate: StateDelegate {
     var knownWindows: [WindowDelegate] = []
     var systemScreens: SystemScreenDelegate { return fakeScreens }
     var notifier: EventNotifier = EventNotifier()
+    var space: Int = 0
 
     var fakeScreens: FakeSystemScreenDelegate = FakeSystemScreenDelegate(screens: [])
 }

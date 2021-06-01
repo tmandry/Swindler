@@ -25,9 +25,10 @@ class OSXDriverSpec: QuickSpec {
             appObserver.allApps = [appElement]
 
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
+            let spaces = FakeSpaceObserver()
             state = State(delegate: OSXStateDelegate<
                 TestUIElement, EmittingTestApplicationElement, FakeObserver, FakeApplicationObserver
-            >(appObserver: appObserver, screens: screenDel))
+            >(appObserver, screenDel, spaces))
             appElement.addWindow(windowElement)
             expect(state.knownWindows.count).toEventually(equal(1))
         }

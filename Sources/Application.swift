@@ -380,7 +380,7 @@ extension OSXApplicationDelegate {
             // checks inexplicably return false. (This has been observed for Finder.) In this case
             // we will never see a new window for this element. Asynchronously check the element
             // role to handle this case.
-            //checkIfWindowPropertyElementIsActuallyApplication(element, property: property)
+            checkIfWindowPropertyElementIsActuallyApplication(element, property: property)
         }
     }
 

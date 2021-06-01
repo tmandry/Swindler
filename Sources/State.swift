@@ -10,8 +10,9 @@ public func initialize() -> Promise<State> {
         AXSwift.Observer,
         ApplicationObserver
     >.initialize(
-        appObserver: ApplicationObserver(),
-        screens: OSXSystemScreenDelegate()
+        ApplicationObserver(),
+        OSXSystemScreenDelegate(),
+        OSXSpaceObserver()
     ).map { delegate in
        State(delegate: delegate)
     }
@@ -240,26 +241,27 @@ final class OSXStateDelegate<
     // TODO: retry instead of ignoring an app/window when timeouts are encountered during
     // initialization?
 
-    static func initialize<S: SystemScreenDelegate>(
-        appObserver: ApplicationObserver,
-        screens: S
+    static func initialize<Screens: SystemScreenDelegate, Spaces: SpaceObserver>(
+        _ appObserver: ApplicationObserver, _ screens: Screens, _ spaces: Spaces
     ) -> Promise<OSXStateDelegate> {
         return firstly { () -> Promise<OSXStateDelegate> in
-            let delegate = OSXStateDelegate(appObserver: appObserver, screens: screens)
+            let delegate = OSXStateDelegate(appObserver, screens, spaces)
             return delegate.initialized.map { delegate }
         }
     }
 
     // TODO make private
-    init<S: SystemScreenDelegate>(appObserver: ApplicationObserver, screens ssd: S) {
+    init<Screens: SystemScreenDelegate, Spaces: SpaceObserver>(
+        _ appObserver: ApplicationObserver, _ screens: Screens, _ spaces: Spaces
+    ) {
         log.debug("Initializing Swindler")
 
         notifier = EventNotifier()
-        systemScreens = ssd
+        systemScreens = screens
         self.appObserver = appObserver
-        spaceObserver = SpaceObserver()
+        spaceObserver = spaces
 
-        ssd.onScreenLayoutChanged { event in
+        screens.onScreenLayoutChanged { event in
             self.notifier.notify(event)
         }
 

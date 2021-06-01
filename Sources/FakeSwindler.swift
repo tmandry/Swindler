@@ -22,8 +22,9 @@ public class FakeState {
     public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
         let appObserver = FakeApplicationObserver()
         let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+        let spaces = FakeSpaceObserver()
         return firstly {
-            Delegate.initialize(appObserver: appObserver, screens: screens)
+            Delegate.initialize(appObserver, screens, spaces)
         }.map { delegate in
             FakeState(delegate, appObserver)
         }

@@ -1,7 +1,32 @@
 import Cocoa
 
-class SpaceObserver: NSObject, NSWindowDelegate {
-    var windows: [Int: NSWindow] = [:]
+protocol SpaceObserver {
+    /// Registers a handler to be called on a space change.
+    ///
+    /// The handler is called with a unique integer identifying the space. The
+    /// handler is called immediately upon registration with the current space
+    /// id.
+    func onSpaceChanged(_ handler: @escaping (Int) -> Void)
+}
+
+class FakeSpaceObserver: SpaceObserver {
+    var handlers: [(Int) -> Void] = []
+    var spaceId: Int = 1 {
+        didSet {
+            newSpaceId = max(newSpaceId, spaceId + 1)
+            for handler in handlers {
+                handler(spaceId)
+            }
+        }
+    }
+    var newSpaceId: Int = 2
+    func onSpaceChanged(_ handler: @escaping (Int) -> Void) {
+        handlers.append(handler)
+    }
+}
+
+class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
+    private var windows: [Int: NSWindow] = [:]
 
     override init() {
         super.init()
