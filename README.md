@@ -1,7 +1,7 @@
 # Swindler
 _A Swift window management library for macOS_
 
-[![Build Status](https://travis-ci.org/tmandry/Swindler.svg?branch=master)](https://travis-ci.org/tmandry/Swindler)
+[![Build Status](https://travis-ci.com/tmandry/Swindler.svg?branch=master)](https://travis-ci.com/tmandry/Swindler)
 [![Join the chat at https://gitter.im/tmandry/Swindler](https://badges.gitter.im/tmandry/Swindler.svg)](https://gitter.im/tmandry/Swindler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 In the past few years, many developers formerly on Linux and Windows have migrated to Mac for their
