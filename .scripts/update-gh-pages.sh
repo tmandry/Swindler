@@ -1,4 +1,5 @@
 #!/bin/bash -e
+set -e
 
 ORG="tmandry"
 NAME="Swindler"
