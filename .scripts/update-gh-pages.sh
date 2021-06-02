@@ -26,7 +26,7 @@ git clone --branch gh-pages "$REPO" "$CHECKOUT_PATH"
 TARGET_DIR="$DOC_URL_ROOT/$RELEASE"
 
 echo " ==> Installing jazzy"
-gem install jazzy --no-rdoc --no-ri
+gem install jazzy --no-document
 
 echo " ==> Generating docs"
 jazzy \
