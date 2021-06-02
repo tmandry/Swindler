@@ -1,5 +1,5 @@
 language: objective-c
-osx_image: xcode11.3
+osx_image: xcode12.5
 
 xcode_workspace: Swindler.xcworkspace
 xcode_scheme: Swindler
