@@ -1,4 +1,4 @@
-xcodebuild_arguments: [-workspace, Swindler.xcworkspace, -scheme, Swindler]
+swift_build_tool: spm
 theme: fullwidth
 github_url: https://github.com/tmandry/Swindler
 author_url: https://twitter.com/tmandry
@@ -35,6 +35,5 @@ custom_categories:
       - WindowCreatedEvent
       - WindowDestroyedEvent
       - WindowMinimizedChangedEvent
-      - WindowPosChangedEvent
-      - WindowSizeChangedEvent
+      - WindowFrameChangedEvent
       - WindowTitleChangedEvent
