@@ -1,7 +1,7 @@
 # Swindler
 _A Swift window management library for macOS_
 
-[![Build Status](https://travis-ci.com/tmandry/Swindler.svg?branch=master)](https://travis-ci.com/tmandry/Swindler)
+[![Build Status](https://travis-ci.com/tmandry/Swindler.svg?branch=main)](https://travis-ci.com/tmandry/Swindler)
 [![Join the chat at https://gitter.im/tmandry/Swindler](https://badges.gitter.im/tmandry/Swindler.svg)](https://gitter.im/tmandry/Swindler?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 In the past few years, many developers formerly on Linux and Windows have migrated to Mac for their
@@ -27,7 +27,7 @@ API and abstraction layer. It addresses the problems of the accessibility API wi
 
 ### Type safety
 
-[Swindler's API](https://github.com/tmandry/Swindler/blob/master/API.swift) is
+[Swindler's API](https://github.com/tmandry/Swindler/blob/main/API.swift) is
 fully documented and type-safe thanks to Swift. It's much easier and safer to use than the C-based
 accessibility APIs. (See the example below.)
 
@@ -157,11 +157,11 @@ Swindler is in development and is in **alpha**. Here is the state of its major f
 - Screen API: **90% complete**
 - Spaces API: **0% complete**
 
-You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/master/API.swift).
+You can see the entire [planned API here](https://github.com/tmandry/Swindler/blob/main/API.swift).
 
 [API Documentation (latest release)](https://tmandry.github.io/Swindler/docs/latest)
 
-[API Documentation (master)](https://tmandry.github.io/Swindler/docs/master)
+[API Documentation (main)](https://tmandry.github.io/Swindler/docs/main)
 
 ## Development
 
