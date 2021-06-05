@@ -45,7 +45,7 @@ public class FakeState {
         }
     }
 
-    public var currentSpaceId: Int {
+    public var currentSpaceId: [Int] {
         get { spaceObserver.spaceId }
         set { spaceObserver.spaceId = newValue }
     }

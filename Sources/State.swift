@@ -48,8 +48,8 @@ public final class State {
         return delegate.systemScreens.screens.map {Screen(delegate: $0)}
     }
 
-    /// A unique integer representing the current space.
-    public var currentSpaceId: Int {
+    /// A unique integer representing the current space for every screen.
+    public var currentSpaceId: [Int] {
         delegate.currentSpaceId
     }
 
@@ -69,7 +69,7 @@ protocol StateDelegate: AnyObject {
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
     var systemScreens: SystemScreenDelegate { get }
-    var currentSpaceId: Int { get }
+    var currentSpaceId: [Int] { get }
 
     var notifier: EventNotifier { get }
 }
@@ -233,8 +233,8 @@ final class OSXStateDelegate<
     }
     var systemScreens: SystemScreenDelegate
 
-    var spaceId: Int!
-    var currentSpaceId: Int { spaceId }
+    var spaceId: [Int]!
+    var currentSpaceId: [Int] { spaceId }
 
     fileprivate var initialized: Promise<Void>!
 

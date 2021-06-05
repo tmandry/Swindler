@@ -187,9 +187,9 @@ class FakeSpec: QuickSpec {
                     expect(fakeState.state.frontmostApplication.value).toEventually(
                         equal(fakeApp2.application))
                     let newSpace = fakeState.newSpaceId
-                    expect(fakeState.currentSpaceId) != newSpace
-                    fakeState.currentSpaceId = newSpace
-                    expect(fakeState.state.currentSpaceId).toEventually(equal(newSpace))
+                    expect(fakeState.currentSpaceId) != [newSpace]
+                    fakeState.currentSpaceId = [newSpace]
+                    expect(fakeState.state.currentSpaceId).toEventually(equal([newSpace]))
                 }
             }
 
