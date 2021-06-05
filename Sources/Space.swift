@@ -27,11 +27,15 @@ class FakeSpaceObserver: SpaceObserver {
 }
 
 class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
-    private var windows: [Int: NSWindow] = [:]
+    private var trackers: [Int: SpaceTracker] = [:]
+    private weak var ssd: SystemScreenDelegate?
+    private var sst: SystemSpaceTracker
 
-    override init() {
+    init(_ ssd: SystemScreenDelegate, _ sst: SystemSpaceTracker) {
+        self.ssd = ssd
+        self.sst = sst
         super.init()
-        for screen in NSScreen.screens {
+        for screen in ssd.screens {
             makeWindow(screen)
         }
         // TODO: Detect screen configuration changes
@@ -44,40 +48,10 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
     /// Without the window events we wouldn't have a way of noticing when this
     /// happened.
     @discardableResult
-    private func makeWindow(_ screen: NSScreen) -> Int {
-        //win = NSWindow(contentViewController: NSViewController(nibName: nil, bundle: nil))
-        // Size must be non-zero to receive occlusion state events.
-        let rect = /*NSRect.zero */NSRect(x: 0, y: 0, width: 1, height: 1)
-        let win = NSWindow(contentRect: rect, styleMask: .borderless/*[.titled, .resizable, .miniaturizable]*/, backing: .buffered, defer: true, screen: screen)
-        win.delegate = self
-        //win.title = "test"
-        win.isReleasedWhenClosed = false
-        win.ignoresMouseEvents = true
-        win.hasShadow = false
-        win.animationBehavior = .none
-        win.backgroundColor = NSColor.clear
-        win.level = .floating
-        win.collectionBehavior = [.transient, .ignoresCycle, .fullScreenAuxiliary]
-        if #available(macOS 10.11, *) {
-            win.collectionBehavior.update(with: .fullScreenDisallowsTiling)
-        }
-        win.makeKeyAndOrderFront(nil)
-        log.debug("new window windowNumber=\(win.windowNumber)")
-        windows[win.windowNumber] = win
-        return win.windowNumber
-    }
-
-    func windowDidChangeScreen(_ notification: Notification) {
-        let win = notification.object as! NSWindow
-        log.debug("window \(win.windowNumber) changed screen; active=\(win.isOnActiveSpace)")
-    }
-
-    func windowDidChangeOcclusionState(_ notification: Notification) {
-        let win = notification.object as! NSWindow
-        log.debug("window \(win.windowNumber) occstchanged; occVis=\(win.occlusionState.contains(NSWindow.OcclusionState.visible)), vis=\(win.isVisible), activeSpace=\(win.isOnActiveSpace)")
-        let visible = (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
-        log.debug("visible=\(visible)")
-        // TODO: Use this event to detect space merges.
+    private func makeWindow(_ screen: ScreenDelegate) -> Int {
+        let win = OSXSpaceTracker(screen)
+        trackers[win.id] = win
+        return win.id
     }
 
     /// Installs a handler to be called when the current space changes.
@@ -93,30 +67,104 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
     }
 
     private func spaceChanged(_ handler: @escaping ([Int]) -> Void) {
-        let visible = (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
+        guard let ssd = ssd else { return }
+        let visible = sst.visibleIds()
         log.debug("spaceChanged: visible=\(visible)")
 
-        var visibleByScreen: [NSScreen: [Int]] = [:]
+        let screens = ssd.screens
+
+        var visibleByScreen = [[Int]](repeating: [], count: screens.count)
         for id in visible {
-            guard let screen = windows[id]?.screen else {
+            // This is O(N^2) in the number of screens, but thankfully that
+            // never gets large.
+            // TODO: Use directDisplayID?
+            guard let screen = trackers[id]?.screen(ssd) else {
                 log.info("Window id \(id) not associated with any screen")
                 continue
             }
-            if !visibleByScreen.keys.contains(screen) {
-                visibleByScreen[screen] = []
+            for (idx, scr) in screens.enumerated() {
+                if scr.equalTo(screen) {
+                    visibleByScreen[idx].append(id)
+                    break
+                }
             }
-            visibleByScreen[screen]!.append(id)
         }
 
         var visiblePerScreen: [Int] = []
-        for screen in NSScreen.screens {
+        for (idx, visible) in visibleByScreen.enumerated() {
             // TODO: Break ties deterministically (and test)
-            if let id = visibleByScreen[screen]?.first {
+            if let id = visible.first {
                 visiblePerScreen.append(id)
             } else {
-                visiblePerScreen.append(makeWindow(screen))
+                visiblePerScreen.append(makeWindow(screens[idx]))
             }
         }
         handler(visiblePerScreen)
+    }
+}
+
+protocol SystemSpaceTracker {
+    /// Returns the list of IDs of SpaceTrackers whose spaces are currently visible.
+    func visibleIds() -> [Int]
+}
+
+class OSXSystemSpaceTracker: SystemSpaceTracker {
+    func visibleIds() -> [Int] {
+        (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
+    }
+}
+
+protocol SpaceTracker {
+    var id: Int { get }
+    func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate?
+}
+
+class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
+    let win: NSWindow
+
+    var id: Int { win.windowNumber }
+
+    init(_ screen: ScreenDelegate) {
+        //win = NSWindow(contentViewController: NSViewController(nibName: nil, bundle: nil))
+        // Size must be non-zero to receive occlusion state events.
+        let rect = /*NSRect.zero */NSRect(x: 0, y: 0, width: 1, height: 1)
+        win = NSWindow(contentRect: rect, styleMask: .borderless/*[.titled, .resizable, .miniaturizable]*/, backing: .buffered, defer: true, screen: screen.native)
+        win.isReleasedWhenClosed = false
+        win.ignoresMouseEvents = true
+        win.hasShadow = false
+        win.animationBehavior = .none
+        win.backgroundColor = NSColor.clear
+        win.level = .floating
+        win.collectionBehavior = [.transient, .ignoresCycle, .fullScreenAuxiliary]
+        if #available(macOS 10.11, *) {
+            win.collectionBehavior.update(with: .fullScreenDisallowsTiling)
+        }
+
+        super.init()
+        win.delegate = self
+
+        win.makeKeyAndOrderFront(nil)
+        log.debug("new window windowNumber=\(win.windowNumber)")
+    }
+
+    func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate? {
+        guard let screen = win.screen else {
+            return nil
+        }
+        // This class should only be used with a "real" SystemScreenDelegate impl.
+        return ssd.delegateForNative(screen: screen)!
+    }
+
+    func windowDidChangeScreen(_ notification: Notification) {
+        let win = notification.object as! NSWindow
+        log.debug("window \(win.windowNumber) changed screen; active=\(win.isOnActiveSpace)")
+    }
+
+    func windowDidChangeOcclusionState(_ notification: Notification) {
+        let win = notification.object as! NSWindow
+        log.debug("window \(win.windowNumber) occstchanged; occVis=\(win.occlusionState.contains(NSWindow.OcclusionState.visible)), vis=\(win.isVisible), activeSpace=\(win.isOnActiveSpace)")
+        let visible = (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
+        log.debug("visible=\(visible)")
+        // TODO: Use this event to detect space merges.
     }
 }

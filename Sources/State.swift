@@ -4,6 +4,7 @@ import PromiseKit
 
 /// Initializes a new Swindler state and returns it in a Promise.
 public func initialize() -> Promise<State> {
+    let ssd = OSXSystemScreenDelegate()
     return OSXStateDelegate<
         AXSwift.UIElement,
         AXSwift.Application,
@@ -11,8 +12,8 @@ public func initialize() -> Promise<State> {
         ApplicationObserver
     >.initialize(
         ApplicationObserver(),
-        OSXSystemScreenDelegate(),
-        OSXSpaceObserver()
+        ssd,
+        OSXSpaceObserver(ssd, OSXSystemSpaceTracker())
     ).map { delegate in
        State(delegate: delegate)
     }

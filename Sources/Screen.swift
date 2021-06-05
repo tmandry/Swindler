@@ -24,11 +24,13 @@ public func ==(lhs: Screen, rhs: Screen) -> Bool {
     return lhs.delegate.equalTo(rhs.delegate)
 }
 
-protocol SystemScreenDelegate {
+protocol SystemScreenDelegate: AnyObject {
     var lock_: NSLock { get }
     var screens_: [ScreenDelegate] { get }
 
     var maxY: CGFloat { get }
+
+    func delegateForNative(screen: NSScreen) -> ScreenDelegate?
 
     func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void)
 }
@@ -56,11 +58,12 @@ func calculateMaxY(_ screens: [ScreenDelegate]) -> CGFloat {
 protocol ScreenDelegate: AnyObject, CustomDebugStringConvertible {
     var frame: CGRect { get }
     var applicationFrame: CGRect { get }
+    var native: NSScreen? { get }
 
     func equalTo(_ other: ScreenDelegate) -> Bool
 }
 
-struct FakeSystemScreenDelegate: SystemScreenDelegate {
+class FakeSystemScreenDelegate: SystemScreenDelegate {
     typealias Delegate = FakeScreenDelegate
 
     var lock_: NSLock
@@ -81,6 +84,10 @@ struct FakeSystemScreenDelegate: SystemScreenDelegate {
         }
     }
 
+    func delegateForNative(screen: NSScreen) -> ScreenDelegate? {
+        nil
+    }
+
     init(screens: [ScreenDelegate]) {
         lock_ = NSLock()
         screens_ = screens
@@ -95,6 +102,8 @@ final class FakeScreenDelegate: ScreenDelegate {
         self.frame = frame
         self.applicationFrame = applicationFrame
     }
+
+    var native: NSScreen? { nil }
 
     func equalTo(_ other: ScreenDelegate) -> Bool { return false }
 
@@ -154,6 +163,11 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
         ) { _ in
             self.handleScreenLayoutChange()
         }
+    }
+
+    func delegateForNative(screen: NSScreen) -> ScreenDelegate? {
+        let displayID = numberForScreen(screen)
+        return delegates.first { $0.directDisplayID == displayID }
     }
 
     func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void) {
@@ -256,6 +270,8 @@ final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
     let frame: CGRect
 
     var applicationFrame: CGRect { return nsScreen.visibleFrame }
+
+    var native: NSScreen? { nsScreen as? NSScreen }
 }
 
 extension OSXScreenDelegate {

@@ -66,6 +66,8 @@ class StubScreenDelegate: ScreenDelegate {
 
     var debugDescription: String { return "StubScreenDelegate" }
 
+    var native: NSScreen? { nil }
+
     func equalTo(_ other: ScreenDelegate) -> Bool { return self === other }
 }
 
