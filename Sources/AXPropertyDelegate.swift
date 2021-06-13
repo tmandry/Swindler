@@ -37,7 +37,9 @@ class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelega
                     + "when attempting to read \(attribute)")
             throw PropertyError.invalidObject(cause: AXError.invalidUIElement)
         } catch let error {
-            unexpectedError(error)
+            log.warn("Got unexpected error for element \(axElement) "
+                    + "when attempting to read \(attribute)")
+            //unexpectedError(error)
             throw PropertyError.invalidObject(cause: error)
         }
     }

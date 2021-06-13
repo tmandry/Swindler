@@ -74,13 +74,17 @@ public protocol PropertyTypeSpec {
     static func toOptionalType(_ from: PropertyType) -> NonOptionalType?
 }
 
+public protocol Defaultable {
+    static func defaultValue() -> Self
+}
+
 /// Specifies that a `Property` has type `T`.
 ///
 /// Internally used by Swindler. You should not use this directly.
 public struct OfType<T: Equatable>: PropertyTypeSpec {
     public typealias NonOptionalType = T
     public typealias PropertyType = T
-    public static func equal(_ lhs: T, _ rhs: T) -> Bool { return lhs == rhs }
+    public static func equal(_ lhs: T, _ rhs: T) -> Bool { lhs == rhs }
     public static func toPropertyType(_ from: T?) throws -> T {
         guard let to: T = from else {
             // TODO: unexpected error
@@ -89,7 +93,21 @@ public struct OfType<T: Equatable>: PropertyTypeSpec {
         }
         return to
     }
-    public static func toOptionalType(_ from: T) -> T? { return from }
+    public static func toOptionalType(_ from: T) -> T? { from }
+}
+
+/// Specifies that a `Property` has type `T`, and should use a default value if
+/// the property is missing.
+///
+/// Internally used by Swindler. You should not use this directly.
+public struct OfDefaultedType<T>: PropertyTypeSpec where T: Equatable, T: Defaultable {
+    public typealias NonOptionalType = T
+    public typealias PropertyType = T
+    public static func equal(_ lhs: T, _ rhs: T) -> Bool { lhs == rhs }
+    public static func toPropertyType(_ from: T?) throws -> T {
+        from ?? T.defaultValue()
+    }
+    public static func toOptionalType(_ from: T) -> T? { from }
 }
 
 /// Used to specify that a `Property` has the type `T?`.

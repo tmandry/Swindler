@@ -63,7 +63,7 @@ public final class Window {
     public var size: WriteableProperty<OfType<CGSize>> { return delegate.size }
 
     /// The window title.
-    public var title: Property<OfType<String>> { return delegate.title }
+    public var title: Property<OfDefaultedType<String>> { return delegate.title }
 
     /// Whether the window is minimized.
     public var isMinimized: WriteableProperty<OfType<Bool>> { return delegate.isMinimized }
@@ -99,6 +99,10 @@ extension String {
     }
 }
 
+extension String: Defaultable {
+    public static func defaultValue() -> String { "" }
+}
+
 protocol WindowDelegate: AnyObject {
     var isValid: Bool { get }
 
@@ -108,7 +112,7 @@ protocol WindowDelegate: AnyObject {
 
     var frame: WriteableProperty<OfType<CGRect>>! { get }
     var size: SizeProperty! { get }
-    var title: Property<OfType<String>>! { get }
+    var title: Property<OfDefaultedType<String>>! { get }
     var isMinimized: WriteableProperty<OfType<Bool>>! { get }
     var isFullscreen: WriteableProperty<OfType<Bool>>! { get }
 
@@ -137,7 +141,7 @@ final class OSXWindowDelegate<
 
     var frame: WriteableProperty<OfType<CGRect>>!
     var size: SizeProperty!
-    var title: Property<OfType<String>>!
+    var title: Property<OfDefaultedType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!
 
