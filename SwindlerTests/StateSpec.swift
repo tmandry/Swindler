@@ -30,11 +30,12 @@ class OSXStateDelegateSpec: QuickSpec {
         func initialize<AppObserver: ApplicationObserverType>(
             _ appObserver: AppObserver
         ) -> OSXStateDelegate<TestUIElement, AppObserver.ApplicationElement, TestObserver, AppObserver> {
+            let notifier = EventNotifier()
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
-            let spaces = FakeSpaceObserver()
+            let spaces = FakeSpaceObserver(notifier)
             let stateDel = OSXStateDelegate<
                 TestUIElement, AppObserver.ApplicationElement, TestObserver, AppObserver
-            >(appObserver, screenDel, spaces)
+            >(notifier, appObserver, screenDel, spaces)
             waitUntil { done in
                 stateDel.frontmostApplication.initialized.done { done() }.cauterize()
             }
@@ -66,11 +67,12 @@ class OSXStateDelegateSpec: QuickSpec {
             )
                 -> OSXStateDelegate<TestUIElement, TestApplicationElement, Obs, StubApplicationObserver>
             {
+                let notifier = EventNotifier()
                 let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
                 let observer = StubApplicationObserver()
-                let spaces = FakeSpaceObserver()
+                let spaces = FakeSpaceObserver(notifier)
                 observer.allApps = apps
-                return OSXStateDelegate(observer, screenDel, spaces)
+                return OSXStateDelegate(notifier, observer, screenDel, spaces)
             }
 
             it("observes all applications") {

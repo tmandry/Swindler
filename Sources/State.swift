@@ -4,16 +4,18 @@ import PromiseKit
 
 /// Initializes a new Swindler state and returns it in a Promise.
 public func initialize() -> Promise<State> {
-    let ssd = OSXSystemScreenDelegate()
+    let notifier = EventNotifier()
+    let ssd = OSXSystemScreenDelegate(notifier)
     return OSXStateDelegate<
         AXSwift.UIElement,
         AXSwift.Application,
         AXSwift.Observer,
         ApplicationObserver
     >.initialize(
+        notifier,
         ApplicationObserver(),
         ssd,
-        OSXSpaceObserver(ssd, OSXSystemSpaceTracker())
+        OSXSpaceObserver(notifier, ssd, OSXSystemSpaceTracker())
     ).map { delegate in
        State(delegate: delegate)
     }
@@ -215,6 +217,8 @@ final class OSXStateDelegate<
     typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
 
     private var applicationsByPID: [pid_t: AppDelegate] = [:]
+
+    // This should be the only strong reference to EventNotifier.
     var notifier: EventNotifier
 
     fileprivate var appObserver: ApplicationObserver
@@ -243,28 +247,30 @@ final class OSXStateDelegate<
     // initialization?
 
     static func initialize<Screens: SystemScreenDelegate, Spaces: SpaceObserver>(
-        _ appObserver: ApplicationObserver, _ screens: Screens, _ spaces: Spaces
+        _ notifier: EventNotifier,
+        _ appObserver: ApplicationObserver,
+        _ screens: Screens,
+        _ spaces: Spaces
     ) -> Promise<OSXStateDelegate> {
         return firstly { () -> Promise<OSXStateDelegate> in
-            let delegate = OSXStateDelegate(appObserver, screens, spaces)
+            let delegate = OSXStateDelegate(notifier, appObserver, screens, spaces)
             return delegate.initialized.map { delegate }
         }
     }
 
     // TODO make private
     init<Screens: SystemScreenDelegate, Spaces: SpaceObserver>(
-        _ appObserver: ApplicationObserver, _ screens: Screens, _ spaces: Spaces
+        _ notifier: EventNotifier,
+        _ appObserver: ApplicationObserver,
+        _ screens: Screens,
+        _ spaces: Spaces
     ) {
         log.debug("Initializing Swindler")
 
-        notifier = EventNotifier()
+        self.notifier = notifier
         systemScreens = screens
         self.appObserver = appObserver
         spaceObserver = spaces
-
-        screens.onScreenLayoutChanged { event in
-            self.notifier.notify(event)
-        }
 
         let appPromises = appObserver.allApplications().map { appElement in
             watchApplication(appElement: appElement)
@@ -292,19 +298,24 @@ final class OSXStateDelegate<
         appObserver.onApplicationLaunched(onApplicationLaunch)
         appObserver.onApplicationTerminated(onApplicationTerminate)
 
-        spaceObserver.onSpaceChanged() { id in
-            log.info("Space changed: \(id)")
-            self.spaceId = id
-            self.notifier.notify(SpaceWillChangeEvent(external: true, id: id))
+        notifier.on { (event: SpaceWillChangeEvent) in
+            log.info("Space changed: \(event.id)")
+            self.spaceId = event.id
 
             let updateWindows = self.applications.map { app in app.onSpaceChanged() }
             when(resolved: updateWindows).done { _ in
-                log.notice("Known windows updated")
-                self.notifier.notify(SpaceDidChangeEvent(external: true, id: id))
+                // The space may have changed again in the meantime. Make sure
+                // we only emit events consistent with the current state.
+                // TODO needs a test
+                if event.id == self.spaceId {
+                    log.notice("Known windows updated")
+                    self.notifier.notify(SpaceDidChangeEvent(external: true, id: event.id))
+                }
             }.recover { error in
                 log.error("Couldn't update window list after space change: \(error)")
             }
         }
+        spaces.emitSpaceWillChangeEvent()
 
         // Must not allow frontmostApplication to initialize until the observer is in place.
         when(fulfilled: appPromises)

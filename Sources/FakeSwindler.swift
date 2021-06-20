@@ -20,11 +20,12 @@ public class FakeState {
         OSXStateDelegate<TestUIElement, AppElement, FakeObserver, FakeApplicationObserver>
 
     public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
+        let notifier = EventNotifier()
         let appObserver = FakeApplicationObserver()
         let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
-        let spaces = FakeSpaceObserver()
+        let spaces = FakeSpaceObserver(notifier)
         return firstly {
-            Delegate.initialize(appObserver, screens, spaces)
+            Delegate.initialize(notifier, appObserver, screens, spaces)
         }.map { delegate in
             FakeState(delegate, appObserver, spaces)
         }

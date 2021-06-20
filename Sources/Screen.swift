@@ -31,8 +31,6 @@ protocol SystemScreenDelegate: AnyObject {
     var maxY: CGFloat { get }
 
     func delegateForNative(screen: NSScreen) -> ScreenDelegate?
-
-    func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void)
 }
 
 extension SystemScreenDelegate {
@@ -147,31 +145,26 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
     var lock_: NSLock
     var screens_: [ScreenDelegate]
     var delegates: [Delegate]
+    weak var notifier: EventNotifier?
 
-    private var handler: Optional<(ScreenLayoutChangedEvent) -> Void>
-
-    init() {
+    init(_ notifier: EventNotifier) {
+        self.notifier = notifier
         lock_ = NSLock()
         delegates = createDelegates()
         screens_ = delegates.map{ $0 as ScreenDelegate }
-        handler = nil
 
         NotificationCenter.default.addObserver(
             forName: NSApplication.didChangeScreenParametersNotification,
             object: NSApplication.shared,
             queue: OperationQueue.main
-        ) { _ in
-            self.handleScreenLayoutChange()
+        ) { [weak self] _ in
+            self?.handleScreenLayoutChange()
         }
     }
 
     func delegateForNative(screen: NSScreen) -> ScreenDelegate? {
         let displayID = numberForScreen(screen)
         return delegates.first { $0.directDisplayID == displayID }
-    }
-
-    func onScreenLayoutChanged(_ handler: @escaping (ScreenLayoutChangedEvent) -> Void) {
-        self.handler = handler
     }
 
     private func handleScreenLayoutChange() {
@@ -188,7 +181,7 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
             screens_ = newScreens.map{ $0 as ScreenDelegate }
         }
 
-        handler?(event)
+        notifier?.notify(event)
     }
 }
 

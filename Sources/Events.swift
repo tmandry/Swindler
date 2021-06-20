@@ -156,11 +156,18 @@ public struct ScreenLayoutChangedEvent: EventType {
 /// The space has changed, but we have not yet updated the list of known windows.
 public struct SpaceWillChangeEvent: EventType {
     public let external: Bool
+    /// For each screen, a unique integer identifying the visible space.
     public let id: [Int]
 }
 
 /// The space has changed, and the list of known windows is up to date.
+///
+/// Note that this event may not correspond 1:1 with SpaceWillChangeEvent.
+/// In particular, if the space changes again before the list of known windows
+/// can be updated, SpaceWillChangeEvent will fire twice and this event will
+/// fire only once.
 public struct SpaceDidChangeEvent: EventType {
     public let external: Bool
+    /// For each screen, a unique integer identifying the visible space.
     public let id: [Int]
 }

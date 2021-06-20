@@ -1,28 +1,25 @@
 import Cocoa
 
 protocol SpaceObserver {
-    /// Registers a handler to be called on a space change.
+    /// Emits a SpaceWillChangeEvent on the notifier this observer was
+    /// constructed with.
     ///
-    /// The handler is called with an array of unique integers identifying the
-    /// active space on each screen. The handler is called immediately upon
-    /// registration with the current space id.
-    func onSpaceChanged(_ handler: @escaping ([Int]) -> Void)
+    /// Used during initialization.
+    func emitSpaceWillChangeEvent()
 }
 
 class FakeSpaceObserver: SpaceObserver {
-    var handlers: [([Int]) -> Void] = []
+    weak var notifier: EventNotifier?
+    init(_ notifier: EventNotifier) { self.notifier = notifier }
     var spaceId: [Int] = [1] {
         didSet {
             newSpaceId = max(newSpaceId, spaceId.max() ?? 0 + 1)
-            for handler in handlers {
-                handler(spaceId)
-            }
+            emitSpaceWillChangeEvent()
         }
     }
     var newSpaceId: Int = 2
-    func onSpaceChanged(_ handler: @escaping ([Int]) -> Void) {
-        handler(spaceId)
-        handlers.append(handler)
+    func emitSpaceWillChangeEvent() {
+        notifier?.notify(SpaceWillChangeEvent(external: true, id: spaceId))
     }
 }
 
@@ -30,13 +27,18 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
     private var trackers: [Int: SpaceTracker] = [:]
     private weak var ssd: SystemScreenDelegate?
     private var sst: SystemSpaceTracker
+    private weak var notifier: EventNotifier?
 
-    init(_ ssd: SystemScreenDelegate, _ sst: SystemSpaceTracker) {
+    init(_ notifier: EventNotifier?, _ ssd: SystemScreenDelegate, _ sst: SystemSpaceTracker) {
+        self.notifier = notifier
         self.ssd = ssd
         self.sst = sst
         super.init()
         for screen in ssd.screens {
             makeWindow(screen)
+        }
+        sst.onSpaceChanged { [weak self] in
+            self?.emitSpaceWillChangeEvent()
         }
         // TODO: Detect screen configuration changes
     }
@@ -54,13 +56,7 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
         return win.id
     }
 
-    /// Installs a handler to be called when the current space changes.
-    func onSpaceChanged(_ handler: @escaping ([Int]) -> Void) {
-        sst.onSpaceChanged { self.spaceChanged(handler) }
-        spaceChanged(handler)
-    }
-
-    private func spaceChanged(_ handler: @escaping ([Int]) -> Void) {
+    func emitSpaceWillChangeEvent() {
         guard let ssd = ssd else { return }
         let visible = sst.visibleIds()
         log.debug("spaceChanged: visible=\(visible)")
@@ -92,7 +88,7 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
                 visiblePerScreen.append(makeWindow(screens[idx]))
             }
         }
-        handler(visiblePerScreen)
+        notifier?.notify(SpaceWillChangeEvent(external: true, id: visiblePerScreen))
     }
 }
 

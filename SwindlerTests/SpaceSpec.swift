@@ -36,6 +36,7 @@ class StubSpaceTracker: SpaceTracker {
 
 class OSXSpaceObserverSpec: QuickSpec {
     override func spec() {
+        var notifier: EventNotifier!
         var screen1: OSXScreenDelegate<StubNSScreen>!
         var screen2: OSXScreenDelegate<StubNSScreen>!
         var ssd: FakeSystemScreenDelegate!
@@ -43,12 +44,14 @@ class OSXSpaceObserverSpec: QuickSpec {
         var observer: OSXSpaceObserver!
         var visibleIds: [Int]?
         beforeEach {
+            notifier = EventNotifier()
             screen1 = OSXScreenDelegate(nsScreen: StubNSScreen(1))
             screen2 = OSXScreenDelegate(nsScreen: StubNSScreen(2))
             ssd = FakeSystemScreenDelegate(screens: [screen1, screen2])
             sst = StubSystemSpaceTracker()
-            observer = OSXSpaceObserver(ssd, sst)
-            observer.onSpaceChanged { ids in visibleIds = ids }
+            observer = OSXSpaceObserver(notifier, ssd, sst)
+            notifier.on { (event: SpaceWillChangeEvent) in visibleIds = event.id }
+            observer.emitSpaceWillChangeEvent()
         }
 
         describe("spaces") {
