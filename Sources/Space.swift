@@ -19,7 +19,7 @@ class FakeSpaceObserver: SpaceObserver {
     }
     var newSpaceId: Int = 2
     func emitSpaceWillChangeEvent() {
-        notifier?.notify(SpaceWillChangeEvent(external: true, id: spaceId))
+        notifier?.notify(SpaceWillChangeEvent(external: true, ids: spaceId))
     }
 }
 
@@ -88,7 +88,7 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
                 visiblePerScreen.append(makeWindow(screens[idx]))
             }
         }
-        notifier?.notify(SpaceWillChangeEvent(external: true, id: visiblePerScreen))
+        notifier?.notify(SpaceWillChangeEvent(external: true, ids: visiblePerScreen))
     }
 }
 

@@ -19,6 +19,9 @@ public final class Screen: Equatable, CustomDebugStringConvertible {
     /// The frame defining the screen boundaries in global coordinates, excluding the menu bar and
     /// dock.
     public var applicationFrame: CGRect { return delegate.applicationFrame }
+
+    /// An integer uniquely representing the current space on this screen.
+    public var spaceId: Int { delegate.spaceId ?? 0 }
 }
 public func ==(lhs: Screen, rhs: Screen) -> Bool {
     return lhs.delegate.equalTo(rhs.delegate)
@@ -57,6 +60,7 @@ protocol ScreenDelegate: AnyObject, CustomDebugStringConvertible {
     var frame: CGRect { get }
     var applicationFrame: CGRect { get }
     var native: NSScreen? { get }
+    var spaceId: Int? { get set }
 
     func equalTo(_ other: ScreenDelegate) -> Bool
 }
@@ -95,6 +99,7 @@ class FakeSystemScreenDelegate: SystemScreenDelegate {
 final class FakeScreenDelegate: ScreenDelegate {
     let frame: CGRect
     let applicationFrame: CGRect
+    var spaceId: Int?
 
     init(frame: CGRect, applicationFrame: CGRect) {
         self.frame = frame
@@ -234,6 +239,7 @@ private let kNSScreenNumber = "NSScreenNumber"
 
 final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
     fileprivate let nsScreen: NSScreenT
+    var spaceId: Int?
 
     // This ID is guaranteed to stay the same for any given display. NSScreen equality checks can
     // fail if the display switches graphics cards.

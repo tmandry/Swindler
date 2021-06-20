@@ -51,11 +51,6 @@ public final class State {
         return delegate.systemScreens.screens.map {Screen(delegate: $0)}
     }
 
-    /// A unique integer representing the current space for every screen.
-    public var currentSpaceId: [Int] {
-        delegate.currentSpaceId
-    }
-
     /// Calls `handler` when the specified `Event` occurs.
     public func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
         delegate.notifier.on(handler)
@@ -72,7 +67,6 @@ protocol StateDelegate: AnyObject {
     var frontmostApplication: WriteableProperty<OfOptionalType<Application>>! { get }
     var knownWindows: [WindowDelegate] { get }
     var systemScreens: SystemScreenDelegate { get }
-    var currentSpaceId: [Int] { get }
 
     var notifier: EventNotifier { get }
 }
@@ -238,8 +232,7 @@ final class OSXStateDelegate<
     }
     var systemScreens: SystemScreenDelegate
 
-    var spaceId: [Int]!
-    var currentSpaceId: [Int] { spaceId }
+    var spaceIds: [Int]!
 
     fileprivate var initialized: Promise<Void>!
 
@@ -298,18 +291,23 @@ final class OSXStateDelegate<
         appObserver.onApplicationLaunched(onApplicationLaunch)
         appObserver.onApplicationTerminated(onApplicationTerminate)
 
-        notifier.on { (event: SpaceWillChangeEvent) in
-            log.info("Space changed: \(event.id)")
-            self.spaceId = event.id
+        notifier.on { [weak self] (event: SpaceWillChangeEvent) in
+            guard let self = self else { return }
+            log.info("Space changed: \(event.ids)")
+            self.spaceIds = event.ids
+
+            for (idx, screen) in self.systemScreens.screens.enumerated() {
+                screen.spaceId = event.ids[idx]
+            }
 
             let updateWindows = self.applications.map { app in app.onSpaceChanged() }
             when(resolved: updateWindows).done { _ in
                 // The space may have changed again in the meantime. Make sure
                 // we only emit events consistent with the current state.
                 // TODO needs a test
-                if event.id == self.spaceId {
+                if event.ids == self.spaceIds {
                     log.notice("Known windows updated")
-                    self.notifier.notify(SpaceDidChangeEvent(external: true, id: event.id))
+                    self.notifier.notify(SpaceDidChangeEvent(external: true, ids: event.ids))
                 }
             }.recover { error in
                 log.error("Couldn't update window list after space change: \(error)")

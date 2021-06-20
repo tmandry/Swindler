@@ -157,7 +157,7 @@ public struct ScreenLayoutChangedEvent: EventType {
 public struct SpaceWillChangeEvent: EventType {
     public let external: Bool
     /// For each screen, a unique integer identifying the visible space.
-    public let id: [Int]
+    public let ids: [Int]
 }
 
 /// The space has changed, and the list of known windows is up to date.
@@ -169,5 +169,5 @@ public struct SpaceWillChangeEvent: EventType {
 public struct SpaceDidChangeEvent: EventType {
     public let external: Bool
     /// For each screen, a unique integer identifying the visible space.
-    public let id: [Int]
+    public let ids: [Int]
 }

@@ -50,7 +50,7 @@ class OSXSpaceObserverSpec: QuickSpec {
             ssd = FakeSystemScreenDelegate(screens: [screen1, screen2])
             sst = StubSystemSpaceTracker()
             observer = OSXSpaceObserver(notifier, ssd, sst)
-            notifier.on { (event: SpaceWillChangeEvent) in visibleIds = event.id }
+            notifier.on { (event: SpaceWillChangeEvent) in visibleIds = event.ids }
             observer.emitSpaceWillChangeEvent()
         }
 

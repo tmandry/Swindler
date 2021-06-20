@@ -46,10 +46,6 @@ public class FakeState {
         }
     }
 
-    public var currentSpaceId: [Int] {
-        get { spaceObserver.spaceId }
-        set { spaceObserver.spaceId = newValue }
-    }
     public var newSpaceId: Int {
         spaceObserver.newSpaceId
     }
@@ -267,6 +263,10 @@ public class FakeScreen {
         get {
             return Screen(delegate: delegate)
         }
+    }
+    public var spaceId: Int? {
+        get { delegate.spaceId }
+        set { delegate.spaceId = newValue }
     }
 
     public init(frame: CGRect, applicationFrame: CGRect) {

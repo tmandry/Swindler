@@ -57,6 +57,7 @@ class StubWindowDelegate: WindowDelegate {
 class StubScreenDelegate: ScreenDelegate {
     var frame: CGRect = CGRect.zero
     var applicationFrame: CGRect = CGRect.zero
+    var spaceId: Int?
 
     init() {}
     init(frame: CGRect) {
