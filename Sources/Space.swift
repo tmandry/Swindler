@@ -49,20 +49,14 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
     /// happened.
     @discardableResult
     private func makeWindow(_ screen: ScreenDelegate) -> Int {
-        let win = OSXSpaceTracker(screen)
+        let win = sst.makeTracker(screen)
         trackers[win.id] = win
         return win.id
     }
 
     /// Installs a handler to be called when the current space changes.
     func onSpaceChanged(_ handler: @escaping ([Int]) -> Void) {
-        let sharedWorkspace = NSWorkspace.shared
-        let notificationCenter = sharedWorkspace.notificationCenter
-        notificationCenter.addObserver(
-            forName: NSWorkspace.activeSpaceDidChangeNotification,
-            object: sharedWorkspace,
-            queue: nil
-        ) { _ in self.spaceChanged(handler) }
+        sst.onSpaceChanged { self.spaceChanged(handler) }
         spaceChanged(handler)
     }
 
@@ -104,11 +98,31 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
 }
 
 protocol SystemSpaceTracker {
+    /// Installs a handler to be called when the current space changes.
+    func onSpaceChanged(_ handler: @escaping () -> ())
+
+    /// Creates a tracker for the current space on the given screen.
+    func makeTracker(_ screen: ScreenDelegate) -> SpaceTracker
+
     /// Returns the list of IDs of SpaceTrackers whose spaces are currently visible.
     func visibleIds() -> [Int]
 }
 
 class OSXSystemSpaceTracker: SystemSpaceTracker {
+    func onSpaceChanged(_ handler: @escaping () -> ()) {
+        let sharedWorkspace = NSWorkspace.shared
+        let notificationCenter = sharedWorkspace.notificationCenter
+        notificationCenter.addObserver(
+            forName: NSWorkspace.activeSpaceDidChangeNotification,
+            object: sharedWorkspace,
+            queue: nil
+        ) { _ in handler() }
+    }
+
+    func makeTracker(_ screen: ScreenDelegate) -> SpaceTracker {
+        OSXSpaceTracker(screen)
+    }
+
     func visibleIds() -> [Int] {
         (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
     }
@@ -128,7 +142,12 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
         //win = NSWindow(contentViewController: NSViewController(nibName: nil, bundle: nil))
         // Size must be non-zero to receive occlusion state events.
         let rect = /*NSRect.zero */NSRect(x: 0, y: 0, width: 1, height: 1)
-        win = NSWindow(contentRect: rect, styleMask: .borderless/*[.titled, .resizable, .miniaturizable]*/, backing: .buffered, defer: true, screen: screen.native)
+        win = NSWindow(
+            contentRect: rect,
+            styleMask: .borderless/*[.titled, .resizable, .miniaturizable]*/,
+            backing: .buffered,
+            defer: true,
+            screen: screen.native)
         win.isReleasedWhenClosed = false
         win.ignoresMouseEvents = true
         win.hasShadow = false
@@ -162,7 +181,11 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
 
     func windowDidChangeOcclusionState(_ notification: Notification) {
         let win = notification.object as! NSWindow
-        log.debug("window \(win.windowNumber) occstchanged; occVis=\(win.occlusionState.contains(NSWindow.OcclusionState.visible)), vis=\(win.isVisible), activeSpace=\(win.isOnActiveSpace)")
+        log.debug("""
+            window \(win.windowNumber) occstchanged; \
+            occVis=\(win.occlusionState.contains(NSWindow.OcclusionState.visible)), \
+            vis=\(win.isVisible), activeSpace=\(win.isOnActiveSpace)
+        """)
         let visible = (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
         log.debug("visible=\(visible)")
         // TODO: Use this event to detect space merges.
