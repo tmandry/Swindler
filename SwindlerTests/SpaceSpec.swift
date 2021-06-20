@@ -39,25 +39,33 @@ class OSXSpaceObserverSpec: QuickSpec {
         var screen1: OSXScreenDelegate<StubNSScreen>!
         var screen2: OSXScreenDelegate<StubNSScreen>!
         var ssd: FakeSystemScreenDelegate!
+        var sst: StubSystemSpaceTracker!
+        var observer: OSXSpaceObserver!
+        var visibleIds: [Int]?
         beforeEach {
             screen1 = OSXScreenDelegate(nsScreen: StubNSScreen(1))
             screen2 = OSXScreenDelegate(nsScreen: StubNSScreen(2))
             ssd = FakeSystemScreenDelegate(screens: [screen1, screen2])
+            sst = StubSystemSpaceTracker()
+            observer = OSXSpaceObserver(ssd, sst)
+            observer.onSpaceChanged { ids in visibleIds = ids }
         }
 
         describe("spaces") {
             it("work") {
-                let sst = StubSystemSpaceTracker()
-                let observer = OSXSpaceObserver(ssd, sst)
-                var visible: [Int]?
-                observer.onSpaceChanged { ids in visible = ids }
                 expect(sst.trackersMade).to(haveCount(2))
-                expect(visible).to(contain(1, 2))
+                expect(visibleIds).to(contain(1, 2))
                 sst.visible = [1]
                 sst.spaceChangeHandler?()
                 expect(sst.trackersMade).to(haveCount(3))
-                expect(visible).to(contain(1, 3))
+                expect(visibleIds) == [1, 3]
                 expect(sst.trackersMade.last?.screen?.equalTo(screen2)) == true
+
+                // Simulate spaces being combined
+                sst.visible = [1, 3, 2]
+                sst.spaceChangeHandler?()
+                expect(sst.trackersMade).to(haveCount(3))
+                expect(visibleIds) == [1, 2]
             }
         }
     }

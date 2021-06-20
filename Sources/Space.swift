@@ -86,8 +86,7 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
 
         var visiblePerScreen: [Int] = []
         for (idx, visible) in visibleByScreen.enumerated() {
-            // TODO: Break ties deterministically (and test)
-            if let id = visible.first {
+            if let id = visible.min() {
                 visiblePerScreen.append(id)
             } else {
                 visiblePerScreen.append(makeWindow(screens[idx]))
