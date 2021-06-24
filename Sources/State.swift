@@ -216,7 +216,7 @@ final class OSXStateDelegate<
     var notifier: EventNotifier
 
     fileprivate var appObserver: ApplicationObserver
-    fileprivate var spaceObserver: SpaceObserver
+    fileprivate var spaceObserver: OSXSpaceObserver
 
     // For convenience/readability.
     fileprivate var applications: Dictionary<pid_t, AppDelegate>.Values {
@@ -239,11 +239,11 @@ final class OSXStateDelegate<
     // TODO: retry instead of ignoring an app/window when timeouts are encountered during
     // initialization?
 
-    static func initialize<Screens: SystemScreenDelegate, Spaces: SpaceObserver>(
+    static func initialize<Screens: SystemScreenDelegate>(
         _ notifier: EventNotifier,
         _ appObserver: ApplicationObserver,
         _ screens: Screens,
-        _ spaces: Spaces
+        _ spaces: OSXSpaceObserver
     ) -> Promise<OSXStateDelegate> {
         return firstly { () -> Promise<OSXStateDelegate> in
             let delegate = OSXStateDelegate(notifier, appObserver, screens, spaces)
@@ -252,11 +252,11 @@ final class OSXStateDelegate<
     }
 
     // TODO make private
-    init<Screens: SystemScreenDelegate, Spaces: SpaceObserver>(
+    init<Screens: SystemScreenDelegate>(
         _ notifier: EventNotifier,
         _ appObserver: ApplicationObserver,
         _ screens: Screens,
-        _ spaces: Spaces
+        _ spaces: OSXSpaceObserver
     ) {
         log.debug("Initializing Swindler")
 
