@@ -32,7 +32,7 @@ class OSXStateDelegateSpec: QuickSpec {
         ) -> OSXStateDelegate<TestUIElement, AppObserver.ApplicationElement, TestObserver, AppObserver> {
             let notifier = EventNotifier()
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
-            let spaces = FakeSpaceObserver(notifier)
+            let spaces = OSXSpaceObserver(notifier, screenDel, FakeSystemSpaceTracker())
             let stateDel = OSXStateDelegate<
                 TestUIElement, AppObserver.ApplicationElement, TestObserver, AppObserver
             >(notifier, appObserver, screenDel, spaces)
@@ -70,7 +70,7 @@ class OSXStateDelegateSpec: QuickSpec {
                 let notifier = EventNotifier()
                 let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
                 let observer = StubApplicationObserver()
-                let spaces = FakeSpaceObserver(notifier)
+                let spaces = OSXSpaceObserver(notifier, screenDel, FakeSystemSpaceTracker())
                 observer.allApps = apps
                 return OSXStateDelegate(notifier, observer, screenDel, spaces)
             }

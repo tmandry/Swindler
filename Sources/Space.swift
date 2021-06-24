@@ -8,21 +8,6 @@ protocol SpaceObserver {
     func emitSpaceWillChangeEvent()
 }
 
-class FakeSpaceObserver: SpaceObserver {
-    weak var notifier: EventNotifier?
-    init(_ notifier: EventNotifier) { self.notifier = notifier }
-    var spaceId: [Int] = [1] {
-        didSet {
-            newSpaceId = max(newSpaceId, spaceId.max() ?? 0 + 1)
-            emitSpaceWillChangeEvent()
-        }
-    }
-    var newSpaceId: Int = 2
-    func emitSpaceWillChangeEvent() {
-        notifier?.notify(SpaceWillChangeEvent(external: true, ids: spaceId))
-    }
-}
-
 class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
     private var trackers: [Int: SpaceTracker] = [:]
     private weak var ssd: SystemScreenDelegate?
@@ -185,4 +170,36 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
         log.debug("visible=\(visible)")
         // TODO: Use this event to detect space merges.
     }
+}
+
+class FakeSystemSpaceTracker: SystemSpaceTracker {
+    init() {}
+
+    var spaceChangeHandler: Optional<() -> ()> = nil
+    func onSpaceChanged(_ handler: @escaping () -> ()) {
+        spaceChangeHandler = handler
+    }
+
+    var trackersMade: [StubSpaceTracker] = []
+    func makeTracker(_ screen: ScreenDelegate) -> SpaceTracker {
+        let tracker = StubSpaceTracker(screen, id: nextSpaceId)
+        trackersMade.append(tracker)
+        visible.append(tracker.id)
+        return tracker
+    }
+
+    var nextSpaceId: Int { trackersMade.count + 1 }
+
+    var visible: [Int] = []
+    func visibleIds() -> [Int] { visible }
+}
+
+class StubSpaceTracker: SpaceTracker {
+    var screen: ScreenDelegate?
+    var id: Int
+    init(_ screen: ScreenDelegate?, id: Int) {
+        self.screen = screen
+        self.id = id
+    }
+    func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate? { screen }
 }

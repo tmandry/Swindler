@@ -26,7 +26,7 @@ class OSXDriverSpec: QuickSpec {
 
             let notifier = EventNotifier()
             let screenDel = FakeSystemScreenDelegate(screens: [FakeScreen().delegate])
-            let spaces = FakeSpaceObserver(notifier)
+            let spaces = OSXSpaceObserver(notifier, screenDel, FakeSystemSpaceTracker())
             state = State(delegate: OSXStateDelegate<
                 TestUIElement, EmittingTestApplicationElement, FakeObserver, FakeApplicationObserver
             >(notifier, appObserver, screenDel, spaces))

@@ -22,12 +22,16 @@ public class FakeState {
     public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
         let notifier = EventNotifier()
         let appObserver = FakeApplicationObserver()
-        let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
-        let spaces = FakeSpaceObserver(notifier)
+        let ssd = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+        let sst = FakeSystemSpaceTracker()
+        let spaces = OSXSpaceObserver(notifier, ssd, sst)
+        for screen in screens {
+            screen.spaceObserver = spaces
+        }
         return firstly {
-            Delegate.initialize(notifier, appObserver, screens, spaces)
+            Delegate.initialize(notifier, appObserver, ssd, spaces)
         }.map { delegate in
-            FakeState(delegate, appObserver, spaces)
+            FakeState(delegate, appObserver, sst)
         }
     }
 
@@ -47,22 +51,22 @@ public class FakeState {
     }
 
     public var newSpaceId: Int {
-        spaceObserver.newSpaceId
+        spaceTracker.nextSpaceId
     }
 
     fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
-    var spaceObserver: FakeSpaceObserver
+    var spaceTracker: FakeSystemSpaceTracker
 
     private init(
         _ delegate: Delegate,
         _ appObserver: FakeApplicationObserver,
-        _ spaces: FakeSpaceObserver
+        _ spaces: FakeSystemSpaceTracker
     ) {
         self.state = State(delegate: delegate)
         self.delegate = delegate
         self.appObserver = appObserver
-        self.spaceObserver = spaces
+        self.spaceTracker = spaces
     }
 }
 
@@ -264,9 +268,13 @@ public class FakeScreen {
             return Screen(delegate: delegate)
         }
     }
+    weak var spaceObserver: OSXSpaceObserver?
     public var spaceId: Int? {
         get { delegate.spaceId }
-        set { delegate.spaceId = newValue }
+        set {
+            delegate.spaceId = newValue
+            spaceObserver?.emitSpaceWillChangeEvent()
+        }
     }
 
     public init(frame: CGRect, applicationFrame: CGRect) {
