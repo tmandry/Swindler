@@ -1,14 +1,6 @@
 import Cocoa
 
-protocol SpaceObserver {
-    /// Emits a SpaceWillChangeEvent on the notifier this observer was
-    /// constructed with.
-    ///
-    /// Used during initialization.
-    func emitSpaceWillChangeEvent()
-}
-
-class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
+class OSXSpaceObserver: NSObject, NSWindowDelegate {
     private var trackers: [Int: SpaceTracker] = [:]
     private weak var ssd: SystemScreenDelegate?
     private var sst: SystemSpaceTracker
@@ -41,6 +33,10 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate, SpaceObserver {
         return win.id
     }
 
+    /// Emits a SpaceWillChangeEvent on the notifier this observer was
+    /// constructed with.
+    ///
+    /// Used during initialization.
     func emitSpaceWillChangeEvent() {
         guard let ssd = ssd else { return }
         let visible = sst.visibleIds()

@@ -369,7 +369,6 @@ extension OSXApplicationDelegate {
         } else {
             // We don't know about the element that has been passed. Wait until the window is
             // initialized.
-            //newWindowHandler.performAfterWindowCreatedForElement(element) { property.refresh() }
             createWindowForElementIfNotExists(element)
                 .done { _ in property.refresh() }
                 .recover { err in
