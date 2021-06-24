@@ -400,6 +400,10 @@ class FakeApplicationObserver: ApplicationObserverType {
         terminateHandlers.append(handler)
     }
 
+    func onSpaceChanged(_ handler: @escaping (Int) -> Void) {
+        // TODO
+    }
+
     func makeApplicationFrontmost(_ pid: pid_t) throws {
         setFrontmost(pid)
     }

@@ -20,12 +20,18 @@ public class FakeState {
         OSXStateDelegate<TestUIElement, AppElement, FakeObserver, FakeApplicationObserver>
 
     public static func initialize(screens: [FakeScreen] = [FakeScreen()]) -> Promise<FakeState> {
+        let notifier = EventNotifier()
         let appObserver = FakeApplicationObserver()
-        let screens = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+        let ssd = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
+        let sst = FakeSystemSpaceTracker()
+        let spaces = OSXSpaceObserver(notifier, ssd, sst)
+        for screen in screens {
+            screen.spaceObserver = spaces
+        }
         return firstly {
-            Delegate.initialize(appObserver: appObserver, screens: screens)
+            Delegate.initialize(notifier, appObserver, ssd, spaces)
         }.map { delegate in
-            FakeState(delegate, appObserver)
+            FakeState(delegate, appObserver, sst)
         }
     }
 
@@ -44,13 +50,23 @@ public class FakeState {
         }
     }
 
+    public var newSpaceId: Int {
+        spaceTracker.nextSpaceId
+    }
+
     fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
+    var spaceTracker: FakeSystemSpaceTracker
 
-    private init(_ delegate: Delegate, _ appObserver: FakeApplicationObserver) {
+    private init(
+        _ delegate: Delegate,
+        _ appObserver: FakeApplicationObserver,
+        _ spaces: FakeSystemSpaceTracker
+    ) {
         self.state = State(delegate: delegate)
         self.delegate = delegate
         self.appObserver = appObserver
+        self.spaceTracker = spaces
     }
 }
 
@@ -250,6 +266,14 @@ public class FakeScreen {
     public var screen: Screen {
         get {
             return Screen(delegate: delegate)
+        }
+    }
+    weak var spaceObserver: OSXSpaceObserver?
+    public var spaceId: Int? {
+        get { delegate.spaceId }
+        set {
+            delegate.spaceId = newValue
+            spaceObserver?.emitSpaceWillChangeEvent()
         }
     }
 

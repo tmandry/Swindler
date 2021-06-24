@@ -607,7 +607,7 @@ class OSXApplicationDelegateSpec: QuickSpec {
 
                 context("and the passed application element doesn't equal our stored application "
                       + "element") {
-                    // Because shit happens. Finder does this.
+                    // Finder does this.
                     it("becomes nil") {
                         let otherAppElement = TestUIElement()
                         otherAppElement.processID = appElement.processID

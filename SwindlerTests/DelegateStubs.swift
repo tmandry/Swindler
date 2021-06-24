@@ -8,6 +8,7 @@ class StubStateDelegate: StateDelegate {
     var knownWindows: [WindowDelegate] = []
     var systemScreens: SystemScreenDelegate { return fakeScreens }
     var notifier: EventNotifier = EventNotifier()
+    var currentSpaceId: [Int] = [0]
 
     var fakeScreens: FakeSystemScreenDelegate = FakeSystemScreenDelegate(screens: [])
 }
@@ -56,6 +57,7 @@ class StubWindowDelegate: WindowDelegate {
 class StubScreenDelegate: ScreenDelegate {
     var frame: CGRect = CGRect.zero
     var applicationFrame: CGRect = CGRect.zero
+    var spaceId: Int?
 
     init() {}
     init(frame: CGRect) {
@@ -64,6 +66,8 @@ class StubScreenDelegate: ScreenDelegate {
     }
 
     var debugDescription: String { return "StubScreenDelegate" }
+
+    var native: NSScreen? { nil }
 
     func equalTo(_ other: ScreenDelegate) -> Bool { return self === other }
 }
