@@ -95,7 +95,7 @@ struct Log {
             }
             // stderr seems to get thrown away by `swift test`, so we print to stdout
             // for now.
-            print(output, to: &stderrStream)
+            // print(output, to: &stderrStream)
             print(output)
         }
     }

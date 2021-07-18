@@ -4,14 +4,18 @@ import PromiseKit
 
 /// Initializes a new Swindler state and returns it in a Promise.
 public func initialize() -> Promise<State> {
+    let notifier = EventNotifier()
+    let ssd = OSXSystemScreenDelegate(notifier)
     return OSXStateDelegate<
         AXSwift.UIElement,
         AXSwift.Application,
         AXSwift.Observer,
         ApplicationObserver
     >.initialize(
-        appObserver: ApplicationObserver(),
-        screens: OSXSystemScreenDelegate()
+        notifier,
+        ApplicationObserver(),
+        ssd,
+        OSXSpaceObserver(notifier, ssd, OSXSystemSpaceTracker())
     ).map { delegate in
        State(delegate: delegate)
     }
@@ -75,6 +79,7 @@ protocol ApplicationObserverType {
     func onFrontmostApplicationChanged(_ handler: @escaping () -> Void)
     func onApplicationLaunched(_ handler: @escaping (pid_t) -> Void)
     func onApplicationTerminated(_ handler: @escaping (pid_t) -> Void)
+
     func makeApplicationFrontmost(_ pid: pid_t) throws
 
     associatedtype ApplicationElement: ApplicationElementType
@@ -206,9 +211,12 @@ final class OSXStateDelegate<
     typealias AppDelegate = OSXApplicationDelegate<UIElement, ApplicationElement, Observer>
 
     private var applicationsByPID: [pid_t: AppDelegate] = [:]
+
+    // This should be the only strong reference to EventNotifier.
     var notifier: EventNotifier
 
     fileprivate var appObserver: ApplicationObserver
+    fileprivate var spaceObserver: OSXSpaceObserver
 
     // For convenience/readability.
     fileprivate var applications: Dictionary<pid_t, AppDelegate>.Values {
@@ -224,32 +232,38 @@ final class OSXStateDelegate<
     }
     var systemScreens: SystemScreenDelegate
 
+    var spaceIds: [Int]!
+
     fileprivate var initialized: Promise<Void>!
 
     // TODO: retry instead of ignoring an app/window when timeouts are encountered during
     // initialization?
 
-    static func initialize<S: SystemScreenDelegate>(
-        appObserver: ApplicationObserver,
-        screens: S
+    static func initialize<Screens: SystemScreenDelegate>(
+        _ notifier: EventNotifier,
+        _ appObserver: ApplicationObserver,
+        _ screens: Screens,
+        _ spaces: OSXSpaceObserver
     ) -> Promise<OSXStateDelegate> {
         return firstly { () -> Promise<OSXStateDelegate> in
-            let delegate = OSXStateDelegate(appObserver: appObserver, screens: screens)
+            let delegate = OSXStateDelegate(notifier, appObserver, screens, spaces)
             return delegate.initialized.map { delegate }
         }
     }
 
     // TODO make private
-    init<S: SystemScreenDelegate>(appObserver: ApplicationObserver, screens ssd: S) {
+    init<Screens: SystemScreenDelegate>(
+        _ notifier: EventNotifier,
+        _ appObserver: ApplicationObserver,
+        _ screens: Screens,
+        _ spaces: OSXSpaceObserver
+    ) {
         log.debug("Initializing Swindler")
 
-        notifier = EventNotifier()
-        systemScreens = ssd
+        self.notifier = notifier
+        systemScreens = screens
         self.appObserver = appObserver
-
-        ssd.onScreenLayoutChanged { event in
-            self.notifier.notify(event)
-        }
+        spaceObserver = spaces
 
         let appPromises = appObserver.allApplications().map { appElement in
             watchApplication(appElement: appElement)
@@ -276,6 +290,30 @@ final class OSXStateDelegate<
         appObserver.onFrontmostApplicationChanged(frontmostApplication.issueRefresh)
         appObserver.onApplicationLaunched(onApplicationLaunch)
         appObserver.onApplicationTerminated(onApplicationTerminate)
+
+        notifier.on { [weak self] (event: SpaceWillChangeEvent) in
+            guard let self = self else { return }
+            log.info("Space changed: \(event.ids)")
+            self.spaceIds = event.ids
+
+            for (idx, screen) in self.systemScreens.screens.enumerated() {
+                screen.spaceId = event.ids[idx]
+            }
+
+            let updateWindows = self.applications.map { app in app.onSpaceChanged() }
+            when(resolved: updateWindows).done { _ in
+                // The space may have changed again in the meantime. Make sure
+                // we only emit events consistent with the current state.
+                // TODO needs a test
+                if event.ids == self.spaceIds {
+                    log.notice("Known windows updated")
+                    self.notifier.notify(SpaceDidChangeEvent(external: true, ids: event.ids))
+                }
+            }.recover { error in
+                log.error("Couldn't update window list after space change: \(error)")
+            }
+        }
+        spaces.emitSpaceWillChangeEvent()
 
         // Must not allow frontmostApplication to initialize until the observer is in place.
         when(fulfilled: appPromises)
