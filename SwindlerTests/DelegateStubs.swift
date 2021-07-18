@@ -36,7 +36,7 @@ class StubWindowDelegate: WindowDelegate {
 
     var frame: WriteableProperty<OfType<CGRect>>!
     var size: SizeProperty!
-    var title: Property<OfType<String>>!
+    var title: Property<OfDefaultedType<String>>!
     var isMinimized: WriteableProperty<OfType<Bool>>!
     var isFullscreen: WriteableProperty<OfType<Bool>>!
 
