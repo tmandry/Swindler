@@ -51,6 +51,11 @@ public final class State {
         return delegate.systemScreens.screens.map {Screen(delegate: $0)}
     }
 
+    /// The main screen, if any.
+    public var mainScreen: Screen? {
+        return delegate.systemScreens.main.map {Screen(delegate: $0)}
+    }
+
     /// Calls `handler` when the specified `Event` occurs.
     public func on<Event: EventType>(_ handler: @escaping (Event) -> Void) {
         delegate.notifier.on(handler)
