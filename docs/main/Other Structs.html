@@ -165,6 +165,9 @@
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Other%20Extensions.html#/AXSwift">AXSwift</a>
               </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Extensions/String.html">String</a>
+              </li>
             </ul>
           </li>
           <li class="nav-group-name">
@@ -191,6 +194,9 @@
             <a class="nav-group-name-link" href="Other%20Protocols.html">Other Protocols</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Protocols/Defaultable.html">Defaultable</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Protocols/EventType.html">EventType</a>
               </li>
             </ul>
@@ -202,10 +208,19 @@
                 <a class="nav-group-task-link" href="Structs/FakeApplicationBuilder.html">FakeApplicationBuilder</a>
               </li>
               <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/OfDefaultedType.html">OfDefaultedType</a>
+              </li>
+              <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Structs/OfOptionalType.html">OfOptionalType</a>
               </li>
               <li class="nav-group-task">
                 <a class="nav-group-task-link" href="Structs/OfType.html">OfType</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/SpaceDidChangeEvent.html">SpaceDidChangeEvent</a>
+              </li>
+              <li class="nav-group-task">
+                <a class="nav-group-task-link" href="Structs/SpaceWillChangeEvent.html">SpaceWillChangeEvent</a>
               </li>
             </ul>
           </li>
@@ -225,6 +240,73 @@
           <div class="section-content">
             <div class="task-group">
               <ul class="item-container">
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler20SpaceWillChangeEventV"></a>
+                    <a name="//apple_ref/swift/Struct/SpaceWillChangeEvent" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler20SpaceWillChangeEventV">SpaceWillChangeEvent</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The space has changed, but we have not yet updated the list of known windows.</p>
+
+                        <a href="Structs/SpaceWillChangeEvent.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">SpaceWillChangeEvent</span> <span class="p">:</span> <span class="kt"><a href="Protocols/EventType.html">EventType</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L157-L161">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler19SpaceDidChangeEventV"></a>
+                    <a name="//apple_ref/swift/Struct/SpaceDidChangeEvent" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler19SpaceDidChangeEventV">SpaceDidChangeEvent</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>The space has changed, and the list of known windows is up to date.</p>
+
+<p>Note that this event may not correspond 1:1 with SpaceWillChangeEvent.
+In particular, if the space changes again before the list of known windows
+can be updated, SpaceWillChangeEvent will fire twice and this event will
+fire only once.</p>
+
+                        <a href="Structs/SpaceDidChangeEvent.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">SpaceDidChangeEvent</span> <span class="p">:</span> <span class="kt"><a href="Protocols/EventType.html">EventType</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L169-L173">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
                 <li class="item">
                   <div>
                     <code>
@@ -251,7 +333,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/ccec313f41d5f06ce8e904eaa5e33c1cb18927c0/Sources/FakeSwindler.swift#L57-L83">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/FakeSwindler.swift#L73-L99">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -284,7 +366,41 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/ccec313f41d5f06ce8e904eaa5e33c1cb18927c0/Sources/Property.swift#L80-L93">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L84-L97">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler15OfDefaultedTypeV"></a>
+                    <a name="//apple_ref/swift/Struct/OfDefaultedType" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler15OfDefaultedTypeV">OfDefaultedType</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Specifies that a <code><a href="Classes/Property.html">Property</a></code> has type <code>T</code>, and should use a default value if
+the property is missing.</p>
+
+<p>Internally used by Swindler. You should not use this directly.</p>
+
+                        <a href="Structs/OfDefaultedType.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">OfDefaultedType</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt">PropertyTypeSpec</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Equatable</span><span class="p">,</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="Protocols/Defaultable.html">Defaultable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L103-L111">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -317,7 +433,7 @@
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/ccec313f41d5f06ce8e904eaa5e33c1cb18927c0/Sources/Property.swift#L98-L104">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L116-L122">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -330,7 +446,7 @@
       </article>
     </div>
     <section class="footer">
-      <p>&copy; 2021 <a class="link" href="https://twitter.com/tmandry" target="_blank" rel="external">Tyler Mandry</a>. All rights reserved. (Last updated: 2021-06-03)</p>
+      <p>&copy; 2021 <a class="link" href="https://twitter.com/tmandry" target="_blank" rel="external">Tyler Mandry</a>. All rights reserved. (Last updated: 2021-07-18)</p>
       <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.7</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
     </section>
   </body>

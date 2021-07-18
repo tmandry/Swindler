@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ApplicationMainWindowChangedEvent Structure Reference</title>
+    <title>OfDefaultedType Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Struct/ApplicationMainWindowChangedEvent" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Struct/OfDefaultedType" class="dashAnchor"></a>
 
-    <a title="ApplicationMainWindowChangedEvent Structure Reference"></a>
+    <a title="OfDefaultedType Structure Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -50,7 +50,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">Swindler Reference</a>
       <img class="carat" src="../img/carat.png" />
-      ApplicationMainWindowChangedEvent Structure Reference
+      OfDefaultedType Structure Reference
     </p>
 
     <div class="content-wrapper">
@@ -230,18 +230,21 @@
 
         <section class="section">
           <div class="section-content top-matter">
-            <h1>ApplicationMainWindowChangedEvent</h1>
+            <h1>OfDefaultedType</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ApplicationMainWindowChangedEvent</span> <span class="p">:</span> <span class="kt">ApplicationPropertyEventType</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">OfDefaultedType</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span> <span class="p">:</span> <span class="kt">PropertyTypeSpec</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt">Equatable</span><span class="p">,</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/Defaultable.html">Defaultable</a></span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>Specifies that a <code><a href="../Classes/Property.html">Property</a></code> has type <code>T</code>, and should use a default value if
+the property is missing.</p>
+
+<p>Internally used by Swindler. You should not use this directly.</p>
 
               <div class="slightly-smaller">
-                <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L129-L136">Show on GitHub</a>
+                <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L103-L111">Show on GitHub</a>
               </div>
           </div>
         </section>
@@ -253,9 +256,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8Swindler33ApplicationMainWindowChangedEventV6Objecta"></a>
-                    <a name="//apple_ref/swift/Alias/Object" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler33ApplicationMainWindowChangedEventV6Objecta">Object</a>
+                    <a name="/s:8Swindler15OfDefaultedTypeV011NonOptionalD0a"></a>
+                    <a name="//apple_ref/swift/Alias/NonOptionalType" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler15OfDefaultedTypeV011NonOptionalD0a">NonOptionalType</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -270,12 +273,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">Object</span> <span class="o">=</span> <span class="kt"><a href="../Classes/Application.html">Application</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">NonOptionalType</span> <span class="o">=</span> <span class="kt">T</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -283,9 +286,38 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea"></a>
+                    <a name="/s:8Swindler16PropertyTypeSpecP0bC0Qa"></a>
                     <a name="//apple_ref/swift/Alias/PropertyType" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea">PropertyType</a>
+                    <a class="token" href="#/s:8Swindler16PropertyTypeSpecP0bC0Qa">PropertyType</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">PropertyType</span> <span class="o">=</span> <span class="kt">T</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div class="slightly-smaller">
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L71">Show on GitHub</a>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:8Swindler15OfDefaultedTypeV5equalySbx_xtFZ"></a>
+                    <a name="//apple_ref/swift/Method/equal(_:_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler15OfDefaultedTypeV5equalySbx_xtFZ">equal(_:<wbr>_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -300,12 +332,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">PropertyType</span> <span class="o">=</span> <span class="kt"><a href="../Classes/Window.html">Window</a></span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">equal</span><span class="p">(</span><span class="n">_</span> <span class="nv">lhs</span><span class="p">:</span> <span class="kt">T</span><span class="p">,</span> <span class="n">_</span> <span class="nv">rhs</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -313,38 +345,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8Swindler9EventTypeP8externalSbvp"></a>
-                    <a name="//apple_ref/swift/Property/external" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler9EventTypeP8externalSbvp">external</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">external</span><span class="p">:</span> <span class="kt">Bool</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L9">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8Swindler33ApplicationMainWindowChangedEventV11applicationAA0B0Cvp"></a>
-                    <a name="//apple_ref/swift/Property/application" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler33ApplicationMainWindowChangedEventV11applicationAA0B0Cvp">application</a>
+                    <a name="/s:8Swindler15OfDefaultedTypeV010toPropertyD0yxxSgKFZ"></a>
+                    <a name="//apple_ref/swift/Method/toPropertyType(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler15OfDefaultedTypeV010toPropertyD0yxxSgKFZ">toPropertyType(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -359,12 +362,12 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">application</span><span class="p">:</span> <span class="kt"><a href="../Classes/Application.html">Application</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">toPropertyType</span><span class="p">(</span><span class="n">_</span> <span class="nv">from</span><span class="p">:</span> <span class="kt">T</span><span class="p">?)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">T</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L107-L109">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
@@ -372,9 +375,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8Swindler17PropertyEventTypeP8oldValue0bD0Qzvp"></a>
-                    <a name="//apple_ref/swift/Property/oldValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler17PropertyEventTypeP8oldValue0bD0Qzvp">oldValue</a>
+                    <a name="/s:8Swindler15OfDefaultedTypeV010toOptionalD0yxSgxFZ"></a>
+                    <a name="//apple_ref/swift/Method/toOptionalType(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler15OfDefaultedTypeV010toOptionalD0yxSgxFZ">toOptionalType(_:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -382,47 +385,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">oldValue</span><span class="p">:</span> <span class="kt"><a href="../Structs/ApplicationMainWindowChangedEvent.html#/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea">PropertyType</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">toOptionalType</span><span class="p">(</span><span class="n">_</span> <span class="nv">from</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">T</span><span class="p">?</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L28">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8Swindler17PropertyEventTypeP8newValue0bD0Qzvp"></a>
-                    <a name="//apple_ref/swift/Property/newValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler17PropertyEventTypeP8newValue0bD0Qzvp">newValue</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">newValue</span><span class="p">:</span> <span class="kt"><a href="../Structs/ApplicationMainWindowChangedEvent.html#/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea">PropertyType</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L30">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Property.swift#L">Show on GitHub</a>
                       </div>
                     </section>
                   </div>

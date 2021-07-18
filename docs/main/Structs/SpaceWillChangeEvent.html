@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>ApplicationMainWindowChangedEvent Structure Reference</title>
+    <title>SpaceWillChangeEvent Structure Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset="utf-8">
@@ -14,9 +14,9 @@
   </head>
   <body>
 
-    <a name="//apple_ref/swift/Struct/ApplicationMainWindowChangedEvent" class="dashAnchor"></a>
+    <a name="//apple_ref/swift/Struct/SpaceWillChangeEvent" class="dashAnchor"></a>
 
-    <a title="ApplicationMainWindowChangedEvent Structure Reference"></a>
+    <a title="SpaceWillChangeEvent Structure Reference"></a>
 
     <header class="header">
       <p class="header-col header-col--primary">
@@ -50,7 +50,7 @@
     <p class="breadcrumbs">
       <a class="breadcrumb" href="../index.html">Swindler Reference</a>
       <img class="carat" src="../img/carat.png" />
-      ApplicationMainWindowChangedEvent Structure Reference
+      SpaceWillChangeEvent Structure Reference
     </p>
 
     <div class="content-wrapper">
@@ -230,18 +230,18 @@
 
         <section class="section">
           <div class="section-content top-matter">
-            <h1>ApplicationMainWindowChangedEvent</h1>
+            <h1>SpaceWillChangeEvent</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">ApplicationMainWindowChangedEvent</span> <span class="p">:</span> <span class="kt">ApplicationPropertyEventType</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">SpaceWillChangeEvent</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/EventType.html">EventType</a></span></code></pre>
 
                 </div>
               </div>
-            <p>Undocumented</p>
+            <p>The space has changed, but we have not yet updated the list of known windows.</p>
 
               <div class="slightly-smaller">
-                <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L129-L136">Show on GitHub</a>
+                <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L157-L161">Show on GitHub</a>
               </div>
           </div>
         </section>
@@ -250,66 +250,6 @@
           <div class="section-content">
             <div class="task-group">
               <ul class="item-container">
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8Swindler33ApplicationMainWindowChangedEventV6Objecta"></a>
-                    <a name="//apple_ref/swift/Alias/Object" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler33ApplicationMainWindowChangedEventV6Objecta">Object</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">Object</span> <span class="o">=</span> <span class="kt"><a href="../Classes/Application.html">Application</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea"></a>
-                    <a name="//apple_ref/swift/Alias/PropertyType" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea">PropertyType</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">typealias</span> <span class="kt">PropertyType</span> <span class="o">=</span> <span class="kt"><a href="../Classes/Window.html">Window</a></span><span class="p">?</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
                 <li class="item">
                   <div>
                     <code>
@@ -342,9 +282,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:8Swindler33ApplicationMainWindowChangedEventV11applicationAA0B0Cvp"></a>
-                    <a name="//apple_ref/swift/Property/application" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler33ApplicationMainWindowChangedEventV11applicationAA0B0Cvp">application</a>
+                    <a name="/s:8Swindler20SpaceWillChangeEventV3idsSaySiGvp"></a>
+                    <a name="//apple_ref/swift/Property/ids" class="dashAnchor"></a>
+                    <a class="token" href="#/s:8Swindler20SpaceWillChangeEventV3idsSaySiGvp">ids</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -352,77 +292,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Undocumented</p>
+                        <p>For each screen, a unique integer identifying the visible space.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">application</span><span class="p">:</span> <span class="kt"><a href="../Classes/Application.html">Application</a></span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">ids</span><span class="p">:</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span></code></pre>
 
                         </div>
                       </div>
                       <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8Swindler17PropertyEventTypeP8oldValue0bD0Qzvp"></a>
-                    <a name="//apple_ref/swift/Property/oldValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler17PropertyEventTypeP8oldValue0bD0Qzvp">oldValue</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">oldValue</span><span class="p">:</span> <span class="kt"><a href="../Structs/ApplicationMainWindowChangedEvent.html#/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea">PropertyType</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L28">Show on GitHub</a>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:8Swindler17PropertyEventTypeP8newValue0bD0Qzvp"></a>
-                    <a name="//apple_ref/swift/Property/newValue" class="dashAnchor"></a>
-                    <a class="token" href="#/s:8Swindler17PropertyEventTypeP8newValue0bD0Qzvp">newValue</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">newValue</span><span class="p">:</span> <span class="kt"><a href="../Structs/ApplicationMainWindowChangedEvent.html#/s:8Swindler33ApplicationMainWindowChangedEventV12PropertyTypea">PropertyType</a></span></code></pre>
-
-                        </div>
-                      </div>
-                      <div class="slightly-smaller">
-                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L30">Show on GitHub</a>
+                        <a href="https://github.com/tmandry/Swindler/blob/a6b530bcf0b821c0b5a6fc3ee9f5adadbc6635fc/Sources/Events.swift#L160">Show on GitHub</a>
                       </div>
                     </section>
                   </div>
