@@ -24,6 +24,7 @@
 		091C22D226F2668C0079F9EE /* Swindler.h in Headers */ = {isa = PBXBuildFile; fileRef = OBJ_8 /* Swindler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		091C22D326F266900079F9EE /* Swindler-C.h in Headers */ = {isa = PBXBuildFile; fileRef = 091C22D026F265F70079F9EE /* Swindler-C.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		091C22D526F26B2B0079F9EE /* Swindler-C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 091C22D426F26B2B0079F9EE /* Swindler-C.swift */; };
+		09CC5B7C26F2711C007BA2CA /* Space.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CC5B7B26F2711B007BA2CA /* Space.swift */; };
 		OBJ_181 /* AXSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_149 /* AXSwift.swift */; };
 		OBJ_182 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_150 /* Application.swift */; };
 		OBJ_183 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_151 /* Constants.swift */; };
@@ -238,6 +239,7 @@
 /* Begin PBXFileReference section */
 		091C22D026F265F70079F9EE /* Swindler-C.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Swindler-C.h"; sourceTree = "<group>"; };
 		091C22D426F26B2B0079F9EE /* Swindler-C.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Swindler-C.swift"; sourceTree = "<group>"; };
+		09CC5B7B26F2711B007BA2CA /* Space.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Space.swift; sourceTree = "<group>"; };
 		"AXSwift::AXSwift::Product" /* AXSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AXSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Nimble::Nimble::Product" /* Nimble.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Nimble.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* AXPropertyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXPropertyDelegate.swift; sourceTree = "<group>"; };
@@ -500,7 +502,7 @@
 				OBJ_155 /* UIElement.swift */,
 			);
 			name = AXSwift;
-			path = AXSwift/Sources;
+			path = .build/checkouts/AXSwift/Sources;
 			sourceTree = SOURCE_ROOT;
 		};
 		OBJ_156 /* Products */ = {
@@ -617,7 +619,7 @@
 			path = DSL;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -638,7 +640,6 @@
 				OBJ_174 /* Podfile */,
 				OBJ_175 /* Podfile.lock */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_54 /* Hooks */ = {
@@ -687,6 +688,7 @@
 				OBJ_17 /* Log.swift */,
 				OBJ_18 /* Property.swift */,
 				OBJ_19 /* Screen.swift */,
+				09CC5B7B26F2711B007BA2CA /* Space.swift */,
 				OBJ_20 /* State.swift */,
 				OBJ_21 /* Successes+PromiseKit.swift */,
 				OBJ_22 /* Window.swift */,
@@ -1014,7 +1016,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_156 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1210,6 +1212,7 @@
 				OBJ_338 /* Application.swift in Sources */,
 				OBJ_339 /* Errors.swift in Sources */,
 				OBJ_340 /* Events.swift in Sources */,
+				09CC5B7C26F2711C007BA2CA /* Space.swift in Sources */,
 				OBJ_341 /* FakeAXSwift.swift in Sources */,
 				OBJ_342 /* FakeSwindler.swift in Sources */,
 				091C22D526F26B2B0079F9EE /* Swindler-C.swift in Sources */,
@@ -1685,7 +1688,7 @@
 				INFOPLIST_FILE = Swindler.xcodeproj/Swindler_Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -1694,7 +1697,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
-				SWIFT_OBJC_BRIDGING_HEADER = "Swindler-C.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Sources/$(SWIFT_MODULE_NAME)-C.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "";
 				SWIFT_VERSION = 5.0;
 				TARGET_NAME = Swindler;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
@@ -1714,7 +1718,7 @@
 				INFOPLIST_FILE = Swindler.xcodeproj/Swindler_Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) $(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -1723,7 +1727,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
-				SWIFT_OBJC_BRIDGING_HEADER = "Swindler-C.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "Sources/$(SWIFT_MODULE_NAME)-C.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "";
 				SWIFT_VERSION = 5.0;
 				TARGET_NAME = Swindler;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
