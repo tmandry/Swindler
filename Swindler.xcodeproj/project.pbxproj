@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		091C22D226F2668C0079F9EE /* Swindler.h in Headers */ = {isa = PBXBuildFile; fileRef = OBJ_8 /* Swindler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		091C22D326F266900079F9EE /* Swindler-C.h in Headers */ = {isa = PBXBuildFile; fileRef = 091C22D026F265F70079F9EE /* Swindler-C.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		091C22D526F26B2B0079F9EE /* Swindler-C.swift in Sources */ = {isa = PBXBuildFile; fileRef = 091C22D426F26B2B0079F9EE /* Swindler-C.swift */; };
 		OBJ_181 /* AXSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_149 /* AXSwift.swift */; };
 		OBJ_182 /* Application.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_150 /* Application.swift */; };
 		OBJ_183 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_151 /* Constants.swift */; };
@@ -236,6 +237,7 @@
 
 /* Begin PBXFileReference section */
 		091C22D026F265F70079F9EE /* Swindler-C.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Swindler-C.h"; sourceTree = "<group>"; };
+		091C22D426F26B2B0079F9EE /* Swindler-C.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Swindler-C.swift"; sourceTree = "<group>"; };
 		"AXSwift::AXSwift::Product" /* AXSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AXSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Nimble::Nimble::Product" /* Nimble.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Nimble.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		OBJ_10 /* AXPropertyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AXPropertyDelegate.swift; sourceTree = "<group>"; };
@@ -673,6 +675,7 @@
 			children = (
 				OBJ_8 /* Swindler.h */,
 				091C22D026F265F70079F9EE /* Swindler-C.h */,
+				091C22D426F26B2B0079F9EE /* Swindler-C.swift */,
 				OBJ_9 /* Info.plist */,
 				OBJ_10 /* AXPropertyDelegate.swift */,
 				OBJ_11 /* AXSwiftProtocols.swift */,
@@ -1209,6 +1212,7 @@
 				OBJ_340 /* Events.swift in Sources */,
 				OBJ_341 /* FakeAXSwift.swift in Sources */,
 				OBJ_342 /* FakeSwindler.swift in Sources */,
+				091C22D526F26B2B0079F9EE /* Swindler-C.swift in Sources */,
 				OBJ_343 /* Log.swift in Sources */,
 				OBJ_344 /* Property.swift in Sources */,
 				OBJ_345 /* Screen.swift in Sources */,
