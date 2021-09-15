@@ -14,5 +14,4 @@ FOUNDATION_EXPORT double SwindlerVersionNumber;
 //! Project version string for Swindler.
 FOUNDATION_EXPORT const unsigned char SwindlerVersionString[];
 
-// In this header, you should import all the public headers of your framework using statements like
-// #import <Swindler/PublicHeader.h>
+#import <Swindler/Swindler-C.h>
