@@ -335,7 +335,7 @@ public class WriteableProperty<TypeSpec: PropertyTypeSpec>: Property<TypeSpec> {
                 // If the new value is not the desired value, then _something_ external interfered.
                 // That something could be the user, the application, or the operating system.
                 // Therefore we mark the event as external.
-                let external = !TypeSpec.equal(actual, desired)
+                let external = false; //!TypeSpec.equal(actual, desired)
                 self.notifier.notify?(external, oldValue, actual)
             }
             return actual
