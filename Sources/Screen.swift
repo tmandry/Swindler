@@ -156,7 +156,7 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
     var delegates: [Delegate]
     weak var notifier: EventNotifier?
 
-    var main: ScreenDelegate? { NSScreen.main.map(OSXScreenDelegate.init) }
+    var main: ScreenDelegate? { NSScreen.main.flatMap(delegateForNative) }
 
     init(_ notifier: EventNotifier) {
         self.notifier = notifier
