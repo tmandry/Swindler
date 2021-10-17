@@ -113,7 +113,7 @@ final class FakeScreenDelegate: ScreenDelegate {
 
     var native: NSScreen? { nil }
 
-    func equalTo(_ other: ScreenDelegate) -> Bool { return false }
+    func equalTo(_ other: ScreenDelegate) -> Bool { self === other }
 
     var debugDescription: String {
         return "FakeScreen(frame: \(frame), applicationFrame: \(applicationFrame))"

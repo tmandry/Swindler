@@ -232,5 +232,50 @@ class FakeSpec: QuickSpec {
                 }
             }
         }
+
+        describe("spaces") {
+            var fakeState: FakeState!
+            beforeEach {
+                waitUntil { done in
+                    FakeState.initialize()
+                        .map { fakeState = $0 }
+                        .then { FakeApplicationBuilder(parent: fakeState).build() }
+                        .asVoid()
+                        .done { done() }
+                        .cauterize()
+                }
+            }
+
+            it("can be set") {
+                var beforeEvents: [SpaceWillChangeEvent] = []
+                fakeState.state.on { (event: SpaceWillChangeEvent) in
+                    beforeEvents.append(event)
+                }
+                var afterEvents: [SpaceDidChangeEvent] = []
+                fakeState.state.on { (event: SpaceDidChangeEvent) in
+                    afterEvents.append(event)
+                }
+
+                let spaceA = fakeState.mainScreen!.spaceId
+                let spaceB = fakeState.newSpaceId
+                expect(spaceA) != spaceB
+
+                fakeState.mainScreen!.spaceId = spaceB
+                expect(fakeState.mainScreen!.screen.spaceId).toEventually(equal(spaceB))
+                expect(afterEvents).toEventually(haveCount(1))
+                expect(beforeEvents).to(haveCount(1))
+                expect(beforeEvents[0].ids) == [spaceB]
+                expect(afterEvents[0].ids) == [spaceB]
+
+                beforeEvents = []
+                afterEvents = []
+                fakeState.mainScreen!.spaceId = spaceA
+                expect(fakeState.mainScreen!.screen.spaceId).toEventually(equal(spaceA))
+                expect(afterEvents).toEventually(haveCount(1))
+                expect(beforeEvents).to(haveCount(1))
+                expect(beforeEvents[0].ids) == [spaceA]
+                expect(afterEvents[0].ids) == [spaceA]
+            }
+        }
     }
 }

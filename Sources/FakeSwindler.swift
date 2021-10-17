@@ -25,13 +25,14 @@ public class FakeState {
         let ssd = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
         let sst = FakeSystemSpaceTracker()
         let spaceObserver = OSXSpaceObserver(notifier, ssd, sst)
-        for screen in screens {
-            screen.spaceObserver = spaceObserver
-        }
         return firstly {
             Delegate.initialize(notifier, appObserver, ssd, spaceObserver)
         }.map { delegate in
-            FakeState(delegate, appObserver, sst, spaceObserver, ssd)
+            let state = FakeState(delegate, appObserver, sst, spaceObserver, ssd)
+            for screen in screens {
+                screen.state = state
+            }
+            return state
         }
     }
 
@@ -57,7 +58,7 @@ public class FakeState {
     public var mainScreen: FakeScreen? {
         get {
             guard let delegate = ssd.main else { return nil }
-            return FakeScreen(delegate as! FakeScreenDelegate, spaceObserver)
+            return FakeScreen(delegate as! FakeScreenDelegate, self)
         }
         set {
             ssd.main = newValue?.delegate
@@ -284,18 +285,20 @@ public class FakeScreen {
             return Screen(delegate: delegate)
         }
     }
-    weak var spaceObserver: OSXSpaceObserver?
+    weak var state: FakeState?
     public var spaceId: Int? {
         get { delegate.spaceId }
         set {
-            delegate.spaceId = newValue
-            spaceObserver?.emitSpaceWillChangeEvent()
+            var visible = state!.spaceTracker.visible
+            let idx = state!.ssd.screens.firstIndex(where: { $0.equalTo(delegate) })!
+            visible[idx] = newValue!
+            state!.delegate.notifier.notify(SpaceWillChangeEvent(external: true, ids: visible))
         }
     }
 
-    init(_ delegate: FakeScreenDelegate, _ spaceObserver: OSXSpaceObserver) {
+    init(_ delegate: FakeScreenDelegate, _ state: FakeState) {
         self.delegate = delegate
-        self.spaceObserver = spaceObserver
+        self.state = state
     }
 
     public init(frame: CGRect, applicationFrame: CGRect) {
