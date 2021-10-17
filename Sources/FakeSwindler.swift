@@ -24,14 +24,14 @@ public class FakeState {
         let appObserver = FakeApplicationObserver()
         let ssd = FakeSystemScreenDelegate(screens: screens.map{ $0.delegate })
         let sst = FakeSystemSpaceTracker()
-        let spaces = OSXSpaceObserver(notifier, ssd, sst)
+        let spaceObserver = OSXSpaceObserver(notifier, ssd, sst)
         for screen in screens {
-            screen.spaceObserver = spaces
+            screen.spaceObserver = spaceObserver
         }
         return firstly {
-            Delegate.initialize(notifier, appObserver, ssd, spaces)
+            Delegate.initialize(notifier, appObserver, ssd, spaceObserver)
         }.map { delegate in
-            FakeState(delegate, appObserver, sst)
+            FakeState(delegate, appObserver, sst, spaceObserver, ssd)
         }
     }
 
@@ -54,19 +54,35 @@ public class FakeState {
         spaceTracker.nextSpaceId
     }
 
+    public var mainScreen: FakeScreen? {
+        get {
+            guard let delegate = ssd.main else { return nil }
+            return FakeScreen(delegate as! FakeScreenDelegate, spaceObserver)
+        }
+        set {
+            ssd.main = newValue?.delegate
+        }
+    }
+
     fileprivate var delegate: Delegate
     var appObserver: FakeApplicationObserver
     var spaceTracker: FakeSystemSpaceTracker
+    var spaceObserver: OSXSpaceObserver
+    var ssd: FakeSystemScreenDelegate
 
     private init(
         _ delegate: Delegate,
         _ appObserver: FakeApplicationObserver,
-        _ spaces: FakeSystemSpaceTracker
+        _ spaceTracker: FakeSystemSpaceTracker,
+        _ spaceObserver: OSXSpaceObserver,
+        _ ssd: FakeSystemScreenDelegate
     ) {
         self.state = State(delegate: delegate)
         self.delegate = delegate
         self.appObserver = appObserver
-        self.spaceTracker = spaces
+        self.spaceTracker = spaceTracker
+        self.spaceObserver = spaceObserver
+        self.ssd = ssd
     }
 }
 
@@ -275,6 +291,11 @@ public class FakeScreen {
             delegate.spaceId = newValue
             spaceObserver?.emitSpaceWillChangeEvent()
         }
+    }
+
+    init(_ delegate: FakeScreenDelegate, _ spaceObserver: OSXSpaceObserver) {
+        self.delegate = delegate
+        self.spaceObserver = spaceObserver
     }
 
     public init(frame: CGRect, applicationFrame: CGRect) {

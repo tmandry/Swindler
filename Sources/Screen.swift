@@ -92,11 +92,12 @@ class FakeSystemScreenDelegate: SystemScreenDelegate {
         nil
     }
 
-    var main: ScreenDelegate? { nil }
+    var main: ScreenDelegate?
 
     init(screens: [ScreenDelegate]) {
         lock_ = NSLock()
         screens_ = screens
+        main = screens.first
     }
 }
 
