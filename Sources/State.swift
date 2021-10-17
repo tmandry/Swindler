@@ -358,7 +358,7 @@ final class OSXStateDelegate<
                 let bundleID = pid.flatMap { NSRunningApplication(processIdentifier: $0) }
                     .flatMap { $0.bundleIdentifier }
                 let pidString = (pid == nil) ? "??" : String(pid!)
-                log.notice("Could not watch application \(bundleID ?? "") (pid=\(pidString)): "
+                log.trace("Could not watch application \(bundleID ?? "") (pid=\(pidString)): "
                          + String(describing: error))
                 throw error
             }

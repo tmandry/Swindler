@@ -319,7 +319,7 @@ extension OSXApplicationDelegate {
                                  element: UIElement,
                                  notification: AXSwift.AXNotification) {
         assert(Thread.current.isMainThread)
-        log.notice("Received \(notification) on \(element)")
+        log.trace("Received \(notification) on \(element)")
 
         switch notification {
         case .windowCreated:
@@ -337,7 +337,7 @@ extension OSXApplicationDelegate {
 
     fileprivate func onWindowCreated(_ windowElement: UIElement) {
         addWindowElement(windowElement).catch { error in
-            log.debug("Could not watch window element on \(self): \(error)")
+            log.trace("Could not watch window element on \(self): \(error)")
         }
     }
 
