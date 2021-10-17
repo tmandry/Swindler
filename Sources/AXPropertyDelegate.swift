@@ -1,6 +1,7 @@
 import Foundation
 import AXSwift
 import PromiseKit
+import AppKit
 
 /// Implements PropertyDelegate using the AXUIElement API.
 class AXPropertyDelegate<T: Equatable, UIElement: UIElementType>: PropertyDelegate {
