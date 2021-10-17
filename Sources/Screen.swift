@@ -31,6 +31,8 @@ protocol SystemScreenDelegate: AnyObject {
     var lock_: NSLock { get }
     var screens_: [ScreenDelegate] { get }
 
+    var main: ScreenDelegate? { get }
+
     var maxY: CGFloat { get }
 
     func delegateForNative(screen: NSScreen) -> ScreenDelegate?
@@ -90,9 +92,12 @@ class FakeSystemScreenDelegate: SystemScreenDelegate {
         nil
     }
 
+    var main: ScreenDelegate?
+
     init(screens: [ScreenDelegate]) {
         lock_ = NSLock()
         screens_ = screens
+        main = screens.first
     }
 }
 
@@ -108,7 +113,7 @@ final class FakeScreenDelegate: ScreenDelegate {
 
     var native: NSScreen? { nil }
 
-    func equalTo(_ other: ScreenDelegate) -> Bool { return false }
+    func equalTo(_ other: ScreenDelegate) -> Bool { self === other }
 
     var debugDescription: String {
         return "FakeScreen(frame: \(frame), applicationFrame: \(applicationFrame))"
@@ -151,6 +156,8 @@ class OSXSystemScreenDelegate: SystemScreenDelegate {
     var screens_: [ScreenDelegate]
     var delegates: [Delegate]
     weak var notifier: EventNotifier?
+
+    var main: ScreenDelegate? { NSScreen.main.flatMap(delegateForNative) }
 
     init(_ notifier: EventNotifier) {
         self.notifier = notifier
@@ -271,9 +278,6 @@ final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
     var applicationFrame: CGRect { return nsScreen.visibleFrame }
 
     var native: NSScreen? { nsScreen as? NSScreen }
-}
-
-extension OSXScreenDelegate {
 }
 
 private func numberForScreen<NSScreenT: NSScreenType>(_ nsScreen: NSScreenT) -> CGDirectDisplayID {

@@ -42,9 +42,9 @@ struct Log {
 
     /// Log something purely informational (not visible in production).
     func info(_ out: @autoclosure () -> String) {
-#if SWINDLER_DEBUG
+//#if SWINDLER_DEBUG
         log(out(), level: .info, withColor: .cyan)
-#endif
+//#endif
     }
 
     /// Log debug info (not visible in production).
