@@ -39,6 +39,7 @@ void SWStateInitializeAsync(SWStateCreatedCallback _Nonnull);
 void SwindlerDestroy(SWStateRef _Nonnull stateRef);
 
 uint32_t SWStateGetScreens(SWStateRef _Nonnull stateRef, SWScreenRef _Nullable * _Nullable screens);
+SWScreenRef _Nullable SWStateGetMainScreen(SWStateRef _Nonnull stateRef);
 uint32_t SWStateGetRunningApplications(SWStateRef _Nonnull stateRef, SWApplicationRef _Nullable * _Nullable apps);
 uint32_t SWStateGetKnownWindows(SWStateRef _Nonnull stateRef, SWWindowRef _Nullable * _Nullable windows);
 SWApplicationRef _Nullable SWStateGetFrontmostApplication(SWStateRef _Nonnull stateRef);

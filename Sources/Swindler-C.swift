@@ -75,6 +75,17 @@ public func SWStateGetScreens(_ stateRef: SWStateRef, outPtr: UnsafeMutablePoint
     return UInt32(state.screens.count)
 }
 
+@_cdecl("SWStateGetMainScreen")
+public func SWStateGetMainScreen(_ stateRef: SWStateRef) -> OpaquePointer? {
+    let state = Unmanaged<State>.fromOpaque(UnsafeRawPointer(stateRef)).takeUnretainedValue()
+    if let screen = state.mainScreen {
+        let retained = Unmanaged.passUnretained(screen).toOpaque()
+        return OpaquePointer(retained)
+    }
+    
+    return nil
+}
+
 @_cdecl("SWStateGetRunningApplications")
 public func SWStateGetRunningApplications(_ stateRef: SWStateRef, outPtr: UnsafeMutablePointer<OpaquePointer>?) -> UInt32 {
     let state = Unmanaged<State>.fromOpaque(UnsafeRawPointer(stateRef)).takeUnretainedValue()

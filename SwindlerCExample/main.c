@@ -14,6 +14,10 @@
 int main(int argc, const char * argv[]) {
     SWStateRef s = SWStateInitialize();
     
+    SWScreenRef mainScreen = SWStateGetMainScreen(s);
+    CGRect screenFrame = SWScreenGetFrame(mainScreen);
+    printf("Main screen frame: %.2f %.2f %.2f %.2f\n", screenFrame.origin.x, screenFrame.origin.y, screenFrame.size.width, screenFrame.size.height);
+    
     uint32_t c = SWStateGetRunningApplications(s, NULL);
     SWApplicationRef apps[c];
     SWStateGetRunningApplications(s, apps);
