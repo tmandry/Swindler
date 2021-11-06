@@ -446,10 +446,10 @@ class PropertySpec: QuickSpec {
                         }
                     }
 
-                    it("marks the event as external") {
+                    it("marks the event as internal") {
                         return property.set(secondFrame).done { _ in
                             if let event = notifier.events.first {
-                                expect(event.external).to(beTrue())
+                                expect(event.external).to(beFalse())
                             }
                         }
                     }
