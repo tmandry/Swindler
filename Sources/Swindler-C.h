@@ -65,9 +65,12 @@ void SWApplicationSetIsHidden(SWApplicationRef _Nonnull, _Bool isHidden, SWCompl
 
 #pragma mark   ---- Windows ----
 SWApplicationRef _Nullable SWWindowGetApplication(SWWindowRef _Nonnull winRef);
-CGPoint SWWindowGetPosition(SWWindowRef _Nonnull winRef);
+
 const char * _Nullable SWWindowGetTitle(SWWindowRef _Nonnull winRef);
 SWScreenRef _Nullable SWWindowGetScreen(SWWindowRef _Nonnull winRef);
+
+CGPoint SWWindowGetPosition(SWWindowRef _Nonnull winRef);
+void SWWindowSetPosition(SWWindowRef _Nonnull winRef, CGPoint position, SWCompletionBlock);
 
 CGRect SWWindowGetFrame(SWWindowRef _Nonnull winRef);
 void SWWindowSetFrame(SWWindowRef _Nonnull winRef, CGRect frame, SWCompletionBlock);

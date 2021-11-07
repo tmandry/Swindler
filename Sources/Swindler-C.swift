@@ -236,6 +236,15 @@ public func SWWindowGetPosition(_ winRef: SWWindowRef) -> CGPoint {
     return frame.origin
 }
 
+@_cdecl("SWWindowSetPosition")
+public func SWWindowSetPosition(_ winRef: SWWindowRef, position: CGPoint, onComplete: SWCompletionBlock?) -> Void {
+    let window = Unmanaged<Window>.fromOpaque(UnsafeRawPointer(winRef)).takeUnretainedValue()
+    var frame = window.frame.getValue()
+    frame.origin = position
+    _ = window.frame.set(frame).asVoid()
+    if let done = onComplete { done() }
+}
+
 @_cdecl("SWWindowGetTitle")
 public func SWWindowGetTitle(_ winRef: SWWindowRef) -> UnsafePointer<CChar>? {
     let window = Unmanaged<Window>.fromOpaque(UnsafeRawPointer(winRef)).takeUnretainedValue()
