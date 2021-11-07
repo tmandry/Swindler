@@ -9,7 +9,7 @@
 #include <stdbool.h> // For bool type
 #include <CoreFoundation/CoreFoundation.h> // For CFRunLoopRun
 #include <CoreGraphics/CoreGraphics.h> // For CGRect
-#include <Swindler/Swindler-C.h>
+#include <Swindler-C.h>
 
 int main(int argc, const char * argv[]) {
     SWStateRef s = SWStateInitialize();
