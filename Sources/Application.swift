@@ -293,7 +293,11 @@ final class OSXApplicationDelegate<
 
             self.windows.append(windowDelegate)
             self.newWindowHandler.windowCreated(axElement)
-
+            
+            if let window = Window(delegate: windowDelegate) {
+                self.notifier?.notify(WindowCreatedEvent(external: true, window: window))
+            }
+            
             return windowDelegate
         }.recover { error -> Promise<WinDelegate?> in
             // If this initialization of WinDelegate failed, the window is somehow invalid and we
