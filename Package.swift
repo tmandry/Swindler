@@ -32,6 +32,12 @@ let package = Package(
         .target(name: "SwindlerExample",
             dependencies: ["Swindler"],
             path: "SwindlerExample"),
+        .target(name: "SwindlerCExample",
+            dependencies: ["Swindler"],
+            path: "SwindlerCExample",
+            cSettings: [
+                .headerSearchPath("../Sources")
+            ]),
         .testTarget(
             name: "SwindlerTests",
             dependencies: ["Swindler", "PromiseKit", "Quick", "Nimble"],

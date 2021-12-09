@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/tmandry/AXSwift.git",
         "state": {
           "branch": null,
-          "revision": "dbf34341fd9a5892a5f8a646699c82308ae40c42",
-          "version": "0.3.1"
+          "revision": "81dcc36aced905d6464cc25e35f8d13184bbf21c",
+          "version": "0.3.2"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/mxcl/PromiseKit.git",
         "state": {
           "branch": null,
-          "revision": "aea48ea1855f5d82e2dffa6027afce3aab8f3dd7",
-          "version": "6.13.3"
+          "revision": "00afea5360bf1c02ac83209c2c8991f73b5a4e7d",
+          "version": "6.16.1"
         }
       },
       {

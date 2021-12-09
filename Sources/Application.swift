@@ -293,7 +293,7 @@ final class OSXApplicationDelegate<
 
             self.windows.append(windowDelegate)
             self.newWindowHandler.windowCreated(axElement)
-
+            
             return windowDelegate
         }.recover { error -> Promise<WinDelegate?> in
             // If this initialization of WinDelegate failed, the window is somehow invalid and we
@@ -369,11 +369,11 @@ extension OSXApplicationDelegate {
         } else {
             // We don't know about the element that has been passed. Wait until the window is
             // initialized.
-            createWindowForElementIfNotExists(element)
-                .done { _ in property.refresh() }
-                .recover { err in
-                    log.error("Error while updating window property: \(err)")
-                }
+            addWindowElement(element).done { _ in
+                property.refresh()
+            }.recover { err in
+                log.error("Error while updating window property: \(err)")
+            }
 
             // In some cases, the element is actually IS the application element, but equality
             // checks inexplicably return false. (This has been observed for Finder.) In this case

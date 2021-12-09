@@ -5,6 +5,7 @@ import Nimble
 @testable import Swindler
 import AXSwift
 import PromiseKit
+import AppKit
 
 class StubApplicationObserver: ApplicationObserverType {
     var frontmostApplicationPID: pid_t? { return nil }
