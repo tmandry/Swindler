@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example",
+            "program": "${workspaceFolder:rogue}/.build/debug/example",
+            "args": [],
+            "cwd": "${workspaceFolder:rogue}",
+            "preLaunchTask": "swift: Build Debug example"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Release example",
+            "program": "${workspaceFolder:rogue}/.build/release/example",
+            "args": [],
+            "cwd": "${workspaceFolder:rogue}",
+            "preLaunchTask": "swift: Build Release example"
+        }
+    ]
+}
