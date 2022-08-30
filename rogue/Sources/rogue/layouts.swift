@@ -25,11 +25,11 @@ enum Event {
     case delWindow(id: Int)
 }
 
-struct State {
+struct State: Equatable {
     var windows: [Window]
 }
 
-struct Window {
+struct Window: Equatable {
     var id: WindowId
 
     // TODO: Should we make these optional so the layout can say it doesn't
@@ -63,6 +63,10 @@ extension Window {
     var invertedFrame: CGRect {
         get { CGRect(origin: topRight, size: size) }
         set { topRight = newValue.origin; size = newValue.size }
+    }
+
+    func withInvertedFrame(_ frame: CGRect) -> Window {
+        Window(id: self.id, invertedFrame: frame)
     }
 
     func cgFrame(config _: Config) -> CGRect {
