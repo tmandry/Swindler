@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug SwindlerExample",
+            "program": "${workspaceFolder:swindler}/.build/debug/SwindlerExample",
+            "args": [],
+            "cwd": "${workspaceFolder:swindler}",
+            "preLaunchTask": "swift: Build Debug SwindlerExample"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Release SwindlerExample",
+            "program": "${workspaceFolder:swindler}/.build/release/SwindlerExample",
+            "args": [],
+            "cwd": "${workspaceFolder:swindler}",
+            "preLaunchTask": "swift: Build Release SwindlerExample"
+        }
+    ]
+}
