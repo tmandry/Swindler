@@ -77,6 +77,13 @@ public func ==(lhs: Window, rhs: Window) -> Bool {
 }
 extension Window: Equatable {}
 
+extension Window: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        // We take care never to have duplicate delegates for a window.
+        hasher.combine(Unmanaged.passUnretained(self.delegate as AnyObject).toOpaque())
+    }
+}
+
 extension Window: CustomDebugStringConvertible {
     public var debugDescription: String {
         return "Window(\"\(title.value.truncate(length: 30))\")"

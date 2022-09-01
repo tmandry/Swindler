@@ -27,6 +27,12 @@ public func ==(lhs: Screen, rhs: Screen) -> Bool {
     return lhs.delegate.equalTo(rhs.delegate)
 }
 
+extension Screen: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        delegate.hash(into: &hasher)
+    }
+}
+
 protocol SystemScreenDelegate: AnyObject {
     var lock_: NSLock { get }
     var screens_: [ScreenDelegate] { get }
@@ -65,6 +71,7 @@ protocol ScreenDelegate: AnyObject, CustomDebugStringConvertible {
     var spaceId: Int? { get set }
 
     func equalTo(_ other: ScreenDelegate) -> Bool
+    func hash(into hasher: inout Hasher)
 }
 
 class FakeSystemScreenDelegate: SystemScreenDelegate {
@@ -114,6 +121,7 @@ final class FakeScreenDelegate: ScreenDelegate {
     var native: NSScreen? { nil }
 
     func equalTo(_ other: ScreenDelegate) -> Bool { self === other }
+    func hash(into _: inout Hasher) {}
 
     var debugDescription: String {
         return "FakeScreen(frame: \(frame), applicationFrame: \(applicationFrame))"
@@ -263,6 +271,9 @@ final class OSXScreenDelegate<NSScreenT: NSScreenType>: ScreenDelegate {
             return false
         }
         return other.directDisplayID == directDisplayID
+    }
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(directDisplayID)
     }
 
     lazy var displayName: String = { self.nsScreen.displayName }()
