@@ -17,19 +17,19 @@
 
 import Cocoa
 
-typealias WindowId = Int
-typealias ScreenId = Int
+public typealias WindowId = Int
+public typealias ScreenId = Int
 
-enum Event {
+public enum Event {
     case addWindow(id: Int)
     case delWindow(id: Int)
 }
 
-struct State: Equatable {
+public struct State: Equatable {
     var windows: [Window]
 }
 
-struct Window: Equatable {
+public struct Window: Equatable {
     var id: WindowId
 
     // TODO: Should we make these optional so the layout can say it doesn't
@@ -55,36 +55,36 @@ struct Window: Equatable {
 }
 
 extension Window {
-    init(id: WindowId, invertedFrame frame: CGRect) {
+    public init(id: WindowId, invertedFrame frame: CGRect) {
         self.init(id: id, topRight: frame.origin, size: frame.size)
     }
 
     // It just seems much more natural to use top-down coordinates in a window manager.
-    var invertedFrame: CGRect {
+    public var invertedFrame: CGRect {
         get { CGRect(origin: topRight, size: size) }
         set { topRight = newValue.origin; size = newValue.size }
     }
 
-    func withInvertedFrame(_ frame: CGRect) -> Window {
+    public func withInvertedFrame(_ frame: CGRect) -> Window {
         Window(id: self.id, invertedFrame: frame)
     }
 
-    func cgFrame(config _: Config) -> CGRect {
+    public func cgFrame(config _: Config) -> CGRect {
         // Unimplemented
         abort()
     }
 }
 
-struct Config {
+public struct Config {
     var screens: [Screen]
 }
 
-struct Screen {
+public struct Screen {
     var id: ScreenId
     var frame: CGRect
 }
 
-protocol Layout {
+public protocol Layout {
     // init(initialState state: State)
 
     // State should be replaced with just [Window].
@@ -116,21 +116,23 @@ extension Optional {
 }
 
 // "Tall": Main window on the left. Other windows share a column on the right.
-class LayoutTall: Layout {
+public class LayoutTall: Layout {
     // TODO: How do we handle properties about windows that we want to remember
     // across layouts? For instance, whether a window is floating, or whether it
     // is primary.
     var primaryId: WindowId?
     var dividerRatio: CGFloat = 0.5
 
-    func onEvent(_ event: Event, state _: State) -> Bool {
+    public init() {}
+
+    public func onEvent(_ event: Event, state _: State) -> Bool {
         switch event {
         case .addWindow: return true
         case .delWindow: return true
         }
     }
 
-    func getLayout(state cur: State, config: Config) -> State {
+    public func getLayout(state cur: State, config: Config) -> State {
         guard let screen = config.screens.first else { return cur }
         guard let first = cur.windows.first else { return cur }
         let primaryId = primaryId.getOrSet(default: first.id)

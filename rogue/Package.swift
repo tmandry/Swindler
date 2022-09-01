@@ -18,13 +18,14 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/tmandry/AXSwift.git", from: "0.3.2"),
+        .package(name: "Swindler", path: "../")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "rogue",
-            dependencies: ["AXSwift"]),
+            dependencies: ["AXSwift", "Swindler"]),
         .executableTarget(
             name: "example",
             dependencies: ["rogue"]),
