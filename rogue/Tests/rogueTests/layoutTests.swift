@@ -6,8 +6,8 @@ final class layoutTests: XCTestCase {
         Config(screens: [Screen(id: 10,
                                 frame: CGRect(x: 0, y: 0, width: 100, height: 100))])
     let winA = Window(id: 100, invertedFrame: CGRect(x: 10, y: 10, width: 50, height: 50))
-    let winB = Window(id: 101, invertedFrame: CGRect(x: 10, y: 10, width: 50, height: 50))
-    let winC = Window(id: 102, invertedFrame: CGRect(x: 10, y: 10, width: 50, height: 50))
+    let winB = Window(id: 101, invertedFrame: CGRect(x: 11, y: 10, width: 50, height: 50))
+    let winC = Window(id: 102, invertedFrame: CGRect(x: 12, y: 10, width: 50, height: 50))
 
     func testLayoutTallZeroWindows() throws {
         let layout = LayoutTall()

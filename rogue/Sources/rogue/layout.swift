@@ -36,12 +36,12 @@ public struct Window: Equatable {
     // care about one or both of them? For example, during a window resize
     // we don't want to interfere. We might want to change the frame.
     //
-    // Another factor to consider is that you can only set the topRight using
+    // Another factor to consider is that you can only set the topLeft using
     // accessibility APIs. We try to hide the fact that these are used in Swindler
     // (especially since it's an inverted coordinate system from the rest of the system
     // APIs), but if we want to expose fine grained control we will have to surface
     // the origin as topLeft (in whatever coordinate system we choose).
-    var topRight: CGPoint
+    var topLeft: CGPoint
     var size: CGSize
 
     // This could be too powerful. But it's certainly the case that we want to be able
@@ -54,22 +54,22 @@ public struct Window: Equatable {
     var zIndex: Int?
 }
 
-extension Window {
-    public init(id: WindowId, invertedFrame frame: CGRect) {
-        self.init(id: id, topRight: frame.origin, size: frame.size)
+public extension Window {
+    init(id: WindowId, invertedFrame frame: CGRect) {
+        self.init(id: id, topLeft: frame.origin, size: frame.size)
     }
 
     // It just seems much more natural to use top-down coordinates in a window manager.
-    public var invertedFrame: CGRect {
-        get { CGRect(origin: topRight, size: size) }
-        set { topRight = newValue.origin; size = newValue.size }
+    var invertedFrame: CGRect {
+        get { CGRect(origin: topLeft, size: size) }
+        set { topLeft = newValue.origin; size = newValue.size }
     }
 
-    public func withInvertedFrame(_ frame: CGRect) -> Window {
-        Window(id: self.id, invertedFrame: frame)
+    func withInvertedFrame(_ frame: CGRect) -> Window {
+        Window(id: id, invertedFrame: frame)
     }
 
-    public func cgFrame(config _: Config) -> CGRect {
+    func cgFrame(config _: Config) -> CGRect {
         // Unimplemented
         abort()
     }
@@ -134,8 +134,9 @@ public class LayoutTall: Layout {
 
     public func getLayout(state cur: State, config: Config) -> State {
         guard let screen = config.screens.first else { return cur }
-        guard let first = cur.windows.first else { return cur }
-        let primaryId = primaryId.getOrSet(default: first.id)
+        guard let leftmost = cur.windows.min(by: { $0.topLeft.x < $1.topLeft.x })
+        else { return cur }
+        let primaryId = primaryId.getOrSet(default: leftmost.id)
 
         let numPrimary = 1
         let numSecondary = cur.windows.count - numPrimary

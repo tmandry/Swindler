@@ -30,26 +30,37 @@ public actor Reactor {
         self.layout = layout
     }
 
-    public func run() throws {
+    public func run() async throws {
         guard let layout = layout else { return }
         guard let maxY = globalMaxY() else { return }
         let screens = swindler.screens.map {
-            Screen(id: screenIds.get($0), frame: invert($0.frame, maxY))
+            Screen(id: screenIds[$0], frame: invert($0.applicationFrame, maxY))
         }
         // TODO: visible only (needs swindler support)
         let windows = swindler.knownWindows.map {
-            Window(id: winIds.get($0), invertedFrame: invert($0.frame.value, maxY))
+            Window(id: winIds[$0], invertedFrame: invert($0.frame.value, maxY))
         }
+        print(State(windows: windows))
         let desired = layout.getLayout(
             state: State(windows: windows),
             config: Config(screens: screens)
         )
         print(desired)
         print(winIds)
+        let promises = desired.windows.compactMap { win -> Promise<Void>? in
+            guard let window = winIds[win.id] else {
+                print("Unknown window id \(win.id) received from layout")
+                return nil
+            }
+            let frame = invert(win.invertedFrame, maxY)
+            print("Setting \(window) frame to \(frame)")
+            return window.frame.set(frame).asVoid()
+        }
+        try await adapt(when(fulfilled: promises))
     }
 
     private func globalMaxY() -> CGFloat? {
-        swindler.screens.map { $0.frame.maxY }.max()
+        swindler.screens.map { $0.applicationFrame.maxY }.max()
     }
 
     private func invert(_ rect: CGRect, _ globalMaxY: CGFloat) -> CGRect {
@@ -60,12 +71,24 @@ public actor Reactor {
 
 class IdMapper<T: Hashable> {
     var idMap: [T: Int] = [:]
+    var valMap: [Int: T] = [:]
     var lastId: Int = 0
 
-    func get(_ win: T) -> Int {
+    subscript(win: T) -> Int {
         if let id = idMap[win] { return id }
         lastId += 1
         idMap[win] = lastId
+        valMap[lastId] = win
         return lastId
+    }
+
+    subscript(id: Int) -> T? {
+        valMap[id]
+    }
+}
+
+extension IdMapper: CustomStringConvertible {
+    var description: String {
+        "\(valMap)"
     }
 }
