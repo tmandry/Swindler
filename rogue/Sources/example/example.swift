@@ -1,3 +1,4 @@
+import Cocoa
 import Foundation
 import rogue
 
@@ -13,8 +14,22 @@ import rogue
         //     print(app)
         // }
 
-        let reactor = try await Reactor()
-        await reactor.setLayout(LayoutTall())
-        try await reactor.run()
+        let application = NSApplication.shared
+        let appDelegate = AppDelegate()
+        application.delegate = appDelegate
+        application.setActivationPolicy(NSApplication.ActivationPolicy.accessory)
+        application.run()
+    }
+}
+
+public class AppDelegate: NSObject, NSApplicationDelegate {
+    @IBOutlet weak var window: NSWindow!
+
+    public func applicationDidFinishLaunching(_ aNotification: Notification) {
+        Task {
+            let reactor = try await Reactor()
+            await reactor.setLayout(LayoutTall())
+            try await reactor.setup()
+        }
     }
 }
