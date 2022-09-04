@@ -36,10 +36,12 @@ public actor Reactor {
         let screens = swindler.screens.map {
             Screen(id: screenIds[$0], frame: invert($0.applicationFrame, maxY))
         }
-        // TODO: visible only (needs swindler support)
-        let windows = swindler.knownWindows.map {
-            Window(id: winIds[$0], invertedFrame: invert($0.frame.value, maxY))
-        }
+        // TODO: current screen only (needs swindler support)
+        let windows = swindler.knownWindows
+            .filter { !$0.isMinimized.value }
+            .map {
+                Window(id: winIds[$0], invertedFrame: invert($0.frame.value, maxY))
+            }
         print(State(windows: windows))
         let desired = layout.getLayout(
             state: State(windows: windows),
