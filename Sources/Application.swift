@@ -267,6 +267,8 @@ final class OSXApplicationDelegate<
         }
     }
 
+    var initializingWindows: [(UIElement, Promise<WinDelegate?>)] = []
+
     /// Initializes an OSXWindowDelegate for the given axElement and adds it to `windows`, then
     /// calls newWindowHandler handlers for that window, if any. If the window has already been
     /// added, does nothing, and the returned promise resolves to nil.
@@ -275,14 +277,20 @@ final class OSXApplicationDelegate<
         guard let systemScreens = stateDelegate?.systemScreens else {
             return .value(nil)
         }
+        // Defer to the existing promise if the window is being initialized.
+        if let entry = initializingWindows.first(where: { $0.0 == axElement }) {
+            return entry.1.map({ _ in nil })
+        }
         // Early return if the element already exists.
         if self.windows.contains(where: { $0.axElement == axElement }) {
             return .value(nil)
         }
-        return WinDelegate.initialize(
+        let promise = WinDelegate.initialize(
             appDelegate: self, notifier: notifier, axElement: axElement, observer: observer,
             systemScreens: systemScreens
         ).map { windowDelegate in
+            self.initializingWindows.removeAll(where: { $0.0 == axElement })
+
             // This check needs to happen (again) here, because it's possible
             // (though rare) to call this method from two different places
             // (fetchWindows and onWindowCreated) before initialization of
@@ -302,6 +310,8 @@ final class OSXApplicationDelegate<
             self.newWindowHandler.removeAllForUIElement(axElement)
             throw error
         }
+        initializingWindows.append((axElement, promise))
+        return promise
     }
 
     func equalTo(_ rhs: ApplicationDelegate) -> Bool {
@@ -369,7 +379,7 @@ extension OSXApplicationDelegate {
         } else {
             // We don't know about the element that has been passed. Wait until the window is
             // initialized.
-            createWindowForElementIfNotExists(element)
+            addWindowElement(element)
                 .done { _ in property.refresh() }
                 .recover { err in
                     log.error("Error while updating window property: \(err)")
