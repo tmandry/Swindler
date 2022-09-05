@@ -371,6 +371,8 @@ class FakeObserver: ObserverType {
     func doEmit(_ notification: AXNotification,
                 watchedElement: TestUIElement,
                 passedElement: TestUIElement) {
+        lock.lock()
+        defer { lock.unlock() }
         let watched = watchedElements[watchedElement] ?? []
         if watched.contains(notification) {
             performOnMainThread {
