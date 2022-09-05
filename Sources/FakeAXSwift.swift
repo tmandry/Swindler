@@ -407,7 +407,10 @@ class FakeApplicationObserver: ApplicationObserverType {
     }
 
     func makeApplicationFrontmost(_ pid: pid_t) throws {
-        setFrontmost(pid)
+        // This is called by property delegates on worker threads.
+        performOnMainThread {
+            setFrontmost(pid)
+        }
     }
 
     typealias ApplicationElement = EmittingTestApplicationElement
