@@ -121,7 +121,7 @@ public class LayoutTall: Layout {
     // across layouts? For instance, whether a window is floating, or whether it
     // is primary.
     var primaryId: WindowId?
-    var dividerRatio: CGFloat = 0.5
+    var dividerRatio: CGFloat = 0.35
 
     public init() {}
 

@@ -11,6 +11,7 @@ final class layoutTests: XCTestCase {
 
     func testLayoutTallZeroWindows() throws {
         let layout = LayoutTall()
+        layout.dividerRatio = 0.5
         XCTAssertEqual(
             State(windows: []),
             layout.getLayout(state: State(windows: []), config: Config(screens: []))
@@ -23,6 +24,7 @@ final class layoutTests: XCTestCase {
 
     func testLayoutTallZeroScreens() throws {
         let layout = LayoutTall()
+        layout.dividerRatio = 0.5
         XCTAssertEqual(
             State(windows: []),
             layout.getLayout(state: State(windows: []), config: Config(screens: []))
@@ -35,6 +37,7 @@ final class layoutTests: XCTestCase {
 
     func testLayoutTallOneWindow() throws {
         let layout = LayoutTall()
+        layout.dividerRatio = 0.5
         XCTAssertEqual(
             State(windows: [
                 winA.withInvertedFrame(CGRect(x: 0, y: 0, width: 100, height: 100)),
@@ -45,6 +48,7 @@ final class layoutTests: XCTestCase {
 
     func testLayoutTallTwoWindows() throws {
         let layout = LayoutTall()
+        layout.dividerRatio = 0.5
         XCTAssertEqual(
             State(windows: [
                 winA.withInvertedFrame(CGRect(x: 0, y: 0, width: 50, height: 100)),
@@ -56,6 +60,7 @@ final class layoutTests: XCTestCase {
 
     func testLayoutTallThreeWindows() throws {
         let layout = LayoutTall()
+        layout.dividerRatio = 0.5
         XCTAssertEqual(
             State(windows: [
                 winA.withInvertedFrame(CGRect(x: 0, y: 0, width: 50, height: 100)),
