@@ -70,6 +70,7 @@ class StubScreenDelegate: ScreenDelegate {
     var native: NSScreen? { nil }
 
     func equalTo(_ other: ScreenDelegate) -> Bool { return self === other }
+    func hash(into hasher: inout Hasher) {}
 }
 
 class StubPropertyDelegate<T: Equatable>: PropertyDelegate {

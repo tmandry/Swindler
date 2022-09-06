@@ -1,4 +1,5 @@
 import Foundation
+import Cocoa
 import Quick
 import Nimble
 

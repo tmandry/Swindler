@@ -371,6 +371,8 @@ class FakeObserver: ObserverType {
     func doEmit(_ notification: AXNotification,
                 watchedElement: TestUIElement,
                 passedElement: TestUIElement) {
+        lock.lock()
+        defer { lock.unlock() }
         let watched = watchedElements[watchedElement] ?? []
         if watched.contains(notification) {
             performOnMainThread {
@@ -405,7 +407,10 @@ class FakeApplicationObserver: ApplicationObserverType {
     }
 
     func makeApplicationFrontmost(_ pid: pid_t) throws {
-        setFrontmost(pid)
+        // This is called by property delegates on worker threads.
+        performOnMainThread {
+            setFrontmost(pid)
+        }
     }
 
     typealias ApplicationElement = EmittingTestApplicationElement
