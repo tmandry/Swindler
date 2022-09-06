@@ -23,8 +23,12 @@ public class Reactor {
 
     var layout: Layout?
 
-    public init() async throws {
-        swindler = try await adapt(Swindler.initialize())
+    public convenience init() async throws {
+        self.init(swindler: try await adapt(Swindler.initialize()))
+    }
+
+    init(swindler: Swindler.State) {
+        self.swindler = swindler
         swindler.on { (event: WindowCreatedEvent) in
             Task {
                 try! await self.handleEvent(Event.addWindow(id: self.winIds[event.window]))
@@ -67,7 +71,6 @@ public class Reactor {
             .map {
                 Window(id: winIds[$0], invertedFrame: invert($0.frame.value, maxY))
             }
-        print(State(windows: windows))
         return State(windows: windows)
     }
 
@@ -82,15 +85,12 @@ public class Reactor {
             state: state,
             config: Config(screens: screens)
         )
-        print(desired)
-        print(winIds)
         let promises = desired.windows.compactMap { win -> Promise<Void>? in
             guard let window = winIds[win.id] else {
                 print("Unknown window id \(win.id) received from layout")
                 return nil
             }
             let frame = invert(win.invertedFrame, maxY)
-            print("Setting \(window) frame to \(frame)")
             return window.frame.set(frame).asVoid()
         }
         // TODO: handle errors?
