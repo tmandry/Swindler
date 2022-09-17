@@ -84,23 +84,65 @@ public struct Screen {
     var frame: CGRect
 }
 
-public protocol Layout {
-    // init(initialState state: State)
-
+public protocol MultiScreenLayout {
     // State should be replaced with just [Window].
     // I can't think of a principled reason to supply config to getLayout only.
-    func onEvent(_ event: Event, state: State) -> Bool
+    func setup(state: State, config: Config)
+    func onEvent(_ event: Event, state: State, config: Config) -> Bool
     func getLayout(state: State, config: Config) -> State
+}
+
+public extension MultiScreenLayout {
+    func setup(state _: State, config _: Config) {}
+}
+
+public protocol Layout {
+    // State should be replaced with just [Window].
+    // I can't think of a principled reason to supply config to getLayout only.
+    func setup(state: State, frame: CGRect)
+    func onEvent(_ event: Event, state: State, frame: CGRect) -> Bool
+    func getLayout(state: State, frame: CGRect) -> State
+}
+
+public extension Layout {
+    func setup(state _: State, frame _: CGRect) {}
+}
+
+public class FirstScreenLayout: MultiScreenLayout {
+    var layout: Layout
+
+    public init(_ layout: Layout) {
+        self.layout = layout
+    }
+
+    static func frame(_ config: Config) -> CGRect {
+        guard let screen = config.screens.first else {
+            fatalError("not supported")
+        }
+        return screen.frame
+    }
+
+    public func setup(state: State, config: Config) {
+        layout.setup(state: state, frame: Self.frame(config))
+    }
+
+    public func onEvent(_ event: Event, state: State, config: Config) -> Bool {
+        layout.onEvent(event, state: state, frame: Self.frame(config))
+    }
+
+    public func getLayout(state: State, config: Config) -> State {
+        layout.getLayout(state: state, frame: Self.frame(config))
+    }
 }
 
 class LayoutNoop: Layout {
     // required init(initialState state: State) {}
 
-    func onEvent(_: Event, state _: State) -> Bool {
+    func onEvent(_: Event, state _: State, frame _: CGRect) -> Bool {
         false
     }
 
-    func getLayout(state: State, config _: Config) -> State {
+    func getLayout(state: State, frame _: CGRect) -> State {
         state
     }
 }
@@ -125,15 +167,14 @@ public class LayoutTall: Layout {
 
     public init() {}
 
-    public func onEvent(_ event: Event, state _: State) -> Bool {
+    public func onEvent(_ event: Event, state _: State, frame _: CGRect) -> Bool {
         switch event {
         case .addWindow: return true
         case .delWindow: return true
         }
     }
 
-    public func getLayout(state cur: State, config: Config) -> State {
-        guard let screen = config.screens.first else { return cur }
+    public func getLayout(state cur: State, frame: CGRect) -> State {
         guard let leftmost = cur.windows.min(by: { $0.topLeft.x < $1.topLeft.x })
         else { return cur }
         let primaryId = primaryId.getOrSet(default: leftmost.id)
@@ -141,8 +182,8 @@ public class LayoutTall: Layout {
         let numPrimary = 1
         let numSecondary = cur.windows.count - numPrimary
         let ratio = (numSecondary == 0) ? 1.0 : dividerRatio
-        let (primary, secondary) = screen.frame.divided(
-            atDistance: ratio * screen.frame.width,
+        let (primary, secondary) = frame.divided(
+            atDistance: ratio * frame.width,
             from: CGRectEdge.minXEdge
         )
 
@@ -151,7 +192,7 @@ public class LayoutTall: Layout {
             .filter { $0.id != primaryId }
             .enumerated()
             .map { idx, win -> Window in
-                let height = screen.frame.height / CGFloat(numSecondary)
+                let height = frame.height / CGFloat(numSecondary)
                 let top = CGFloat(idx) * height
                 let frame = secondary
                     .offsetBy(dx: 0, dy: top)

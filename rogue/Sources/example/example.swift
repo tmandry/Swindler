@@ -28,7 +28,7 @@ public class AppDelegate: NSObject, NSApplicationDelegate {
     public func applicationDidFinishLaunching(_ aNotification: Notification) {
         Task {
             let reactor = try await Reactor()
-            await reactor.setLayout(LayoutTall())
+            await reactor.setLayout(FirstScreenLayout(LayoutTall()))
             try await reactor.setup()
         }
     }
