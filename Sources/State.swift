@@ -4,20 +4,65 @@ import PromiseKit
 
 /// Initializes a new Swindler state and returns it in a Promise.
 public func initialize() -> Promise<State> {
-    let notifier = EventNotifier()
-    let ssd = OSXSystemScreenDelegate(notifier)
-    return OSXStateDelegate<
-        AXSwift.UIElement,
-        AXSwift.Application,
-        AXSwift.Observer,
-        ApplicationObserver
-    >.initialize(
-        notifier,
-        ApplicationObserver(),
-        ssd,
-        OSXSpaceObserver(notifier, ssd, OSXSystemSpaceTracker())
-    ).map { delegate in
-       State(delegate: delegate)
+    return try! Initializer(nil).promise
+}
+
+/// Initializes a new Swindler state and returns it in a Promise.
+///
+/// When supplied with a decoder in a correctly configured app environment (TODO),
+/// Swindler remembers space IDs across restarts of the application and
+/// operating system.
+public func initialize(restoringFrom data: Data) throws -> Promise<State> {
+    return try Initializer.restore(data).promise
+}
+
+typealias RealStateDelegate = OSXStateDelegate<
+    AXSwift.UIElement,
+    AXSwift.Application,
+    AXSwift.Observer,
+    ApplicationObserver
+>
+
+private class Initializer: Decodable {
+    let promise: Promise<State>
+
+    static func restore(_ recoveryData: Data) throws -> Initializer {
+        let decoder = JSONDecoder()
+        let initializer = try decoder.decode(Initializer.self, from: recoveryData)
+        return initializer
+    }
+
+    required convenience init(from decoder: Decoder) throws {
+        try self.init(decoder)
+    }
+
+    init(_ decoder: Decoder? = nil) throws {
+        let notifier = EventNotifier()
+        let ssd = OSXSystemScreenDelegate(notifier)
+        var spaces: OSXSpaceObserver
+        if let decoder = decoder {
+            spaces = try OSXSpaceObserver(from: decoder, notifier, ssd, OSXSystemSpaceTracker())
+        } else {
+            spaces = OSXSpaceObserver(notifier, ssd, OSXSystemSpaceTracker())
+        }
+        promise = RealStateDelegate.initialize(notifier, ApplicationObserver(), ssd, spaces).map { delegate in
+            State(delegate: delegate)
+        }
+    }
+}
+
+// TODO: Support AppKit automatic restoration
+// - Don't initialize spaces until after application finishes launching by scheduling that on the dispatch queue (run loop won't start until restoration is complete, I think).. or finding a suitable event
+// - During automatic restoration, save each tracker into a global list
+// - Check the list before initializing space on startup
+//
+// This simplifies everything.
+
+extension State {
+    public func recoveryData() throws -> Data? {
+        guard let delegate = delegate as? RealStateDelegate else { return nil }
+        let encoder = JSONEncoder()
+        return try encoder.encode(delegate.spaceObserver)
     }
 }
 
