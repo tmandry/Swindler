@@ -1,19 +1,31 @@
 import Cocoa
 
-class OSXSpaceObserver: NSObject, NSWindowDelegate {
+class OSXSpaceObserver: NSObject, NSWindowDelegate, Encodable {
     private var trackers: [Int: SpaceTracker] = [:]
     private weak var ssd: SystemScreenDelegate?
     private var sst: SystemSpaceTracker
     private weak var notifier: EventNotifier?
+    private var nextId: Int = 1
 
-    init(_ notifier: EventNotifier?, _ ssd: SystemScreenDelegate, _ sst: SystemSpaceTracker) {
+    // Maps from NSWindow id back to space id.
+    var idMap: [NSNumber: Int] = [:]
+
+    convenience init(_ notifier: EventNotifier?, _ ssd: SystemScreenDelegate, _ sst: SystemSpaceTracker) {
+        self.init(notifier, ssd, sst) { this in
+            for screen in ssd.screens {
+                this.makeWindow(screen)
+            }
+        }
+    }
+
+    private init(_ notifier: EventNotifier?, _ ssd: SystemScreenDelegate, _ sst: SystemSpaceTracker, makeTrackers: (OSXSpaceObserver) throws -> ()) rethrows {
         self.notifier = notifier
         self.ssd = ssd
         self.sst = sst
         super.init()
-        for screen in ssd.screens {
-            makeWindow(screen)
-        }
+        // Don't install the event handler until we're done making the initial
+        // set of trackers.
+        try makeTrackers(self)
         sst.onSpaceChanged { [weak self] in
             self?.emitSpaceWillChangeEvent()
         }
@@ -28,9 +40,13 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate {
     /// happened.
     @discardableResult
     private func makeWindow(_ screen: ScreenDelegate) -> Int {
+        let id = nextId
         let win = sst.makeTracker(screen)
-        trackers[win.id] = win
-        return win.id
+        idMap[win.systemId] = id
+        nextId += 1
+        trackers[id] = win
+        log.info("Made tracker \(id) for \(screen)")
+        return id
     }
 
     /// Emits a SpaceWillChangeEvent on the notifier this observer was
@@ -39,7 +55,7 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate {
     /// Used during initialization.
     func emitSpaceWillChangeEvent() {
         guard let ssd = ssd else { return }
-        let visible = sst.visibleIds()
+        let visible = sst.visibleIds().compactMap({ idMap[$0] })
         log.debug("spaceChanged: visible=\(visible)")
 
         let screens = ssd.screens
@@ -71,6 +87,31 @@ class OSXSpaceObserver: NSObject, NSWindowDelegate {
         }
         notifier?.notify(SpaceWillChangeEvent(external: true, ids: visiblePerScreen))
     }
+
+    enum CodingKeys: CodingKey {
+        case nextSpaceId
+        case spaceTrackers
+    }
+
+    required convenience init(from decoder: Decoder, _ notifier: EventNotifier?, _ ssd: SystemScreenDelegate, _ sst: SystemSpaceTracker) throws {
+        try self.init(notifier, ssd, sst) { this in
+            let object = try decoder.container(keyedBy: CodingKeys.self)
+            this.nextId = try object.decode(Int.self, forKey: .nextSpaceId)
+            this.trackers = try object.decode(
+                [Int: OSXSpaceTracker].self,
+                forKey: .spaceTrackers)
+            for (id, tracker) in this.trackers {
+                this.idMap[tracker.systemId] = id
+            }
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var object = encoder.container(keyedBy: CodingKeys.self)
+        let trackers = trackers.compactMapValues({ $0 as? OSXSpaceTracker })
+        try object.encode(nextId, forKey: .nextSpaceId)
+        try object.encode(trackers, forKey: .spaceTrackers)
+    }
 }
 
 protocol SystemSpaceTracker {
@@ -81,7 +122,7 @@ protocol SystemSpaceTracker {
     func makeTracker(_ screen: ScreenDelegate) -> SpaceTracker
 
     /// Returns the list of IDs of SpaceTrackers whose spaces are currently visible.
-    func visibleIds() -> [Int]
+    func visibleIds() -> [NSNumber]
 }
 
 class OSXSystemSpaceTracker: SystemSpaceTracker {
@@ -96,25 +137,26 @@ class OSXSystemSpaceTracker: SystemSpaceTracker {
     }
 
     func makeTracker(_ screen: ScreenDelegate) -> SpaceTracker {
-        OSXSpaceTracker(screen)
+        let tracker = OSXSpaceTracker(screen)
+        return tracker
     }
 
-    func visibleIds() -> [Int] {
-        (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
+    func visibleIds() -> [NSNumber] {
+        NSWindow.windowNumbers(options: []) ?? []
     }
 }
 
 protocol SpaceTracker {
-    var id: Int { get }
+    var systemId: NSNumber { get }
     func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate?
 }
 
-class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
+class OSXSpaceTracker: NSObject, NSWindowDelegate, Codable, SpaceTracker {
     let win: NSWindow
 
-    var id: Int { win.windowNumber }
+    var systemId: NSNumber { win.windowNumber as NSNumber }
 
-    init(_ screen: ScreenDelegate) {
+    private init(screen: ScreenDelegate?) {
         //win = NSWindow(contentViewController: NSViewController(nibName: nil, bundle: nil))
         // Size must be non-zero to receive occlusion state events.
         let rect = /*NSRect.zero */NSRect(x: 0, y: 0, width: 1, height: 1)
@@ -123,7 +165,7 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
             styleMask: .borderless/*[.titled, .resizable, .miniaturizable]*/,
             backing: .buffered,
             defer: true,
-            screen: screen.native)
+            screen: screen?.native)
         win.isReleasedWhenClosed = false
         win.ignoresMouseEvents = true
         win.hasShadow = false
@@ -140,6 +182,10 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
 
         win.makeKeyAndOrderFront(nil)
         log.debug("new window windowNumber=\(win.windowNumber)")
+    }
+
+    convenience init(_ screen: ScreenDelegate) {
+        self.init(screen: screen)
     }
 
     func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate? {
@@ -165,6 +211,45 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, SpaceTracker {
         let visible = (NSWindow.windowNumbers(options: []) ?? []) as! [Int]
         log.debug("visible=\(visible)")
         // TODO: Use this event to detect space merges.
+        //debug()
+    }
+
+    private class ArchiverDelegate: NSObject, NSKeyedArchiverDelegate {
+        // Make sure we don't try to encode unencodable objects. AppKit does this by
+        // defining a custom encoder.
+        func archiver(_ archiver: NSKeyedArchiver, willEncode object: Any) -> Any? {
+            if object as? NSWindow != nil || object as? NSView != nil {
+                return nil
+            }
+            return object
+        }
+    }
+
+    func debug() {
+        let delegate = ArchiverDelegate()
+        let encoder = NSKeyedArchiver(requiringSecureCoding: false)
+        encoder.delegate = delegate
+        encoder.outputFormat = .xml
+        win.encodeRestorableState(with: encoder)
+        log.info("::: SpaceTracker \(win.windowNumber) restore state :::")
+        log.info(String(decoding: encoder.encodedData, as: UTF8.self))
+        log.info(":::")
+    }
+
+    func encode(to encoder: Encoder) throws {
+        let delegate = ArchiverDelegate()
+        let nsEncoder = NSKeyedArchiver()
+        nsEncoder.delegate = delegate
+        win.encodeRestorableState(with: nsEncoder)
+        var object = encoder.singleValueContainer()
+        try object.encode(nsEncoder.encodedData)
+    }
+
+    required convenience init(from decoder: Decoder) throws {
+        let object = try decoder.singleValueContainer()
+        let nsDecoder = try NSKeyedUnarchiver(forReadingFrom: object.decode(Data.self))
+        self.init(screen: nil)
+        win.restoreState(with: nsDecoder)
     }
 }
 
@@ -178,24 +263,24 @@ class FakeSystemSpaceTracker: SystemSpaceTracker {
 
     var trackersMade: [StubSpaceTracker] = []
     func makeTracker(_ screen: ScreenDelegate) -> SpaceTracker {
-        let tracker = StubSpaceTracker(screen, id: nextSpaceId)
+        let tracker = StubSpaceTracker(nextSpaceId as NSNumber, screen)
+        visible.append(nextSpaceId)
         trackersMade.append(tracker)
-        visible.append(tracker.id)
         return tracker
     }
 
     var nextSpaceId: Int { trackersMade.count + 1 }
 
     var visible: [Int] = []
-    func visibleIds() -> [Int] { visible }
+    func visibleIds() -> [NSNumber] { visible as [NSNumber] }
 }
 
 class StubSpaceTracker: SpaceTracker {
     var screen: ScreenDelegate?
-    var id: Int
-    init(_ screen: ScreenDelegate?, id: Int) {
+    var systemId: NSNumber
+    init(_ id: NSNumber, _ screen: ScreenDelegate?) {
+        systemId = id
         self.screen = screen
-        self.id = id
     }
     func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate? { screen }
 }
