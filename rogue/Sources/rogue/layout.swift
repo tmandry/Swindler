@@ -202,3 +202,183 @@ public class LayoutTall: Layout {
         return State(windows: windows)
     }
 }
+
+public class TallLayout: Layout {
+    var layout: Horizontal = Horizontal()
+    var secondaryLayout: Horizontal?
+
+    public func setup(state cur: State, frame: CGRect) {
+        layout.setup(state: cur, frame: frame)
+    }
+
+    public func onEvent(_ event: Event, state: State, frame: CGRect) -> Bool {
+        switch event {
+        case .addWindow(_):
+            if layout.children.count == 0 {
+                return layout.onEvent(event, state: state, frame: frame)
+            } else {
+                if layout.children.count == 1 {
+                    secondaryLayout = Horizontal()
+                    //layout.addChild(secondaryLayout, frame)
+                }
+                return secondaryLayout!.onEvent(event, state: state, frame: frame)
+            }
+        case .delWindow(_):
+            if layout.onEvent(event, state: state, frame: frame) {
+                if let secondaryLayout = secondaryLayout, layout.children.count < 2 {
+                    // Promote the first child
+                    let win = secondaryLayout.delChild(at: 0, frame)
+                    // TODO insert at index 0
+                    layout.addChild(win, frame)
+                }
+                if secondaryLayout?.children.count == 0 {
+                    secondaryLayout = nil
+                    layout.delChild(at: 1, frame)
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    public func getLayout(state: State, frame: CGRect) -> State {
+        layout.getLayout(state: state, frame: frame)
+    }
+}
+
+enum Child {
+    case layout(Layout)
+    case window(WindowId)
+}
+
+extension Child {
+    func windowId() -> WindowId? {
+        switch self {
+        case let .window(wid): return wid
+        default: return nil
+        }
+    }
+}
+
+public class Nested {
+    var child: [Child] = []
+    //var layout: Layout
+}
+
+extension Nested {
+    public func setup(state cur: State, frame: CGRect) {
+        //layout.setup(state: cur, frame: frame)
+    }
+
+    // public func
+}
+
+public final class Horizontal {
+    var children: [Child] = []
+    var dividers: [CGFloat] = []
+
+    public func setup(state cur: State, frame: CGRect) {
+        children = cur.windows.lazy
+            .sorted(by: { $0.topLeft.x < $1.topLeft.x })
+            .map { .window($0.id) }
+        dividers = Array(sequence(
+            first: 0,
+            next: { $0 + frame.width / CGFloat(cur.windows.count) }
+        ).prefix(cur.windows.count))
+    }
+
+    @discardableResult
+    func addChild(_ child: Child, _ frame: CGRect) -> Int {
+        let slice = 1.0 / CGFloat(dividers.count + 1)
+        for var divider in dividers {
+            divider *= (1 - slice)
+        }
+        dividers.append(frame.width * slice)
+        children.append(child)
+        return children.count - 1
+    }
+
+    @discardableResult
+    func delChild(at idx: Int, _ frame: CGRect) -> Child {
+        let slice = dividers[idx] / frame.width
+        for var divider in dividers {
+            divider /= (1 - slice)
+        }
+        dividers.remove(at: idx)
+        return children.remove(at: idx)
+    }
+
+    public func onEvent(_ event: Event, state _: State, frame: CGRect) -> Bool {
+        switch event {
+        case let .addWindow(wid):
+            addChild(.window(wid), frame)
+            return true
+        case let .delWindow(wid):
+            let idx = children.firstIndex(where: { $0.windowId() == wid })!
+            delChild(at: idx, frame)
+            return true
+        }
+    }
+
+    public func getLayout(state cur: State, frame: CGRect) -> State {
+        assert(dividers.count == children.count)
+        return State(windows: children.enumerated().flatMap { idx, child -> [Window] in
+            let x = (idx == 0) ? 0 : dividers[idx - 1]
+            let frame = CGRect(
+                x: frame.minX + x,
+                y: frame.minY,
+                width: dividers[idx] - x,
+                height: frame.height
+            )
+            switch child {
+            case let .window(wid): return [Window(id: wid, invertedFrame: frame)]
+            case let .layout(layout): return layout
+                .getLayout(state: cur, frame: frame).windows
+            }
+        })
+    }
+}
+
+protocol BaseView {
+    // Transitive window count.
+    var count: Int { get }
+
+    var body: View { get }
+
+    func getLayout(frame: CGRect) -> [CGRect]
+}
+
+protocol View: BaseView {}
+
+extension View {
+    var count: Int { body.count }
+    func getLayout(frame: CGRect) -> [CGRect] { body.getLayout(frame: frame) }
+}
+
+struct MyView: View {
+    var count: Int
+    var body: View {
+        fatalError()
+    }
+}
+
+struct VStack: View {
+    var children: [View]
+
+    var count: Int {
+        children.reduce(0, { $0 + $1.count })
+    }
+    var body: View {
+        self
+    }
+
+    func getLayout(frame: CGRect) -> [CGRect] {
+        children.flatMap({ $0.getLayout(frame: frame) })
+    }
+}
+
+struct WindowView: View {
+    var count: Int { 1 }
+    var body: View { self }
+    func getLayout(frame: CGRect) -> [CGRect] { [frame] }
+}

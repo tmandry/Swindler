@@ -31,7 +31,7 @@ public class Reactor {
         self.swindler = swindler
         swindler.on { (event: WindowCreatedEvent) in
             Task {
-                try! await self.handleEvent(Event.addWindow(id: self.winIds[event.window]))
+                //try! await self.handleEvent(Event.addWindow(id: self.winIds[event.window]))
             }
         }
         swindler.on { (event: WindowDestroyedEvent) in
