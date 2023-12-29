@@ -5,7 +5,7 @@ import PromiseKit
 
 /// A physical display.
 public final class Screen: Equatable, CustomDebugStringConvertible {
-    internal let delegate: ScreenDelegate
+    let delegate: ScreenDelegate
     internal init(delegate: ScreenDelegate) {
         self.delegate = delegate
     }
