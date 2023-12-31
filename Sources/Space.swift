@@ -137,7 +137,7 @@ class OSXSystemSpaceTracker: SystemSpaceTracker {
     }
 
     func makeTracker(_ screen: ScreenDelegate) -> SpaceTracker {
-        let tracker = OSXSpaceTracker(screen)
+        let tracker = OSXSpaceTracker(screen, id: 0)
         return tracker
     }
 
@@ -151,12 +151,14 @@ protocol SpaceTracker {
     func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate?
 }
 
-class OSXSpaceTracker: NSObject, NSWindowDelegate, Codable, SpaceTracker {
+class OSXSpaceTracker: NSObject, NSWindowDelegate, Codable, SpaceTracker, NSWindowRestoration {
     let win: NSWindow
 
     var systemId: NSNumber { win.windowNumber as NSNumber }
+    let id: Int
 
-    private init(screen: ScreenDelegate?) {
+    private init(screen: ScreenDelegate?, id: Int) {
+        self.id = id
         //win = NSWindow(contentViewController: NSViewController(nibName: nil, bundle: nil))
         // Size must be non-zero to receive occlusion state events.
         let rect = /*NSRect.zero */NSRect(x: 0, y: 0, width: 1, height: 1)
@@ -180,12 +182,16 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, Codable, SpaceTracker {
         super.init()
         win.delegate = self
 
+        win.isRestorable = true
+        win.restorationClass = OSXSpaceTracker.self
+        win.identifier = NSUserInterfaceItemIdentifier("spaceTracker")
+
         win.makeKeyAndOrderFront(nil)
         log.debug("new window windowNumber=\(win.windowNumber)")
     }
 
-    convenience init(_ screen: ScreenDelegate) {
-        self.init(screen: screen)
+    convenience init(_ screen: ScreenDelegate, id: Int) {
+        self.init(screen: screen, id: id)
     }
 
     func screen(_ ssd: SystemScreenDelegate) -> ScreenDelegate? {
@@ -248,8 +254,21 @@ class OSXSpaceTracker: NSObject, NSWindowDelegate, Codable, SpaceTracker {
     required convenience init(from decoder: Decoder) throws {
         let object = try decoder.singleValueContainer()
         let nsDecoder = try NSKeyedUnarchiver(forReadingFrom: object.decode(Data.self))
-        self.init(screen: nil)
+        self.init(screen: nil, id: 0)
         win.restoreState(with: nsDecoder)
+    }
+
+    @MainActor
+    static func restoreWindow(withIdentifier identifier: NSUserInterfaceItemIdentifier, state: NSCoder) async throws -> NSWindow {
+        let id = state.decodeInteger(forKey: "SpaceId")
+        log.info("restoreWindow \(id)")
+        let tracker = OSXSpaceTracker(screen: nil, id: id)
+        return tracker.win
+    }
+
+    func window(_ window: NSWindow, willEncodeRestorableState state: NSCoder) {
+        log.info("window willencode \(id)")
+        state.encode(id, forKey: "SpaceId")
     }
 }
 
